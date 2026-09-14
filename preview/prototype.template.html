@@ -1,0 +1,774 @@
+<title>Hasnain Foundation Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+<!--APP_CSS-->
+
+/* ---- prototype chrome ---- */
+body { background: #e7efeb; }
+.proto {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 26px 16px;
+  position: relative;
+  z-index: 1;
+}
+.proto-inner { display: flex; gap: 34px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.proto-copy { max-width: 300px; }
+.proto-copy .eyebrow {
+  font-size: 10.5px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+  color: #b8801a; font-family: 'Inter', sans-serif;
+}
+.proto-copy h1 {
+  font-size: 27px; font-weight: 800; letter-spacing: -.8px; margin: 12px 0 0; line-height: 1.15;
+  color: #10201a; font-family: 'Inter', sans-serif;
+}
+.proto-copy p {
+  font-size: 13.5px; line-height: 1.65; color: #5c6f67; margin: 12px 0 0; font-family: 'Inter', sans-serif;
+}
+.proto-copy ol {
+  margin: 18px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.9; color: #5c6f67;
+  font-family: 'Inter', sans-serif;
+}
+.proto-copy .reset {
+  margin-top: 20px; display: inline-flex; align-items: center; gap: 7px;
+  background: #fff; border: 1.5px solid #e3ebe7; border-radius: 12px;
+  padding: 9px 15px; font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 650;
+  color: #10201a; cursor: pointer;
+}
+.proto-copy .reset:hover { border-color: #14b892; color: #0e9d63; }
+.proto-stage {
+  width: 400px; height: 830px;
+  border-radius: 44px;
+  overflow: hidden;
+  box-shadow: 0 40px 90px rgba(10, 40, 30, .3), 0 0 0 10px #12211c, 0 0 0 11px #35493f;
+  position: relative;
+  background: #eef4f1;
+  flex: 0 0 auto;
+}
+.proto-stage .phone { max-width: none; width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
+@media (max-width: 900px) {
+  .proto-copy { max-width: 400px; text-align: center; }
+  .proto-copy ol { text-align: left; }
+  .proto-stage { width: 100%; max-width: 400px; height: 760px; }
+}
+
+/* only one screen at a time */
+.scr { display: none; }
+.scr.on { display: block; }
+[hidden] { display: none !important; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<!--SPRITE-->
+</defs></svg>
+
+<div class="stage-bg"></div>
+<div class="proto">
+  <div class="proto-inner">
+
+    <div class="proto-copy">
+      <div class="eyebrow">Clickable prototype</div>
+      <h1>Subaidar Hasnain Foundation</h1>
+      <p>Tap through the whole member journey. Nothing is saved — it resets when you reload.</p>
+      <ol>
+        <li>Sign in (any details work)</li>
+        <li>Tap a fund on the dashboard</li>
+        <li>Confirm, enter an amount, attach a bill</li>
+        <li>Watch it appear under Requests</li>
+      </ol>
+      <p style="margin-top:16px"><strong style="color:#10201a">EN / اردو</strong> switches the whole app, including right-to-left layout.</p>
+      <button class="reset" onclick="location.reload()">↻ Start over</button>
+    </div>
+
+    <div class="proto-stage">
+      <div class="phone">
+
+        <!-- ================= LOGIN ================= -->
+        <div class="scr on" id="s-login">
+          <div class="screen no-nav">
+            <div class="auth-hero">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div style="display:flex;justify-content:flex-end;margin-bottom:6px"><span id="lang-1"></span></div>
+              <div class="mark"><img src="PV_LOGO" alt=""></div>
+              <h1 data-t="common.appName"></h1>
+              <p data-t="common.tagline"></p>
+            </div>
+            <div class="pad mt-24">
+              <h2 style="font-size:20px;font-weight:750;margin:0 0 5px;letter-spacing:-.4px" data-t="login.title"></h2>
+              <p class="muted" style="margin:0 0 20px" data-t="login.lede"></p>
+              <div class="field">
+                <label data-t="login.email"></label>
+                <div class="input-icon"><svg><use href="#i-mail"/></svg>
+                  <input class="input" type="email" dir="ltr" value="fatima.bibi@gmail.com">
+                </div>
+              </div>
+              <div class="field">
+                <label data-t="login.password"></label>
+                <div class="input-icon"><svg><use href="#i-lock"/></svg>
+                  <input class="input" type="password" dir="ltr" value="demo1234">
+                </div>
+              </div>
+              <button class="btn mt-8" onclick="go('s-home')"><svg class="flip"><use href="#i-arrowRight"/></svg><span data-t="login.submit"></span></button>
+              <p class="center muted mt-20" style="font-size:13.5px">
+                <span data-t="login.newHere"></span>
+                <a class="link" onclick="go('s-reg')" style="cursor:pointer" data-t="login.createAccount"></a>
+              </p>
+              <div class="note mt-24"><strong style="color:var(--text)" data-t="login.helpTitle"></strong> <span data-t="login.helpBody"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= REGISTER ================= -->
+        <div class="scr" id="s-reg">
+          <div class="screen no-nav">
+            <div class="hero tight">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="appbar">
+                <button class="icon-btn" onclick="regBack()"><svg class="flip"><use href="#i-chevL"/></svg></button>
+                <div style="flex:1"><h1 data-t="register.title"></h1><div class="sub" id="reg-step"></div></div>
+                <span id="lang-2"></span>
+              </div>
+              <div class="steps mt-16"><i class="on"></i><i id="dot2"></i><i id="dot3"></i></div>
+            </div>
+
+            <div class="pad mt-24">
+              <!-- step 1 -->
+              <div id="rs1">
+                <div class="field">
+                  <label><span data-t="register.fullName"></span> <span class="req-star">*</span></label>
+                  <div class="input-icon"><svg><use href="#i-user"/></svg><input class="input" data-tp="register.fullNameHint" value="Fatima Bibi"></div>
+                </div>
+                <div class="field">
+                  <label><span data-t="register.gender"></span> <span class="req-star">*</span></label>
+                  <div class="seg">
+                    <button onclick="pickSeg(this)" data-t="register.male"></button>
+                    <button class="active" onclick="pickSeg(this)" data-t="register.female"></button>
+                    <button onclick="pickSeg(this)" data-t="register.other"></button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label><span data-t="register.age"></span> <span class="req-star">*</span></label>
+                  <input class="input" type="number" value="41">
+                </div>
+              </div>
+
+              <!-- step 2 -->
+              <div id="rs2" hidden>
+                <div class="row-2">
+                  <div class="field">
+                    <label><span data-t="register.country"></span> <span class="req-star">*</span></label>
+                    <select class="input"><option>Pakistan</option><option>Saudi Arabia</option><option>United Arab Emirates</option></select>
+                  </div>
+                  <div class="field">
+                    <label><span data-t="register.city"></span> <span class="req-star">*</span></label>
+                    <input class="input" value="Lahore">
+                  </div>
+                </div>
+                <div class="field">
+                  <label><span data-t="register.email"></span> <span class="req-star">*</span></label>
+                  <div class="input-icon"><svg><use href="#i-mail"/></svg><input class="input" dir="ltr" value="fatima.bibi@gmail.com"></div>
+                </div>
+                <div class="field">
+                  <label><span data-t="register.mobile"></span> <span class="req-star">*</span></label>
+                  <div class="input-icon"><svg><use href="#i-phone"/></svg><input class="input" dir="ltr" value="+92 301 4477210"></div>
+                </div>
+              </div>
+
+              <!-- step 3 -->
+              <div id="rs3" hidden>
+                <div class="field">
+                  <label><span data-t="register.cnic"></span> <span class="req-star">*</span></label>
+                  <div class="upload" onclick="addCnic()">
+                    <div class="u-ico"><svg><use href="#i-idcard" id="cnic-ico"/></svg></div>
+                    <div class="u-t" data-t="register.cnicUpload" id="cnic-t"></div>
+                    <div class="u-d" data-t="register.cnicHint"></div>
+                  </div>
+                  <div class="filelist" id="cnic-list" hidden>
+                    <div class="fileitem">
+                      <div class="fi"><svg><use href="#i-idcard"/></svg></div>
+                      <div class="fmid"><div class="fn" dir="ltr">cnic-front.jpg</div><div class="fs">1.2 MB</div></div>
+                      <button class="rm" onclick="event.stopPropagation();removeCnic()"><svg><use href="#i-x"/></svg></button>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label><span data-t="register.password"></span> <span class="req-star">*</span></label>
+                  <div class="input-icon"><svg><use href="#i-lock"/></svg><input class="input" type="password" dir="ltr" value="demo1234"></div>
+                </div>
+                <div class="field">
+                  <label><span data-t="register.confirm"></span> <span class="req-star">*</span></label>
+                  <div class="input-icon"><svg><use href="#i-lock"/></svg><input class="input" type="password" dir="ltr" value="demo1234"></div>
+                </div>
+                <div class="note" data-t="register.privacy"></div>
+              </div>
+
+              <button class="btn mt-20" onclick="regNext()"><svg class="flip"><use href="#i-arrowRight" id="reg-ico"/></svg><span id="reg-cta"></span></button>
+              <p class="center muted mt-16" style="font-size:13px">
+                <span data-t="register.already"></span>
+                <a class="link" onclick="go('s-login')" style="cursor:pointer" data-t="register.signIn"></a>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= HOME ================= -->
+        <div class="scr" id="s-home">
+          <div class="screen">
+            <div class="hero">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="greet">
+                <div class="avatar">FB</div>
+                <div style="flex:1;min-width:0"><div class="hi" data-t="dashboard.greeting"></div><div class="name">Fatima Bibi</div></div>
+                <span id="lang-3"></span>
+                <button class="icon-btn" onclick="go('s-profile')"><svg><use href="#i-user"/></svg></button>
+              </div>
+              <div class="mt-20" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:15px 17px">
+                <div style="font-size:11.5px;opacity:.85;letter-spacing:.3px" data-t="dashboard.totalReceived"></div>
+                <div class="num" style="font-size:28px;font-weight:800;letter-spacing:-1px;margin-top:4px;line-height:1">PKR 74,000</div>
+                <div style="font-size:11.5px;opacity:.85;margin-top:7px" id="home-across"></div>
+              </div>
+            </div>
+
+            <div class="pad overlap">
+              <div class="stat-row" id="home-stats"></div>
+            </div>
+
+            <div class="pad">
+              <div class="section-head">
+                <h2 data-t="dashboard.applyHeading"></h2>
+                <span style="font-size:12px;color:var(--text-faint)" id="home-avail"></span>
+              </div>
+              <div class="fund-grid" id="fund-grid"></div>
+            </div>
+
+            <div class="pad">
+              <div class="section-head">
+                <h2 data-t="dashboard.yourApplications"></h2>
+                <a onclick="go('s-requests')" style="cursor:pointer" data-t="common.viewAll"></a>
+              </div>
+              <div id="home-recent"></div>
+            </div>
+
+            <div class="pad mt-8">
+              <div class="card" style="background:linear-gradient(135deg,rgba(20,184,146,.09),rgba(224,165,43,.11));border-color:rgba(20,184,146,.2)">
+                <div style="display:flex;gap:12px;align-items:flex-start">
+                  <div style="width:38px;height:38px;flex:0 0 38px;border-radius:13px;background:var(--grad-gold);color:#6b4a06;display:grid;place-items:center"><svg style="width:18px;height:18px"><use href="#i-shield"/></svg></div>
+                  <div>
+                    <div style="font-size:13.5px;font-weight:700" data-t="dashboard.privateTitle"></div>
+                    <p class="muted mb-0" style="font-size:12.5px;margin-top:4px" data-t="dashboard.privateBody"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= REQUESTS ================= -->
+        <div class="scr" id="s-requests">
+          <div class="screen">
+            <div class="hero tight">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="appbar">
+                <button class="icon-btn" onclick="go('s-home')"><svg class="flip"><use href="#i-chevL"/></svg></button>
+                <div style="flex:1"><h1 data-t="requests.title"></h1><div class="sub" data-t="requests.subtitle"></div></div>
+              </div>
+            </div>
+            <div class="pad mt-16"><div class="chips" id="req-chips"></div></div>
+            <div class="pad mt-16" id="req-list"></div>
+          </div>
+        </div>
+
+        <!-- ================= DETAIL ================= -->
+        <div class="scr" id="s-detail">
+          <div class="screen">
+            <div class="hero tight">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="appbar">
+                <button class="icon-btn" onclick="go('s-requests')"><svg class="flip"><use href="#i-chevL"/></svg></button>
+                <div style="flex:1"><h1 id="det-fund"></h1><div class="sub ref" id="det-ref"></div></div>
+              </div>
+              <div class="mt-20" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:15px 17px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
+                <div>
+                  <div style="font-size:11.5px;opacity:.85;letter-spacing:.3px" id="det-amt-lbl"></div>
+                  <div class="num" id="det-amt" style="font-size:26px;font-weight:800;letter-spacing:-.8px;margin-top:4px;line-height:1"></div>
+                </div>
+                <span id="det-badge"></span>
+              </div>
+            </div>
+            <div class="pad overlap">
+              <div class="card">
+                <div class="track" id="det-track"></div>
+                <p class="muted mb-0 mt-16" style="font-size:12.5px;text-align:center" id="det-blurb"></p>
+              </div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2 data-t="detail.details"></h2></div>
+              <div class="card" id="det-kv"></div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2 data-t="detail.documents"></h2><span style="font-size:12px;color:var(--text-faint)" id="det-files"></span></div>
+              <div id="det-docs"></div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2 data-t="detail.history"></h2></div>
+              <div class="card"><div class="timeline" id="det-time"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= PROFILE ================= -->
+        <div class="scr" id="s-profile">
+          <div class="screen">
+            <div class="hero">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="appbar">
+                <button class="icon-btn" onclick="go('s-home')"><svg class="flip"><use href="#i-chevL"/></svg></button>
+                <div style="flex:1"><h1 data-t="profile.title"></h1></div>
+                <span id="lang-4"></span>
+              </div>
+              <div class="center mt-20">
+                <div class="avatar" style="width:76px;height:76px;border-radius:26px;font-size:25px;margin:0 auto 12px">FB</div>
+                <div style="font-size:19px;font-weight:750;letter-spacing:-.3px">Fatima Bibi</div>
+                <div style="font-size:12.5px;opacity:.85;margin-top:3px">Lahore, Pakistan</div>
+              </div>
+            </div>
+            <div class="pad overlap">
+              <div class="card" style="display:flex;text-align:center">
+                <div style="flex:1"><div class="num" id="prof-count" style="font-size:19px;font-weight:800;letter-spacing:-.5px"></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:600" data-t="profile.applications"></div></div>
+                <div style="width:1px;background:var(--border)"></div>
+                <div style="flex:1"><div class="num" style="font-size:19px;font-weight:800;letter-spacing:-.5px;color:var(--brand-2)">74,000</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:600" data-t="profile.received"></div></div>
+                <div style="width:1px;background:var(--border)"></div>
+                <div style="flex:1"><div class="num" style="font-size:19px;font-weight:800;letter-spacing:-.5px">2024</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:600" data-t="profile.memberSince"></div></div>
+              </div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2 data-t="profile.registrationDetails"></h2></div>
+              <div class="card" id="prof-kv"></div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2 data-t="profile.identity"></h2></div>
+              <button class="list-row">
+                <span class="li"><svg><use href="#i-idcard"/></svg></span>
+                <span class="lmid"><span class="lt" style="display:block" data-t="profile.cnicOnFile"></span><span class="ld" style="display:block" data-t="profile.cnicVerified"></span></span>
+                <span class="chev"><svg><use href="#i-eye"/></svg></span>
+              </button>
+            </div>
+            <div class="pad mt-8">
+              <div class="mt-16" style="display:flex;justify-content:center"><span id="lang-5"></span></div>
+              <button class="btn danger-ghost mt-16" onclick="go('s-login')"><svg><use href="#i-logout"/></svg><span data-t="common.signOut"></span></button>
+              <p class="center muted mt-16" style="font-size:11px"><span data-t="common.appName"></span> · v1.0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= HELP ================= -->
+        <div class="scr" id="s-help">
+          <div class="screen">
+            <div class="hero tight">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="appbar">
+                <button class="icon-btn" onclick="go('s-home')"><svg class="flip"><use href="#i-chevL"/></svg></button>
+                <div style="flex:1"><h1 data-t="help.title"></h1><div class="sub" data-t="help.subtitle"></div></div>
+              </div>
+            </div>
+            <div class="pad mt-20">
+              <div class="section-head" style="margin-top:0"><h2 data-t="help.howItWorks"></h2></div>
+              <div class="card"><div class="timeline" id="help-stages"></div></div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2 data-t="help.beforeYouApply"></h2></div>
+              <div class="card">
+                <p class="muted" style="margin-top:0" data-t="help.beforeLede"></p>
+                <ul class="muted" style="margin:0;padding-inline-start:18px;line-height:1.9" id="help-tips"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= overlays ================= -->
+        <div class="backdrop" id="backdrop" onclick="closeAll()"></div>
+
+        <div class="dialog" id="dlg-confirm">
+          <div class="big-ico" id="cf-ico"><svg><use href="#i-bolt" id="cf-ico-use"/></svg></div>
+          <h3 id="cf-title"></h3>
+          <p id="cf-body"></p>
+          <div class="btn-row">
+            <button class="btn ghost" onclick="closeAll()"><span data-t="common.cancel"></span></button>
+            <button class="btn" onclick="openSheet()"><svg class="flip"><use href="#i-arrowRight"/></svg><span data-t="common.continue"></span></button>
+          </div>
+        </div>
+
+        <div class="sheet" id="sheet">
+          <div class="grab"></div>
+          <div class="sheet-body">
+            <div class="sheet-head">
+              <div class="ico" id="sh-ico"><svg><use href="#i-bolt" id="sh-ico-use"/></svg></div>
+              <div style="flex:1"><h3 id="sh-title"></h3><p id="sh-sub"></p></div>
+              <button class="icon-btn dark" onclick="closeAll()"><svg><use href="#i-x"/></svg></button>
+            </div>
+            <div class="field">
+              <label><span data-t="apply.amount"></span> <span class="req-star">*</span></label>
+              <div class="amount-wrap"><span class="cur" data-t="common.currency"></span><input class="input" id="sh-amount" type="number" placeholder="0"></div>
+              <div class="quick-amounts" id="sh-quick"></div>
+            </div>
+            <div class="field">
+              <label id="sh-doclabel"></label>
+              <div class="upload small" onclick="addDoc()">
+                <div class="u-ico"><svg><use href="#i-upload"/></svg></div>
+                <div class="u-t" data-t="apply.uploadTitle"></div>
+                <div class="u-d" data-t="apply.uploadHint"></div>
+              </div>
+              <div class="filelist" id="sh-files"></div>
+            </div>
+            <div class="field">
+              <label data-t="apply.reason"></label>
+              <textarea class="input" id="sh-reason" data-tp="apply.reasonPlaceholder"></textarea>
+            </div>
+            <p class="err-msg" id="sh-err" hidden></p>
+            <button class="btn" onclick="submitApp()"><svg><use href="#i-send"/></svg><span data-t="apply.submit"></span></button>
+            <p class="muted center mt-12" style="font-size:11.5px" data-t="apply.disclaimer"></p>
+          </div>
+        </div>
+
+        <div class="dialog" id="dlg-success">
+          <div class="big-ico"><svg><use href="#i-checkCircle"/></svg></div>
+          <h3 data-t="apply.successTitle"></h3>
+          <p id="ok-body"></p>
+          <div class="btn-row">
+            <button class="btn ghost" onclick="closeAll()"><span data-t="common.done"></span></button>
+            <button class="btn" onclick="closeAll();go('s-requests')"><svg><use href="#i-list"/></svg><span data-t="apply.track"></span></button>
+          </div>
+        </div>
+
+        <!-- ================= bottom nav ================= -->
+        <nav class="nav" id="nav">
+          <a onclick="go('s-home')" data-nav="s-home"><span class="nav-ico"><svg><use href="#i-home"/></svg></span><span data-t="nav.home"></span></a>
+          <a onclick="go('s-requests')" data-nav="s-requests"><span class="nav-ico"><svg><use href="#i-list"/></svg></span><span data-t="nav.requests"></span></a>
+          <div class="fab-wrap"><button class="fab" onclick="go('s-home')"><svg><use href="#i-plus"/></svg></button></div>
+          <a onclick="go('s-help')" data-nav="s-help"><span class="nav-ico"><svg><use href="#i-info"/></svg></span><span data-t="nav.help"></span></a>
+          <a onclick="go('s-profile')" data-nav="s-profile"><span class="nav-ico"><svg><use href="#i-user"/></svg></span><span data-t="nav.profile"></span></a>
+        </nav>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== dictionaries (mirrors src/lib/i18n) ===================== */
+const DICT = <!--DICT-->;
+
+/* ===================== state ===================== */
+const FUNDS = [
+  { id:'monthly',     grad:'g-brand', icon:'i-calendar', min:2000, max:50000,  req:false },
+  { id:'accidental',  grad:'g-rose',  icon:'i-health',   min:5000, max:500000, req:true  },
+  { id:'grocery',     grad:'g-amber', icon:'i-basket',   min:1000, max:30000,  req:false },
+  { id:'electricity', grad:'g-blue',  icon:'i-bolt',     min:1000, max:80000,  req:true  },
+];
+
+let LOC = 'en';
+let refSeq = 1042;
+let activeFund = null;
+let docsAdded = 0;
+let filter = 'all';
+let detailId = null;
+
+const REQS = [
+  { id:'r1', fund:'electricity', ref:'SHF-26-01039', amount:18400, approved:null, status:'review',      days:2,  docs:['lesco-bill-august.jpg'], reason:'Bill is two months overdue and the meter is due for disconnection this week.' },
+  { id:'r2', fund:'accidental',  ref:'SHF-26-01038', amount:45000, approved:40000, status:'accepted',   days:6,  docs:['hospital-report.jpg','pharmacy-invoice.pdf'], reason:'Hospital admission after a road accident.' },
+  { id:'r3', fund:'grocery',     ref:'SHF-26-00991', amount:12000, approved:12000, status:'transferred',days:42, docs:['ration-estimate.jpg'], reason:'Monthly ration for a family of six.' },
+  { id:'r4', fund:'monthly',     ref:'SHF-26-00920', amount:15000, approved:15000, status:'transferred',days:73, docs:[], reason:'' },
+];
+
+const STAGES = ['requested','review','accepted','transferred'];
+const BADGE = { requested:'b-requested', review:'b-review', accepted:'b-accepted', transferred:'b-transferred', rejected:'b-rejected' };
+const STEP_ICON = { requested:'i-send', review:'i-search', accepted:'i-checkCircle', transferred:'i-wallet' };
+
+/* ===================== helpers ===================== */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const D = () => DICT[LOC];
+const dig = (path) => path.split('.').reduce((o,k)=> (o ? o[k] : undefined), D());
+const money = (n, code=true) => (code ? D().common.currency + ' ' : '') + Number(n).toLocaleString('en-US');
+const fund = (id) => D().funds[id];
+const fundMeta = (id) => FUNDS.find(f => f.id === id);
+const ago = (days) => days === 0 ? (LOC==='ur'?'آج':'today') : days < 30 ? days + (LOC==='ur'?' دن پہلے':'d ago') : Math.round(days/30) + (LOC==='ur'?' ماہ پہلے':'mo ago');
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ===================== language ===================== */
+function langHTML(id) {
+  return '<div class="lang-toggle" data-tone="' + (id === 'lang-5' ? 'dark' : 'light') + '">' +
+    '<button lang="en" class="' + (LOC==='en'?'on':'') + '" onclick="setLang(\'en\')">EN</button>' +
+    '<button lang="ur" class="' + (LOC==='ur'?'on':'') + '" onclick="setLang(\'ur\')">اردو</button></div>';
+}
+
+function setLang(l) {
+  LOC = l;
+  document.documentElement.lang = l;
+  document.documentElement.dir = l === 'ur' ? 'rtl' : 'ltr';
+  render();
+}
+
+/* ===================== render ===================== */
+function render() {
+  $$('[data-t]').forEach(el => { const v = dig(el.dataset.t); if (typeof v === 'string') el.textContent = v; });
+  $$('[data-tp]').forEach(el => { const v = dig(el.dataset.tp); if (typeof v === 'string') el.placeholder = v; });
+  ['lang-1','lang-2','lang-3','lang-4','lang-5'].forEach(id => { const n = $('#'+id); if (n) n.innerHTML = langHTML(id); });
+
+  renderRegister();
+  renderHome();
+  renderRequests();
+  renderDetail();
+  renderProfile();
+  renderHelp();
+  renderSheet();
+}
+
+/* ---- register ---- */
+let regStep = 1;
+function renderRegister() {
+  $('#reg-step').textContent = D().register.step(regStep) + ' — ' + D().register.stepNames[regStep-1];
+  $('#dot2').className = regStep >= 2 ? 'on' : '';
+  $('#dot3').className = regStep >= 3 ? 'on' : '';
+  $('#rs1').hidden = regStep !== 1;
+  $('#rs2').hidden = regStep !== 2;
+  $('#rs3').hidden = regStep !== 3;
+  $('#reg-cta').textContent = regStep === 3 ? D().register.submit : D().common.continue;
+  $('#reg-ico').setAttribute('href', regStep === 3 ? '#i-checkCircle' : '#i-arrowRight');
+}
+function regNext() {
+  if (regStep < 3) { regStep++; renderRegister(); return; }
+  go('s-home');
+}
+function regBack() { if (regStep > 1) { regStep--; renderRegister(); } else go('s-login'); }
+function pickSeg(btn) { $$('.seg button', btn.parentElement).forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+function addCnic() { $('#cnic-list').hidden = false; $('#cnic-t').textContent = D().register.cnicChange; $('#cnic-ico').setAttribute('href','#i-checkCircle'); }
+function removeCnic() { $('#cnic-list').hidden = true; $('#cnic-t').textContent = D().register.cnicUpload; $('#cnic-ico').setAttribute('href','#i-idcard'); }
+
+/* ---- home ---- */
+function renderHome() {
+  const counts = STAGES.map(s => ({ s, n: REQS.filter(r => r.status === s).length }));
+  const colors = { requested:'var(--st-requested)', review:'var(--st-review)', accepted:'var(--st-accepted)', transferred:'var(--st-transfer)' };
+  $('#home-stats').innerHTML = counts.map(c =>
+    '<a class="stat" onclick="filter=\''+c.s+'\';go(\'s-requests\')" style="cursor:pointer">' +
+      '<div class="n num" style="color:'+colors[c.s]+'">'+c.n+'</div>' +
+      '<div class="l">'+esc(D().status[c.s])+'</div>' +
+      '<div class="bar" style="background:'+colors[c.s]+';opacity:'+(c.n?.9:.2)+'"></div></a>').join('');
+
+  const transferred = REQS.filter(r => r.status === 'transferred').length;
+  $('#home-across').textContent = D().dashboard.across(REQS.length, transferred);
+  $('#home-avail').textContent = D().dashboard.available(FUNDS.length);
+
+  $('#fund-grid').innerHTML = FUNDS.map((f,i) =>
+    '<button class="fund '+f.grad+' rise rise-'+Math.min(i+1,4)+'" onclick="openConfirm(\''+f.id+'\')">' +
+      '<div class="ico"><svg><use href="'+f.icon+'"/></svg></div>' +
+      '<div><div class="t">'+esc(fund(f.id).name)+'</div><div class="d">'+esc(fund(f.id).desc)+'</div></div></button>').join('');
+
+  $('#home-recent').innerHTML = REQS.slice(0,4).map(r => {
+    const m = fundMeta(r.fund);
+    return '<a class="req" onclick="openDetail(\''+r.id+'\')">' +
+      '<div class="ico '+m.grad+'"><svg><use href="'+m.icon+'"/></svg></div>' +
+      '<div class="mid"><div class="ttl">'+esc(fund(r.fund).name)+'</div>' +
+      '<div class="meta"><span class="badge '+BADGE[r.status]+'"><i></i>'+esc(D().status[r.status])+'</span><span>'+ago(r.days)+'</span></div></div>' +
+      '<div class="amt">'+money(r.amount,false)+'<small>'+esc(D().common.currency)+'</small></div></a>';
+  }).join('');
+}
+
+/* ---- requests ---- */
+function renderRequests() {
+  const keys = ['all', ...STAGES];
+  $('#req-chips').innerHTML = keys.map(k =>
+    '<a class="chip '+(filter===k?'active':'')+'" onclick="filter=\''+k+'\';renderRequests()">' +
+    esc(k === 'all' ? D().requests.all : D().status[k]) + '</a>').join('');
+
+  const list = REQS.filter(r => filter === 'all' || r.status === filter);
+  if (!list.length) {
+    $('#req-list').innerHTML =
+      '<div class="empty"><div class="e-ico"><svg><use href="#i-inbox"/></svg></div>' +
+      '<h3>'+esc(D().requests.emptyTitle)+'</h3><p>'+esc(D().requests.emptyFiltered(D().status[filter]))+'</p></div>';
+    return;
+  }
+
+  $('#req-list').innerHTML = list.map(r => {
+    const m = fundMeta(r.fund);
+    const pct = ((STAGES.indexOf(r.status) + 1) / 4) * 100;
+    return '<a class="card" style="display:block;margin-bottom:12px;cursor:pointer" onclick="openDetail(\''+r.id+'\')">' +
+      '<div style="display:flex;gap:12px;align-items:center">' +
+        '<div class="'+m.grad+'" style="width:42px;height:42px;flex:0 0 42px;border-radius:14px;display:grid;place-items:center;color:#fff"><svg style="width:20px;height:20px"><use href="'+m.icon+'"/></svg></div>' +
+        '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:650">'+esc(fund(r.fund).name)+'</div>' +
+        '<div class="ref" style="font-size:11.5px;color:var(--text-faint);margin-top:3px">'+r.ref+'</div></div>' +
+        '<div class="amt" style="text-align:end"><div style="font-size:14px;font-weight:750;letter-spacing:-.3px">'+money(r.amount,false)+'</div>' +
+        '<div style="font-size:10px;color:var(--text-faint);margin-top:2px">'+esc(D().common.currency)+'</div></div>' +
+      '</div>' +
+      '<div class="mt-12 pbar"><span style="width:'+pct+'%"></span></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">' +
+        '<span class="badge '+BADGE[r.status]+'"><i></i>'+esc(D().status[r.status])+'</span>' +
+        '<span style="font-size:11.5px;color:var(--text-faint)">'+ago(r.days)+'</span></div></a>';
+  }).join('');
+}
+
+/* ---- detail ---- */
+function openDetail(id) { detailId = id; renderDetail(); go('s-detail'); }
+function renderDetail() {
+  const r = REQS.find(x => x.id === detailId) || REQS[0];
+  if (!r) return;
+  const idx = STAGES.indexOf(r.status);
+
+  $('#det-fund').textContent = fund(r.fund).name;
+  $('#det-ref').textContent = r.ref;
+  $('#det-amt-lbl').textContent = r.approved ? D().detail.approvedAmount : D().detail.requestedAmount;
+  $('#det-amt').textContent = money(r.approved ?? r.amount);
+  $('#det-badge').outerHTML = '<span id="det-badge" class="badge '+BADGE[r.status]+'"><i></i>'+esc(D().status[r.status])+'</span>';
+  $('#det-blurb').textContent = D().status.blurb[r.status];
+
+  $('#det-track').innerHTML = STAGES.map((s,i) => {
+    const state = i < idx ? 'done' : i === idx ? 'current' : '';
+    return '<div class="step '+state+'"><div class="dot"><svg><use href="'+(i<=idx?STEP_ICON[s]:'#i-clock')+'"/></svg></div>' +
+      '<div class="lbl">'+esc(D().status[s])+'</div></div>';
+  }).join('');
+
+  const kv = (k,v,cls) => '<div class="kv"><span class="k">'+esc(k)+'</span><span class="v '+(cls||'')+'">'+esc(v)+'</span></div>';
+  $('#det-kv').innerHTML =
+    kv(D().detail.fund, fund(r.fund).name) +
+    kv(D().detail.reference, r.ref, 'ref') +
+    kv(D().detail.requested, money(r.amount), 'num') +
+    (r.approved != null ? kv(D().detail.approved, money(r.approved), 'num') : '') +
+    (r.reason ? '<div style="padding-top:12px;border-top:1px solid var(--border);margin-top:4px">' +
+      '<div style="font-size:12.5px;color:var(--text-dim);margin-bottom:5px">'+esc(D().detail.yourReason)+'</div>' +
+      '<p class="mb-0" style="font-size:13.5px;line-height:1.55;margin:0">'+esc(r.reason)+'</p></div>' : '');
+
+  $('#det-files').textContent = D().detail.files(r.docs.length);
+  $('#det-docs').innerHTML = r.docs.length
+    ? r.docs.map(n => '<button class="list-row"><span class="li"><svg><use href="'+(n.endsWith('.pdf')?'#i-file':'#i-image')+'"/></svg></span>' +
+        '<span class="lmid"><span class="lt" style="display:block" dir="ltr">'+esc(n)+'</span></span>' +
+        '<span class="chev"><svg><use href="#i-eye"/></svg></span></button>').join('')
+    : '<div class="card center"><p class="muted mb-0" style="font-size:13px">'+esc(D().detail.noDocuments)+'</p></div>';
+
+  $('#det-time').innerHTML = STAGES.map((s,i) => {
+    const on = i <= idx;
+    return '<div class="ev '+(on?'on':'off')+'"><div class="mark"><svg><use href="'+(on?'#i-check':'#i-clock')+'"/></svg></div>' +
+      '<div class="t">'+esc(D().status[s])+'</div><div class="d">'+esc(D().status.blurb[s])+'</div></div>';
+  }).join('');
+}
+
+/* ---- profile / help ---- */
+function renderProfile() {
+  $('#prof-count').textContent = REQS.length;
+  const kv = (k,v) => '<div class="kv"><span class="k">'+esc(k)+'</span><span class="v">'+esc(v)+'</span></div>';
+  $('#prof-kv').innerHTML =
+    kv(D().profile.gender, D().register.female) +
+    kv(D().profile.age, '41 ' + D().profile.years) +
+    kv(D().profile.country, 'Pakistan') +
+    kv(D().profile.city, 'Lahore') +
+    '<div class="kv"><span class="k">'+esc(D().profile.email)+'</span><span class="v" dir="ltr">fatima.bibi@gmail.com</span></div>' +
+    '<div class="kv"><span class="k">'+esc(D().profile.mobile)+'</span><span class="v" dir="ltr">+92 301 4477210</span></div>';
+}
+
+function renderHelp() {
+  const icons = ['#i-send','#i-search','#i-checkCircle','#i-wallet'];
+  $('#help-stages').innerHTML = D().help.stages.map((s,i) =>
+    '<div class="ev on"><div class="mark"><svg><use href="'+icons[i]+'"/></svg></div>' +
+    '<div class="t">'+esc(s.title)+'</div><div class="d">'+esc(s.body)+'</div></div>').join('');
+  $('#help-tips').innerHTML = D().help.tips.map(t => '<li>'+esc(t)+'</li>').join('');
+}
+
+/* ---- apply flow ---- */
+function openConfirm(id) {
+  activeFund = id;
+  const m = fundMeta(id), f = fund(id);
+  $('#cf-ico').className = 'big-ico ' + m.grad;
+  $('#cf-ico-use').setAttribute('href', m.icon);
+  $('#cf-title').textContent = D().apply.confirmTitle(f.name);
+  $('#cf-body').textContent = D().apply.confirmBody(f.desc, f.doc.toLowerCase());
+  $('#backdrop').classList.add('open');
+  $('#dlg-confirm').classList.add('open');
+}
+
+function openSheet() {
+  $('#dlg-confirm').classList.remove('open');
+  docsAdded = 0;
+  $('#sh-files').innerHTML = '';
+  $('#sh-amount').value = '';
+  $('#sh-reason').value = '';
+  $('#sh-err').hidden = true;
+  renderSheet();
+  $('#sheet').classList.add('open');
+}
+
+function renderSheet() {
+  if (!activeFund) return;
+  const m = fundMeta(activeFund), f = fund(activeFund);
+  $('#sh-ico').className = 'ico ' + m.grad;
+  $('#sh-ico-use').setAttribute('href', m.icon);
+  $('#sh-title').textContent = f.name;
+  $('#sh-sub').textContent = D().apply.range(money(m.min), money(m.max)) + ' · ' + D().apply.reviewedBy;
+  $('#sh-doclabel').innerHTML = esc(f.doc) + ' ' + (m.req
+    ? '<span class="req-star">*</span>'
+    : '<span style="color:var(--text-faint);font-weight:500">'+esc(D().common.optional)+'</span>');
+  const q = [m.min, Math.round((m.min+m.max)/4/500)*500, Math.round((m.min+m.max)/2/500)*500, m.max];
+  $('#sh-quick').innerHTML = [...new Set(q)].map(v =>
+    '<button onclick="document.getElementById(\'sh-amount\').value='+v+'">'+money(v,false)+'</button>').join('');
+}
+
+function addDoc() {
+  if (docsAdded >= 3) return;
+  docsAdded++;
+  const names = ['bill-august.jpg','medical-report.pdf','receipt.jpg'];
+  const n = names[docsAdded-1];
+  $('#sh-files').insertAdjacentHTML('beforeend',
+    '<div class="fileitem"><div class="fi"><svg><use href="'+(n.endsWith('.pdf')?'#i-file':'#i-image')+'"/></svg></div>' +
+    '<div class="fmid"><div class="fn" dir="ltr">'+n+'</div><div class="fs">842 KB</div></div>' +
+    '<button class="rm" onclick="event.stopPropagation();this.parentElement.remove();docsAdded--"><svg><use href="#i-x"/></svg></button></div>');
+}
+
+function submitApp() {
+  const m = fundMeta(activeFund);
+  const v = Number($('#sh-amount').value);
+  const err = $('#sh-err');
+
+  if (!v) { err.textContent = D().apply.errors.amountRequired; err.hidden = false; return; }
+  if (v < m.min) { err.textContent = D().apply.errors.min(money(m.min)); err.hidden = false; return; }
+  if (v > m.max) { err.textContent = D().apply.errors.max(money(m.max)); err.hidden = false; return; }
+  if (m.req && docsAdded === 0) { err.textContent = D().apply.errors.docRequired(fund(activeFund).doc); err.hidden = false; return; }
+  err.hidden = true;
+
+  const ref = 'SHF-26-0' + (++refSeq);
+  REQS.unshift({
+    id: 'n' + refSeq, fund: activeFund, ref, amount: v, approved: null,
+    status: 'requested', days: 0,
+    docs: Array.from({ length: docsAdded }, (_, i) => ['bill-august.jpg','medical-report.pdf','receipt.jpg'][i]),
+    reason: $('#sh-reason').value,
+  });
+
+  $('#sheet').classList.remove('open');
+  $('#ok-body').innerHTML = esc(D().apply.successBody(fund(activeFund).name)) + '<br>' +
+    esc(D().apply.reference) + ' <strong class="ref" style="color:var(--text)">' + ref + '</strong><br>' +
+    esc(D().apply.trackHint);
+  $('#dlg-success').classList.add('open');
+  renderHome();
+  renderRequests();
+}
+
+function closeAll() {
+  $('#backdrop').classList.remove('open');
+  ['#dlg-confirm','#sheet','#dlg-success'].forEach(s => $(s).classList.remove('open'));
+}
+
+/* ---- navigation ---- */
+function go(id) {
+  closeAll();
+  $$('.scr').forEach(s => s.classList.toggle('on', s.id === id));
+  const chrome = ['s-login','s-reg'].includes(id);
+  $('#nav').hidden = chrome;
+  $$('#nav a').forEach(a => a.classList.toggle('on', a.dataset.nav === id));
+  $$('.screen').forEach(s => (s.scrollTop = 0));
+}
+
+setLang('en');
+go('s-login');
+</script>

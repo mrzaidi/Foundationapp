@@ -1,0 +1,913 @@
+<title>Subaidar Hasnain Foundation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&display=swap" rel="stylesheet">
+
+<style>
+/* ==== the real app stylesheet, assets inlined ==== */
+<!--APP_CSS-->
+
+/* ==== review-page chrome (pv- prefix, never touches the app classes) ==== */
+:root {
+  --pv-ground: #f4f7f5;
+  --pv-panel: #ffffff;
+  --pv-ink: #16241e;
+  --pv-muted: #5f736b;
+  --pv-rule: #dbe4df;
+  --pv-accent: #b8801a;
+  --pv-shadow: 0 30px 60px rgba(12, 40, 30, .13);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pv-ground: #0d1613;
+    --pv-panel: #14201b;
+    --pv-ink: #e9f1ec;
+    --pv-muted: #8ba297;
+    --pv-rule: #24342d;
+    --pv-accent: #e7b95a;
+    --pv-shadow: 0 30px 70px rgba(0, 0, 0, .5);
+  }
+}
+:root[data-theme="dark"] {
+  --pv-ground: #0d1613;
+  --pv-panel: #14201b;
+  --pv-ink: #e9f1ec;
+  --pv-muted: #8ba297;
+  --pv-rule: #24342d;
+  --pv-accent: #e7b95a;
+  --pv-shadow: 0 30px 70px rgba(0, 0, 0, .5);
+}
+
+body {
+  background: var(--pv-ground);
+  color: var(--pv-ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  margin: 0;
+}
+
+.pv-wrap { max-width: 1180px; margin: 0 auto; padding: 0 28px 96px; }
+
+/* masthead */
+.pv-head { padding: 76px 0 44px; border-bottom: 1px solid var(--pv-rule); }
+.pv-head .pv-lockup { display: flex; align-items: center; gap: 18px; }
+.pv-head .pv-lockup img { width: 60px; height: 60px; border-radius: 20px; }
+.pv-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 2.2px; text-transform: uppercase;
+  color: var(--pv-accent);
+}
+.pv-head h1 {
+  font-family: 'Newsreader', Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(34px, 5.4vw, 56px);
+  line-height: 1.04;
+  letter-spacing: -1.4px;
+  margin: 22px 0 0;
+  text-wrap: balance;
+  max-width: 16ch;
+}
+.pv-head h1 em { font-style: italic; color: var(--pv-accent); }
+.pv-lede {
+  font-size: 16px; line-height: 1.65; color: var(--pv-muted);
+  max-width: 62ch; margin: 20px 0 0;
+}
+.pv-meta {
+  display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 30px;
+  font-size: 12.5px; color: var(--pv-muted);
+}
+.pv-meta b { color: var(--pv-ink); font-weight: 650; }
+
+/* section */
+.pv-sec { padding-top: 72px; }
+.pv-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; flex-wrap: wrap; margin-bottom: 30px; }
+.pv-sec h2 {
+  font-family: 'Newsreader', Georgia, serif;
+  font-weight: 400; font-size: 30px; letter-spacing: -.7px;
+  margin: 10px 0 0;
+}
+.pv-sec p.pv-note {
+  font-size: 14px; line-height: 1.65; color: var(--pv-muted);
+  max-width: 46ch; margin: 0;
+}
+
+/* phone rail */
+.pv-rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 34px 26px;
+}
+.pv-frame { min-width: 0; }
+.pv-cap { display: flex; align-items: baseline; gap: 9px; margin-bottom: 13px; }
+.pv-cap .pv-n {
+  font-size: 11px; font-weight: 700; color: var(--pv-accent);
+  font-variant-numeric: tabular-nums;
+}
+.pv-cap .pv-t { font-size: 13.5px; font-weight: 650; }
+.pv-cap .pv-d { font-size: 12px; color: var(--pv-muted); }
+
+/* phone viewport — the app CSS renders inside, unmodified */
+.pv-phone {
+  height: 780px;
+  border-radius: 40px;
+  overflow: hidden;
+  background: #eef4f1;
+  box-shadow: var(--pv-shadow), 0 0 0 9px #12211c, 0 0 0 10px #35493f;
+  position: relative;
+}
+.pv-phone .phone {
+  max-width: none; width: 100%; height: 100%;
+  border-radius: 0; box-shadow: none;
+}
+.pv-phone .screen { padding-bottom: 98px; }
+
+/* desktop viewport for the admin portal */
+.pv-desk {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f2f6f4;
+  box-shadow: var(--pv-shadow);
+  border: 1px solid var(--pv-rule);
+}
+.pv-bar {
+  height: 38px; background: #0d1a16; display: flex; align-items: center; gap: 8px; padding: 0 15px;
+}
+.pv-bar i { width: 10px; height: 10px; border-radius: 50%; background: #35493f; display: block; }
+.pv-bar span {
+  margin-left: 12px; font-size: 11.5px; color: #7d968b;
+  font-family: ui-monospace, Menlo, monospace;
+}
+.pv-scroll { height: 760px; overflow: auto; }
+.pv-scroll .admin-body { min-height: 100%; position: relative; overflow: hidden; }
+.pv-scroll .admin-shell { min-height: 760px; }
+.pv-scroll .side { height: auto; position: static; }
+/* the app paints these fixed to the viewport — contain them in the frame */
+.pv-scroll .admin-body::before, .pv-scroll .admin-body::after { position: absolute; }
+
+/* swatches */
+.pv-swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+.pv-sw { border-radius: 16px; overflow: hidden; border: 1px solid var(--pv-rule); background: var(--pv-panel); }
+.pv-sw .pv-chip { height: 78px; }
+.pv-sw .pv-lbl { padding: 11px 13px; }
+.pv-sw .pv-lbl b { display: block; font-size: 12.5px; font-weight: 650; }
+.pv-sw .pv-lbl span {
+  display: block; font-size: 11px; color: var(--pv-muted); margin-top: 3px;
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+/* spec list */
+.pv-specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2px; background: var(--pv-rule); border: 1px solid var(--pv-rule); border-radius: 16px; overflow: hidden; }
+.pv-spec { background: var(--pv-panel); padding: 18px 20px; }
+.pv-spec b { display: block; font-size: 13px; font-weight: 650; margin-bottom: 6px; }
+.pv-spec span { font-size: 12.5px; line-height: 1.6; color: var(--pv-muted); }
+
+.pv-foot {
+  margin-top: 80px; padding-top: 26px; border-top: 1px solid var(--pv-rule);
+  font-size: 12.5px; color: var(--pv-muted); display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .pv-wrap { padding: 0 18px 70px; }
+  .pv-phone { height: 700px; }
+  .pv-scroll { height: 560px; }
+}
+</style>
+
+<!-- icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="ig" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></g>
+  </defs>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-5.5h5V20"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 9h8M8 13h8M8 17h4"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20c0-3.6 3.4-6 7.5-6s7.5 2.4 7.5 6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M2.8 20c0-3.3 2.9-5.6 6.2-5.6s6.2 2.3 6.2 5.6"/><path d="M16.5 5.2a3.4 3.4 0 0 1 0 6.6M17.5 14.8c2.3.6 3.9 2.3 3.9 5.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.8v.6"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7.5 8 5 8-5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10.5" rx="3"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3.2"/></symbol>
+  <symbol id="i-arrowRight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-chevL" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-chevR" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 7"/></symbol>
+  <symbol id="i-checkCircle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.4l2.8 2.8L16 9.8"/></symbol>
+  <symbol id="i-xCircle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.3l3.2 2"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 9.8 21 3Z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18"/><circle cx="17" cy="14.5" r="1.3"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M7.5 8.5 12 4l4.5 4.5"/><path d="M4 15v3.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V15"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5H7A2 2 0 0 0 5 5.5v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9l-5.5-5.5Z"/><path d="M13.5 3.5V9H19"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m4.5 17 4.2-4 3.3 3 2.8-2.6 4.7 4.4"/></symbol>
+  <symbol id="i-idcard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="3"/><circle cx="8.5" cy="11" r="2.2"/><path d="M5 16.2c.6-1.5 2-2.2 3.5-2.2s2.9.7 3.5 2.2"/><path d="M14.5 10h4M14.5 13.5h4"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 15h3"/></symbol>
+  <symbol id="i-health" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-7.5-4.6-7.5-10A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 7.5 3.5c0 5.4-7.5 10-7.5 10Z"/><path d="M8.5 12h2l1-2 1.5 4 1-2h2"/></symbol>
+  <symbol id="i-basket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16l-1.4 9.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8L4 9Z"/><path d="M9 9 12 3l3 6"/><path d="M10 13v3M14 13v3"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5.5c0 4.4 3 8 7 9.5 4-1.5 7-5.1 7-9.5V6l-7-3Z"/><path d="M9.2 12.2 11.2 14.2 15 10.4"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13.5 6 5.5h12l2.5 8v5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-5Z"/><path d="M3.5 13.5h4l1 2.5h7l1-2.5h4"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="2.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2.2"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 16.5 9 11l3.5 3.5L20 7"/><path d="M15.5 7H20v4.5"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V20a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.56V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.56 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.03Z"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 4.5H6A2 2 0 0 0 4 6.5v11a2 2 0 0 0 2 2h3.5"/><path d="M15 8l4 4-4 4"/><path d="M19 12H9.5"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h3l1.6 4-2 1.4a12 12 0 0 0 5.5 5.5l1.4-2 4 1.6v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4 5.7 2 2 0 0 1 6 3.5Z"/></symbol>
+  <symbol id="i-battery" viewBox="0 0 22 11" fill="none"><rect x=".6" y=".6" width="17" height="9.8" rx="2.6" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="13" height="7" rx="1.6" fill="currentColor"/><path d="M19.4 4v3a1.9 1.9 0 0 0 0-3Z" fill="currentColor" opacity=".5"/></symbol>
+</svg>
+
+<div class="pv-wrap">
+
+  <!-- ================= masthead ================= -->
+  <header class="pv-head">
+    <div class="pv-lockup">
+      <img src="PV_LOGO" alt="">
+      <div>
+        <div class="pv-eyebrow">Design review · v1</div>
+        <div style="font-size:13.5px;color:var(--pv-muted);margin-top:5px">Member app &amp; admin portal</div>
+      </div>
+    </div>
+    <h1>Subaidar Hasnain <em>Foundation</em></h1>
+    <p class="pv-lede">
+      A welfare application built around one promise: a family in difficulty can ask for help in under a
+      minute, attach the bill or medical report that proves the need, and then watch exactly where their
+      request sits. Every screen below is rendered from the app's own stylesheet — what you see is the
+      built product, not a mockup of it.
+    </p>
+    <div class="pv-meta">
+      <span><b>4 funds</b> Monthly · Accidental · Grocery · Electricity</span>
+      <span><b>4 stages</b> Requested → Review → Accepted → Transferred</span>
+      <span><b>Stack</b> Next.js on Vercel · Supabase</span>
+    </div>
+  </header>
+
+  <!-- ================= palette ================= -->
+  <section class="pv-sec">
+    <div class="pv-sec-head">
+      <div>
+        <div class="pv-eyebrow">01 — Foundations</div>
+        <h2>Palette &amp; surface</h2>
+      </div>
+      <p class="pv-note">
+        Emerald carries the brand; gold marks anything awaiting a person's decision. Each fund gets its
+        own gradient so members recognise a card before they read it. Behind everything sits a light
+        geometric pattern at low opacity — texture without noise.
+      </p>
+    </div>
+
+    <div class="pv-swatches">
+      <div class="pv-sw"><div class="pv-chip g-brand"></div><div class="pv-lbl"><b>Brand emerald</b><span>#14b892 → #0b7a4e</span></div></div>
+      <div class="pv-sw"><div class="pv-chip g-gold"></div><div class="pv-lbl"><b>Decision gold</b><span>#ffd977 → #e0a52b</span></div></div>
+      <div class="pv-sw"><div class="pv-chip g-rose"></div><div class="pv-lbl"><b>Accidental fund</b><span>#ff9a8b → #e0525f</span></div></div>
+      <div class="pv-sw"><div class="pv-chip g-amber"></div><div class="pv-lbl"><b>Grocery fund</b><span>#ffc86b → #f08a24</span></div></div>
+      <div class="pv-sw"><div class="pv-chip g-blue"></div><div class="pv-lbl"><b>Electricity fund</b><span>#5aa9ff → #2f6fe0</span></div></div>
+      <div class="pv-sw"><div class="pv-chip g-plum"></div><div class="pv-lbl"><b>Transferred</b><span>#b28bff → #6d4ad6</span></div></div>
+    </div>
+  </section>
+
+  <!-- ================= entry ================= -->
+  <section class="pv-sec">
+    <div class="pv-sec-head">
+      <div>
+        <div class="pv-eyebrow">02 — Getting in</div>
+        <h2>Registration &amp; sign in</h2>
+      </div>
+      <p class="pv-note">
+        Registration is split into three short steps rather than one long form — name and gender, then
+        contact and location, then CNIC and password. Nobody abandons a form they can see the end of.
+      </p>
+    </div>
+
+    <div class="pv-rail">
+
+      <!-- ---- sign in ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">01</span><span class="pv-t">Sign in</span><span class="pv-d">returning member</span></div>
+        <div class="pv-phone"><div class="phone"><div class="screen no-nav">
+          <div class="auth-hero">
+            <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+            <div class="mark"><img src="PV_LOGO" alt=""></div>
+            <h1>Subaidar Hasnain Foundation</h1>
+            <p>WELFARE • RELIEF • DIGNITY</p>
+          </div>
+          <div class="pad mt-24">
+            <h2 style="font-size:20px;font-weight:750;margin:0 0 5px;letter-spacing:-.4px">Sign in</h2>
+            <p class="muted" style="margin:0 0 20px">Welcome back. Sign in to apply for a fund or track an existing application.</p>
+            <div class="field">
+              <label>Email address</label>
+              <div class="input-icon"><svg><use href="#i-mail"/></svg>
+                <div class="input">fatima.bibi@gmail.com</div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Password</label>
+              <div class="input-icon"><svg><use href="#i-lock"/></svg>
+                <div class="input">••••••••••</div>
+                <button class="eye"><svg><use href="#i-eye"/></svg></button>
+              </div>
+            </div>
+            <button class="btn mt-8"><svg><use href="#i-arrowRight"/></svg><span>Sign in</span></button>
+            <p class="center muted mt-20" style="font-size:13.5px">New to the foundation? <a class="link">Create an account</a></p>
+            <div class="note mt-24"><strong style="color:var(--text)">Need help?</strong> Visit the foundation office with your CNIC, or call the helpline.</div>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- ---- register ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">02</span><span class="pv-t">Register — step 3</span><span class="pv-d">CNIC &amp; password</span></div>
+        <div class="pv-phone"><div class="phone"><div class="screen no-nav">
+          <div class="hero tight">
+            <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+            <div class="appbar">
+              <button class="icon-btn"><svg><use href="#i-chevL"/></svg></button>
+              <div style="flex:1"><h1>Create account</h1><div class="sub">Step 3 of 3 — ID &amp; password</div></div>
+            </div>
+            <div class="steps mt-16"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+          </div>
+          <div class="pad mt-24">
+            <div class="field">
+              <label>CNIC / ID card image <span class="req-star">*</span></label>
+              <div class="upload">
+                <div class="u-ico"><svg><use href="#i-checkCircle"/></svg></div>
+                <div class="u-t">Change CNIC image</div>
+                <div class="u-d">JPG, PNG or PDF — up to 10 MB</div>
+              </div>
+              <div class="filelist">
+                <div class="fileitem">
+                  <div class="fi"><svg><use href="#i-idcard"/></svg></div>
+                  <div class="fmid"><div class="fn">cnic-front.jpg</div><div class="fs">1.2 MB</div></div>
+                  <button class="rm"><svg><use href="#i-x"/></svg></button>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Password <span class="req-star">*</span></label>
+              <div class="input-icon"><svg><use href="#i-lock"/></svg><div class="input">••••••••••</div></div>
+            </div>
+            <div class="field">
+              <label>Confirm password <span class="req-star">*</span></label>
+              <div class="input-icon"><svg><use href="#i-lock"/></svg><div class="input">••••••••••</div></div>
+            </div>
+            <div class="note">Your CNIC is stored privately and is only visible to foundation administrators reviewing your applications.</div>
+            <button class="btn mt-20"><svg><use href="#i-checkCircle"/></svg><span>Complete registration</span></button>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- ---- profile ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">03</span><span class="pv-t">Profile</span><span class="pv-d">registration on file</span></div>
+        <div class="pv-phone"><div class="phone"><div class="screen">
+          <div class="hero">
+            <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+            <div class="appbar">
+              <button class="icon-btn"><svg><use href="#i-chevL"/></svg></button>
+              <div style="flex:1"><h1>My profile</h1></div>
+              <button class="icon-btn"><svg><use href="#i-settings"/></svg></button>
+            </div>
+            <div class="center mt-20">
+              <div class="avatar" style="width:76px;height:76px;border-radius:26px;font-size:25px;margin:0 auto 12px">FB</div>
+              <div style="font-size:19px;font-weight:750;letter-spacing:-.3px">Fatima Bibi</div>
+              <div style="font-size:12.5px;opacity:.85;margin-top:3px">Lahore, Pakistan</div>
+            </div>
+          </div>
+          <div class="pad overlap">
+            <div class="card" style="display:flex;text-align:center">
+              <div style="flex:1"><div style="font-size:19px;font-weight:800;letter-spacing:-.5px">6</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:600">Applications</div></div>
+              <div style="width:1px;background:var(--border)"></div>
+              <div style="flex:1"><div style="font-size:19px;font-weight:800;letter-spacing:-.5px;color:var(--brand-2)">74,000</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:600">PKR received</div></div>
+              <div style="width:1px;background:var(--border)"></div>
+              <div style="flex:1"><div style="font-size:19px;font-weight:800;letter-spacing:-.5px">2024</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:600">Member since</div></div>
+            </div>
+          </div>
+          <div class="pad">
+            <div class="section-head"><h2>Registration details</h2></div>
+            <div class="card">
+              <div class="kv"><span class="k">Gender</span><span class="v">Female</span></div>
+              <div class="kv"><span class="k">Age</span><span class="v">41 years</span></div>
+              <div class="kv"><span class="k">Country</span><span class="v">Pakistan</span></div>
+              <div class="kv"><span class="k">City</span><span class="v">Lahore</span></div>
+              <div class="kv"><span class="k">Email</span><span class="v">fatima.bibi@gmail.com</span></div>
+              <div class="kv"><span class="k">Mobile</span><span class="v">+92 301 4477210</span></div>
+            </div>
+          </div>
+          <div class="pad">
+            <div class="section-head"><h2>Identity document</h2></div>
+            <button class="list-row"><span class="li"><svg><use href="#i-idcard"/></svg></span><span class="lmid"><span class="lt" style="display:block">CNIC on file</span><span class="ld" style="display:block">Verified against your registration</span></span><span class="chev"><svg><use href="#i-eye"/></svg></span></button>
+          </div>
+          <nav class="nav">
+            <a><span class="nav-ico"><svg><use href="#i-home"/></svg></span>Home</a>
+            <a><span class="nav-ico"><svg><use href="#i-list"/></svg></span>Requests</a>
+            <div class="fab-wrap"><button class="fab"><svg><use href="#i-plus"/></svg></button></div>
+            <a><span class="nav-ico"><svg><use href="#i-info"/></svg></span>Help</a>
+            <a class="on"><span class="nav-ico"><svg><use href="#i-user"/></svg></span>Profile</a>
+          </nav>
+        </div></div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= the ask ================= -->
+  <section class="pv-sec">
+    <div class="pv-sec-head">
+      <div>
+        <div class="pv-eyebrow">03 — The core flow</div>
+        <h2>Choosing a fund, and asking</h2>
+      </div>
+      <p class="pv-note">
+        Tapping a fund raises a confirmation before anything else happens — it names the fund and says
+        what will be needed. Only then does the sheet open for the amount and the bill or report.
+        Two deliberate steps, so nobody submits by accident.
+      </p>
+    </div>
+
+    <div class="pv-rail">
+
+      <!-- ---- dashboard ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">04</span><span class="pv-t">Dashboard</span><span class="pv-d">funds &amp; live progress</span></div>
+        <div class="pv-phone"><div class="phone"><div class="screen">
+          <div class="hero">
+            <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+            <div class="greet">
+              <div class="avatar">FB</div>
+              <div style="flex:1;min-width:0"><div class="hi">Assalam-u-Alaikum</div><div class="name">Fatima Bibi</div></div>
+              <button class="icon-btn"><svg><use href="#i-user"/></svg></button>
+            </div>
+            <div class="mt-20" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:15px 17px">
+              <div style="font-size:11.5px;opacity:.85;letter-spacing:.3px">TOTAL SUPPORT RECEIVED</div>
+              <div style="font-size:28px;font-weight:800;letter-spacing:-1px;margin-top:4px;line-height:1">PKR 74,000</div>
+              <div style="font-size:11.5px;opacity:.85;margin-top:7px">Across 6 applications · 3 transferred</div>
+            </div>
+          </div>
+          <div class="pad overlap">
+            <div class="stat-row">
+              <div class="stat"><div class="n" style="color:var(--st-requested)">1</div><div class="l">Requested</div><div class="bar" style="background:var(--st-requested)"></div></div>
+              <div class="stat"><div class="n" style="color:var(--st-review)">1</div><div class="l">Review</div><div class="bar" style="background:var(--st-review)"></div></div>
+              <div class="stat"><div class="n" style="color:var(--st-accepted)">1</div><div class="l">Accepted</div><div class="bar" style="background:var(--st-accepted)"></div></div>
+              <div class="stat"><div class="n" style="color:var(--st-transfer)">3</div><div class="l">Transferred</div><div class="bar" style="background:var(--st-transfer)"></div></div>
+            </div>
+          </div>
+          <div class="pad">
+            <div class="section-head"><h2>Apply for a fund</h2><span style="font-size:12px;color:var(--text-faint)">4 available</span></div>
+            <div class="fund-grid">
+              <button class="fund g-brand"><div class="ico"><svg><use href="#i-calendar"/></svg></div><div><div class="t">Monthly Fund</div><div class="d">Recurring monthly support for registered families</div></div></button>
+              <button class="fund g-rose"><div class="ico"><svg><use href="#i-health"/></svg></div><div><div class="t">Accidental Fund</div><div class="d">Emergency help after an accident or medical event</div></div></button>
+              <button class="fund g-amber"><div class="ico"><svg><use href="#i-basket"/></svg></div><div><div class="t">Grocery Fund</div><div class="d">Ration and household grocery assistance</div></div></button>
+              <button class="fund g-blue"><div class="ico"><svg><use href="#i-bolt"/></svg></div><div><div class="t">Electricity Bill Fund</div><div class="d">Help clearing an outstanding electricity bill</div></div></button>
+            </div>
+          </div>
+          <div class="pad">
+            <div class="section-head"><h2>Your applications</h2><a>View all</a></div>
+            <a class="req"><div class="ico g-blue"><svg><use href="#i-bolt"/></svg></div><div class="mid"><div class="ttl">Electricity Bill Fund</div><div class="meta"><span class="badge b-review"><i></i>Review</span><span>2d ago</span></div></div><div class="amt">18,400<small>PKR</small></div></a>
+            <a class="req"><div class="ico g-rose"><svg><use href="#i-health"/></svg></div><div class="mid"><div class="ttl">Accidental Fund</div><div class="meta"><span class="badge b-accepted"><i></i>Accepted</span><span>6d ago</span></div></div><div class="amt">45,000<small>PKR</small></div></a>
+          </div>
+          <nav class="nav">
+            <a class="on"><span class="nav-ico"><svg><use href="#i-home"/></svg></span>Home</a>
+            <a><span class="nav-ico"><svg><use href="#i-list"/></svg></span>Requests</a>
+            <div class="fab-wrap"><button class="fab"><svg><use href="#i-plus"/></svg></button></div>
+            <a><span class="nav-ico"><svg><use href="#i-info"/></svg></span>Help</a>
+            <a><span class="nav-ico"><svg><use href="#i-user"/></svg></span>Profile</a>
+          </nav>
+        </div></div></div>
+      </div>
+
+      <!-- ---- confirm ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">05</span><span class="pv-t">Confirmation</span><span class="pv-d">raised on tap</span></div>
+        <div class="pv-phone"><div class="phone">
+          <div class="screen">
+            <div class="hero">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="greet"><div class="avatar">FB</div><div style="flex:1"><div class="hi">Assalam-u-Alaikum</div><div class="name">Fatima Bibi</div></div></div>
+              <div class="mt-20" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:15px 17px">
+                <div style="font-size:11.5px;opacity:.85;letter-spacing:.3px">TOTAL SUPPORT RECEIVED</div>
+                <div style="font-size:28px;font-weight:800;letter-spacing:-1px;margin-top:4px;line-height:1">PKR 74,000</div>
+              </div>
+            </div>
+            <div class="pad overlap">
+              <div class="stat-row">
+                <div class="stat"><div class="n" style="color:var(--st-requested)">1</div><div class="l">Requested</div><div class="bar" style="background:var(--st-requested)"></div></div>
+                <div class="stat"><div class="n" style="color:var(--st-review)">1</div><div class="l">Review</div><div class="bar" style="background:var(--st-review)"></div></div>
+                <div class="stat"><div class="n" style="color:var(--st-accepted)">1</div><div class="l">Accepted</div><div class="bar" style="background:var(--st-accepted)"></div></div>
+                <div class="stat"><div class="n" style="color:var(--st-transfer)">3</div><div class="l">Transferred</div><div class="bar" style="background:var(--st-transfer)"></div></div>
+              </div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2>Apply for a fund</h2></div>
+              <div class="fund-grid">
+                <button class="fund g-brand"><div class="ico"><svg><use href="#i-calendar"/></svg></div><div><div class="t">Monthly Fund</div><div class="d">Recurring monthly support</div></div></button>
+                <button class="fund g-rose"><div class="ico"><svg><use href="#i-health"/></svg></div><div><div class="t">Accidental Fund</div><div class="d">Emergency medical help</div></div></button>
+              </div>
+            </div>
+          </div>
+          <div class="backdrop open"></div>
+          <div class="dialog open">
+            <div class="big-ico g-blue"><svg><use href="#i-bolt"/></svg></div>
+            <h3>Apply for Electricity Bill Fund?</h3>
+            <p>Help clearing an outstanding electricity bill. You will be asked to upload <strong style="color:var(--text)">the latest electricity bill</strong> and the estimated amount you need.</p>
+            <div class="btn-row">
+              <button class="btn ghost"><span>Cancel</span></button>
+              <button class="btn"><svg><use href="#i-arrowRight"/></svg><span>Continue</span></button>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ---- apply sheet ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">06</span><span class="pv-t">Application sheet</span><span class="pv-d">amount + attachment</span></div>
+        <div class="pv-phone"><div class="phone">
+          <div class="screen">
+            <div class="hero">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="greet"><div class="avatar">FB</div><div style="flex:1"><div class="hi">Assalam-u-Alaikum</div><div class="name">Fatima Bibi</div></div></div>
+            </div>
+          </div>
+          <div class="backdrop open"></div>
+          <div class="sheet open">
+            <div class="grab"></div>
+            <div class="sheet-body">
+              <div class="sheet-head">
+                <div class="ico g-blue"><svg><use href="#i-bolt"/></svg></div>
+                <div style="flex:1"><h3>Electricity Bill Fund</h3><p>PKR 1,000 – PKR 80,000 · reviewed by the foundation committee</p></div>
+                <button class="icon-btn dark"><svg><use href="#i-x"/></svg></button>
+              </div>
+              <div class="field">
+                <label>Estimated amount required <span class="req-star">*</span></label>
+                <div class="amount-wrap"><span class="cur">PKR</span><div class="input" style="padding-left:52px;font-size:18px;font-weight:750">18,400</div></div>
+                <div class="quick-amounts"><button>1,000</button><button>20,500</button><button>40,500</button><button>80,000</button></div>
+              </div>
+              <div class="field">
+                <label>Latest electricity bill <span class="req-star">*</span></label>
+                <div class="upload small">
+                  <div class="u-ico"><svg><use href="#i-upload"/></svg></div>
+                  <div class="u-t">Upload report or bill</div>
+                  <div class="u-d">Images or PDF · up to 5 files · 10 MB each</div>
+                </div>
+                <div class="filelist">
+                  <div class="fileitem"><div class="fi"><svg><use href="#i-image"/></svg></div><div class="fmid"><div class="fn">lesco-bill-august.jpg</div><div class="fs">842 KB</div></div><button class="rm"><svg><use href="#i-x"/></svg></button></div>
+                  <div class="fileitem"><div class="fi"><svg><use href="#i-file"/></svg></div><div class="fmid"><div class="fn">disconnection-notice.pdf</div><div class="fs">96 KB</div></div><button class="rm"><svg><use href="#i-x"/></svg></button></div>
+                </div>
+              </div>
+              <div class="field">
+                <label>Reason for the request</label>
+                <div class="input" style="min-height:74px;line-height:1.5;color:var(--text-dim)">Bill is two months overdue and the meter is due for disconnection this week.</div>
+              </div>
+              <button class="btn"><svg><use href="#i-send"/></svg><span>Submit application</span></button>
+              <p class="muted center mt-12" style="font-size:11.5px">Submitting does not guarantee approval. The committee reviews every application.</p>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= tracking ================= -->
+  <section class="pv-sec">
+    <div class="pv-sec-head">
+      <div>
+        <div class="pv-eyebrow">04 — After submitting</div>
+        <h2>Where my money is</h2>
+      </div>
+      <p class="pv-note">
+        The four stages are the same object everywhere: a counter on the dashboard, a bar on each card,
+        a tracker on the detail screen, a status column in the admin table. A member never has to ask
+        the office what &ldquo;review&rdquo; means.
+      </p>
+    </div>
+
+    <div class="pv-rail">
+
+      <!-- ---- success ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">07</span><span class="pv-t">Submitted</span><span class="pv-d">reference issued</span></div>
+        <div class="pv-phone"><div class="phone">
+          <div class="screen">
+            <div class="hero">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="greet"><div class="avatar">FB</div><div style="flex:1"><div class="hi">Assalam-u-Alaikum</div><div class="name">Fatima Bibi</div></div></div>
+            </div>
+            <div class="pad mt-24"><div class="fund-grid">
+              <button class="fund g-amber"><div class="ico"><svg><use href="#i-basket"/></svg></div><div><div class="t">Grocery Fund</div><div class="d">Ration assistance</div></div></button>
+              <button class="fund g-blue"><div class="ico"><svg><use href="#i-bolt"/></svg></div><div><div class="t">Electricity Bill</div><div class="d">Outstanding bill help</div></div></button>
+            </div></div>
+          </div>
+          <div class="backdrop open"></div>
+          <div class="dialog open">
+            <div class="big-ico"><svg><use href="#i-checkCircle"/></svg></div>
+            <h3>Application submitted</h3>
+            <p>Your electricity bill fund request has been received.<br>Reference <strong style="color:var(--text)">SHF-26-01042</strong><br>Track its progress under Requests.</p>
+            <div class="btn-row">
+              <button class="btn ghost"><span>Done</span></button>
+              <button class="btn"><svg><use href="#i-list"/></svg><span>Track</span></button>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ---- requests list ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">08</span><span class="pv-t">My applications</span><span class="pv-d">filtered by stage</span></div>
+        <div class="pv-phone"><div class="phone"><div class="screen">
+          <div class="hero tight">
+            <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+            <div class="appbar">
+              <button class="icon-btn"><svg><use href="#i-chevL"/></svg></button>
+              <div style="flex:1"><h1>My applications</h1><div class="sub">Track every request you have submitted</div></div>
+            </div>
+          </div>
+          <div class="pad mt-16">
+            <div class="chips">
+              <a class="chip active">All</a><a class="chip">Requested</a><a class="chip">Review</a><a class="chip">Accepted</a><a class="chip">Transferred</a>
+            </div>
+          </div>
+          <div class="pad mt-16">
+            <div class="card" style="margin-bottom:12px">
+              <div style="display:flex;gap:12px;align-items:center">
+                <div class="g-blue" style="width:42px;height:42px;flex:0 0 42px;border-radius:14px;display:grid;place-items:center;color:#fff"><svg style="width:20px;height:20px"><use href="#i-bolt"/></svg></div>
+                <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:650">Electricity Bill Fund</div><div style="font-size:11.5px;color:var(--text-faint);margin-top:3px;font-family:ui-monospace,Menlo,monospace">SHF-26-01042</div></div>
+                <div style="text-align:right"><div style="font-size:14px;font-weight:750;letter-spacing:-.3px">18,400</div><div style="font-size:10px;color:var(--text-faint);margin-top:2px">PKR</div></div>
+              </div>
+              <div class="mt-12 pbar"><span style="width:50%"></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span class="badge b-review"><i></i>Review</span><span style="font-size:11.5px;color:var(--text-faint)">2d ago</span></div>
+            </div>
+            <div class="card" style="margin-bottom:12px">
+              <div style="display:flex;gap:12px;align-items:center">
+                <div class="g-rose" style="width:42px;height:42px;flex:0 0 42px;border-radius:14px;display:grid;place-items:center;color:#fff"><svg style="width:20px;height:20px"><use href="#i-health"/></svg></div>
+                <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:650">Accidental Fund</div><div style="font-size:11.5px;color:var(--text-faint);margin-top:3px;font-family:ui-monospace,Menlo,monospace">SHF-26-01038</div></div>
+                <div style="text-align:right"><div style="font-size:14px;font-weight:750;letter-spacing:-.3px">45,000</div><div style="font-size:10px;color:var(--text-faint);margin-top:2px">PKR</div></div>
+              </div>
+              <div class="mt-12 pbar"><span style="width:75%"></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span class="badge b-accepted"><i></i>Accepted</span><span style="font-size:11.5px;color:var(--text-faint)">6d ago</span></div>
+            </div>
+            <div class="card" style="margin-bottom:12px">
+              <div style="display:flex;gap:12px;align-items:center">
+                <div class="g-amber" style="width:42px;height:42px;flex:0 0 42px;border-radius:14px;display:grid;place-items:center;color:#fff"><svg style="width:20px;height:20px"><use href="#i-basket"/></svg></div>
+                <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:650">Grocery Fund</div><div style="font-size:11.5px;color:var(--text-faint);margin-top:3px;font-family:ui-monospace,Menlo,monospace">SHF-26-00991</div></div>
+                <div style="text-align:right"><div style="font-size:14px;font-weight:750;letter-spacing:-.3px">12,000</div><div style="font-size:10px;color:var(--text-faint);margin-top:2px">PKR</div></div>
+              </div>
+              <div class="mt-12 pbar"><span style="width:100%"></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span class="badge b-transferred"><i></i>Transferred</span><span style="font-size:11.5px;color:var(--text-faint)">3 Aug 2026</span></div>
+            </div>
+          </div>
+          <nav class="nav">
+            <a><span class="nav-ico"><svg><use href="#i-home"/></svg></span>Home</a>
+            <a class="on"><span class="nav-ico"><svg><use href="#i-list"/></svg></span>Requests</a>
+            <div class="fab-wrap"><button class="fab"><svg><use href="#i-plus"/></svg></button></div>
+            <a><span class="nav-ico"><svg><use href="#i-info"/></svg></span>Help</a>
+            <a><span class="nav-ico"><svg><use href="#i-user"/></svg></span>Profile</a>
+          </nav>
+        </div></div></div>
+      </div>
+
+      <!-- ---- detail ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">09</span><span class="pv-t">Application detail</span><span class="pv-d">tracker &amp; history</span></div>
+        <div class="pv-phone"><div class="phone"><div class="screen">
+          <div class="hero tight">
+            <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+            <div class="appbar">
+              <button class="icon-btn"><svg><use href="#i-chevL"/></svg></button>
+              <div style="flex:1"><h1>Accidental Fund</h1><div class="sub" style="font-family:ui-monospace,Menlo,monospace">SHF-26-01038</div></div>
+            </div>
+            <div class="mt-20" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:15px 17px;display:flex;justify-content:space-between;align-items:flex-end">
+              <div>
+                <div style="font-size:11.5px;opacity:.85;letter-spacing:.3px">APPROVED AMOUNT</div>
+                <div style="font-size:26px;font-weight:800;letter-spacing:-.8px;margin-top:4px;line-height:1">PKR 40,000</div>
+                <div style="font-size:11.5px;opacity:.8;margin-top:6px">You requested PKR 45,000</div>
+              </div>
+              <span class="badge b-accepted"><i></i>Accepted</span>
+            </div>
+          </div>
+          <div class="pad overlap">
+            <div class="card">
+              <div class="track">
+                <div class="step done"><div class="dot"><svg><use href="#i-send"/></svg></div><div class="lbl">Requested</div><div class="when">8 Sep</div></div>
+                <div class="step done"><div class="dot"><svg><use href="#i-search"/></svg></div><div class="lbl">Review</div><div class="when">9 Sep</div></div>
+                <div class="step current"><div class="dot"><svg><use href="#i-checkCircle"/></svg></div><div class="lbl">Accepted</div><div class="when">12 Sep</div></div>
+                <div class="step"><div class="dot"><svg><use href="#i-clock"/></svg></div><div class="lbl">Transferred</div></div>
+              </div>
+              <p class="muted mb-0 mt-16" style="font-size:12.5px;text-align:center">Approved. The transfer is being arranged.</p>
+            </div>
+          </div>
+          <div class="pad">
+            <div class="section-head"><h2>Attached documents</h2><span style="font-size:12px;color:var(--text-faint)">2 files</span></div>
+            <button class="list-row"><span class="li"><svg><use href="#i-image"/></svg></span><span class="lmid"><span class="lt" style="display:block">hospital-report.jpg</span><span class="ld" style="display:block">report · 1.4 MB · 8 Sep 2026</span></span><span class="chev"><svg><use href="#i-eye"/></svg></span></button>
+            <button class="list-row"><span class="li"><svg><use href="#i-file"/></svg></span><span class="lmid"><span class="lt" style="display:block">pharmacy-invoice.pdf</span><span class="ld" style="display:block">report · 210 KB · 8 Sep 2026</span></span><span class="chev"><svg><use href="#i-eye"/></svg></span></button>
+          </div>
+          <div class="pad">
+            <div class="section-head"><h2>Progress history</h2></div>
+            <div class="card"><div class="timeline">
+              <div class="ev on"><div class="mark"><svg><use href="#i-check"/></svg></div><div class="t">Requested</div><div class="d">Application submitted by member<br><span style="color:var(--text-faint)">8 Sep 2026, 14:20</span></div></div>
+              <div class="ev on"><div class="mark"><svg><use href="#i-check"/></svg></div><div class="t">Review</div><div class="d">Documents received, committee reviewing<br><span style="color:var(--text-faint)">9 Sep 2026, 10:05</span></div></div>
+              <div class="ev on"><div class="mark"><svg><use href="#i-check"/></svg></div><div class="t">Accepted</div><div class="d">Approved at PKR 40,000 against the hospital invoice<br><span style="color:var(--text-faint)">12 Sep 2026, 16:42</span></div></div>
+              <div class="ev off"><div class="mark"><svg><use href="#i-clock"/></svg></div><div class="t">Transferred</div><div class="d">Funds have been transferred to you.</div></div>
+            </div></div>
+          </div>
+          <nav class="nav">
+            <a><span class="nav-ico"><svg><use href="#i-home"/></svg></span>Home</a>
+            <a class="on"><span class="nav-ico"><svg><use href="#i-list"/></svg></span>Requests</a>
+            <div class="fab-wrap"><button class="fab"><svg><use href="#i-plus"/></svg></button></div>
+            <a><span class="nav-ico"><svg><use href="#i-info"/></svg></span>Help</a>
+            <a><span class="nav-ico"><svg><use href="#i-user"/></svg></span>Profile</a>
+          </nav>
+        </div></div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= admin ================= -->
+  <section class="pv-sec">
+    <div class="pv-sec-head">
+      <div>
+        <div class="pv-eyebrow">05 — The other side</div>
+        <h2>Admin portal</h2>
+      </div>
+      <p class="pv-note">
+        Same design language, different job. The portal is built to be operated, not read: what needs a
+        decision is counted at the top, and every document a member attached opens in one click through
+        a short-lived signed link.
+      </p>
+    </div>
+
+    <div class="pv-desk" style="margin-bottom:34px">
+      <div class="pv-bar"><i></i><i></i><i></i><span>shf-foundation.vercel.app/admin</span></div>
+      <div class="pv-scroll"><div class="admin-body"><div class="admin-shell">
+        <aside class="side">
+          <div class="brand"><img src="PV_LOGO" alt=""><div><div class="bt">Subaidar Hasnain</div><div class="bs">Admin portal</div></div></div>
+          <nav>
+            <div class="nav-label">Overview</div>
+            <a class="on"><svg><use href="#i-grid"/></svg><span>Dashboard</span></a>
+            <div class="nav-label">Manage</div>
+            <a><svg><use href="#i-inbox"/></svg><span>Applications</span><span class="count">14</span></a>
+            <a><svg><use href="#i-users"/></svg><span>Members</span></a>
+            <a><svg><use href="#i-wallet"/></svg><span>Funds</span></a>
+            <div class="nav-label">Member app</div>
+            <a><svg><use href="#i-phone"/></svg><span>Open member app</span></a>
+          </nav>
+          <div class="side-foot">
+            <div class="av">AH</div>
+            <div class="who"><div class="wn">Admin Hasnain</div><div class="we">admin@shfoundation.org</div></div>
+            <button class="out"><svg><use href="#i-logout"/></svg></button>
+          </div>
+        </aside>
+        <main class="main">
+          <div class="topbar">
+            <div><h1>Dashboard</h1><div class="crumb">312 registered members · PKR 4,180,000 disbursed to date</div></div>
+            <a class="admin-btn"><svg><use href="#i-inbox"/></svg>Review applications</a>
+          </div>
+          <div class="kpis">
+            <a class="kpi"><div class="kico g-blue"><svg><use href="#i-send"/></svg></div><div class="kn">9</div><div class="kl">Awaiting first look</div><div class="kedge g-blue"></div></a>
+            <a class="kpi"><div class="kico g-amber"><svg><use href="#i-search"/></svg></div><div class="kn">5</div><div class="kl">Under review</div><div class="kedge g-amber"></div></a>
+            <a class="kpi"><div class="kico g-brand"><svg><use href="#i-checkCircle"/></svg></div><div class="kn">7</div><div class="kl">Approved, awaiting transfer</div><div class="kedge g-brand"></div></a>
+            <a class="kpi"><div class="kico g-plum"><svg><use href="#i-wallet"/></svg></div><div class="kn">184</div><div class="kl">Transferred</div><div class="kedge g-plum"></div></a>
+          </div>
+          <div class="kpis mt-16">
+            <div class="kpi"><div class="kico g-gold" style="color:#6b4a06"><svg><use href="#i-trend"/></svg></div><div class="kn">5.4M</div><div class="kl">PKR requested, all time</div></div>
+            <div class="kpi"><div class="kico g-brand"><svg><use href="#i-wallet"/></svg></div><div class="kn">4.2M</div><div class="kl">PKR actually transferred</div></div>
+            <div class="kpi"><div class="kico g-rose"><svg><use href="#i-xCircle"/></svg></div><div class="kn">23</div><div class="kl">Not approved</div></div>
+            <a class="kpi"><div class="kico g-plum"><svg><use href="#i-users"/></svg></div><div class="kn">312</div><div class="kl">Registered members</div></a>
+          </div>
+          <div class="two-col mt-24">
+            <div class="panel">
+              <div class="panel-head">
+                <div><h2>Latest applications</h2><div class="ph-sub">Newest submissions across every fund</div></div>
+                <a class="admin-btn ghost">View all<svg><use href="#i-chevR"/></svg></a>
+              </div>
+              <div style="overflow-x:auto"><table class="grid">
+                <thead><tr><th>Member</th><th>Fund</th><th>Amount</th><th>Status</th><th>Submitted</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td><div class="who"><div class="av">FB</div><div><div class="wn">Fatima Bibi</div><div class="we">Lahore</div></div></div></td><td><span class="fundtag"><span class="fdot g-blue"><svg><use href="#i-bolt"/></svg></span>Electricity Bill Fund</span></td><td class="num">18,400</td><td><span class="badge b-review"><i></i>Review</span></td><td style="color:var(--text-faint);font-size:12.5px">2d ago</td><td><a class="rowlink">Open</a></td></tr>
+                  <tr><td><div class="who"><div class="av">MA</div><div><div class="wn">Muhammad Aslam</div><div class="we">Multan</div></div></div></td><td><span class="fundtag"><span class="fdot g-rose"><svg><use href="#i-health"/></svg></span>Accidental Fund</span></td><td class="num">120,000</td><td><span class="badge b-requested"><i></i>Requested</span></td><td style="color:var(--text-faint);font-size:12.5px">4h ago</td><td><a class="rowlink">Open</a></td></tr>
+                  <tr><td><div class="who"><div class="av">SK</div><div><div class="wn">Sana Khalid</div><div class="we">Karachi</div></div></div></td><td><span class="fundtag"><span class="fdot g-amber"><svg><use href="#i-basket"/></svg></span>Grocery Fund</span></td><td class="num">12,000</td><td><span class="badge b-transferred"><i></i>Transferred</span></td><td style="color:var(--text-faint);font-size:12.5px">6d ago</td><td><a class="rowlink">Open</a></td></tr>
+                  <tr><td><div class="who"><div class="av">RY</div><div><div class="wn">Rizwan Yousaf</div><div class="we">Faisalabad</div></div></div></td><td><span class="fundtag"><span class="fdot g-brand"><svg><use href="#i-calendar"/></svg></span>Monthly Fund</span></td><td class="num">15,000</td><td><span class="badge b-accepted"><i></i>Accepted</span></td><td style="color:var(--text-faint);font-size:12.5px">1w ago</td><td><a class="rowlink">Open</a></td></tr>
+                </tbody>
+              </table></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div><h2>Demand by fund</h2><div class="ph-sub">Applications received per fund type</div></div></div>
+              <div class="panel-body">
+                <div class="bar-row"><div class="bl">Monthly Fund</div><div class="btrack"><span style="width:100%;background:var(--grad-brand)"></span></div><div class="bv">96</div></div>
+                <div class="bar-row"><div class="bl">Accidental Fund</div><div class="btrack"><span style="width:64%;background:var(--grad-rose)"></span></div><div class="bv">61</div></div>
+                <div class="bar-row"><div class="bl">Grocery Fund</div><div class="btrack"><span style="width:48%;background:var(--grad-amber)"></span></div><div class="bv">46</div></div>
+                <div class="bar-row"><div class="bl">Electricity Bill</div><div class="btrack"><span style="width:37%;background:var(--grad-blue)"></span></div><div class="bv">35</div></div>
+                <div class="note mt-16">Totals are computed live from <code>fund_requests</code> by the <code>admin_stats()</code> function in Postgres, so they always match the database.</div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div></div></div>
+    </div>
+
+    <div class="pv-cap"><span class="pv-n">11</span><span class="pv-t">Reviewing one application</span><span class="pv-d">documents, decision, audit trail</span></div>
+    <div class="pv-desk">
+      <div class="pv-bar"><i></i><i></i><i></i><span>shf-foundation.vercel.app/admin/requests/SHF-26-01038</span></div>
+      <div class="pv-scroll"><div class="admin-body"><div class="admin-shell">
+        <aside class="side">
+          <div class="brand"><img src="PV_LOGO" alt=""><div><div class="bt">Subaidar Hasnain</div><div class="bs">Admin portal</div></div></div>
+          <nav>
+            <div class="nav-label">Overview</div>
+            <a><svg><use href="#i-grid"/></svg><span>Dashboard</span></a>
+            <div class="nav-label">Manage</div>
+            <a class="on"><svg><use href="#i-inbox"/></svg><span>Applications</span><span class="count">14</span></a>
+            <a><svg><use href="#i-users"/></svg><span>Members</span></a>
+            <a><svg><use href="#i-wallet"/></svg><span>Funds</span></a>
+          </nav>
+          <div class="side-foot">
+            <div class="av">AH</div>
+            <div class="who"><div class="wn">Admin Hasnain</div><div class="we">admin@shfoundation.org</div></div>
+            <button class="out"><svg><use href="#i-logout"/></svg></button>
+          </div>
+        </aside>
+        <main class="main">
+          <div class="topbar">
+            <div style="display:flex;align-items:center;gap:14px">
+              <a class="admin-btn ghost"><svg><use href="#i-chevL"/></svg></a>
+              <div><h1>Accidental Fund</h1><div class="crumb"><span style="font-family:ui-monospace,Menlo,monospace">SHF-26-01038</span> · submitted 8 Sep 2026, 14:20</div></div>
+            </div>
+            <span class="badge b-accepted"><i></i>Accepted</span>
+          </div>
+          <div class="two-col">
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div class="panel">
+                <div class="panel-head"><div><h2>Progress</h2><div class="ph-sub">What the member sees on their tracker</div></div></div>
+                <div class="panel-body"><div class="track">
+                  <div class="step done"><div class="dot"><svg><use href="#i-send"/></svg></div><div class="lbl">Requested</div><div class="when">8 Sep</div></div>
+                  <div class="step done"><div class="dot"><svg><use href="#i-search"/></svg></div><div class="lbl">Review</div><div class="when">9 Sep</div></div>
+                  <div class="step current"><div class="dot"><svg><use href="#i-checkCircle"/></svg></div><div class="lbl">Accepted</div><div class="when">12 Sep</div></div>
+                  <div class="step"><div class="dot"><svg><use href="#i-clock"/></svg></div><div class="lbl">Transferred</div></div>
+                </div></div>
+              </div>
+              <div class="panel">
+                <div class="panel-head">
+                  <div><h2>Attached documents</h2><div class="ph-sub">Reports and bills uploaded with this application — click to open</div></div>
+                  <span style="font-size:12.5px;color:var(--text-faint)">2 files</span>
+                </div>
+                <div class="panel-body">
+                  <button class="list-row"><span class="li"><svg><use href="#i-image"/></svg></span><span class="lmid"><span class="lt" style="display:block">hospital-report.jpg</span><span class="ld" style="display:block">report · 1.4 MB · 8 Sep 2026</span></span><span class="chev"><svg><use href="#i-eye"/></svg></span></button>
+                  <button class="list-row"><span class="li"><svg><use href="#i-file"/></svg></span><span class="lmid"><span class="lt" style="display:block">pharmacy-invoice.pdf</span><span class="ld" style="display:block">report · 210 KB · 8 Sep 2026</span></span><span class="chev"><svg><use href="#i-eye"/></svg></span></button>
+                  <div style="font-size:12px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:.6px;margin:18px 0 10px">Identity</div>
+                  <button class="list-row"><span class="li"><svg><use href="#i-idcard"/></svg></span><span class="lmid"><span class="lt" style="display:block">CNIC on file</span><span class="ld" style="display:block">cnic · 8 Mar 2024</span></span><span class="chev"><svg><use href="#i-eye"/></svg></span></button>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div class="panel">
+                <div class="panel-head"><div><h2>Decision</h2><div class="ph-sub">Move this application along the pipeline</div></div></div>
+                <div class="panel-body"><div class="admin-actions">
+                  <button class="admin-btn plum" style="justify-content:center;width:100%"><svg><use href="#i-wallet"/></svg>Confirm transfer</button>
+                  <button class="admin-btn red" style="justify-content:center;width:100%"><svg><use href="#i-xCircle"/></svg>Reject application</button>
+                </div></div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><div><h2>Member</h2><div class="ph-sub">Registration details on file</div></div></div>
+                <div class="panel-body">
+                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                    <div style="width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-weight:800;background:linear-gradient(135deg,rgba(20,184,146,.18),rgba(224,165,43,.22));color:var(--brand-3)">FB</div>
+                    <div><div style="font-size:15px;font-weight:700">Fatima Bibi</div><div style="font-size:12px;color:var(--text-faint)">fatima.bibi@gmail.com</div></div>
+                  </div>
+                  <div class="kv"><span class="k">Mobile</span><span class="v">+92 301 4477210</span></div>
+                  <div class="kv"><span class="k">Gender</span><span class="v">Female</span></div>
+                  <div class="kv"><span class="k">Age</span><span class="v">41</span></div>
+                  <div class="kv"><span class="k">Location</span><span class="v">Lahore, Pakistan</span></div>
+                  <div class="kv"><span class="k">CNIC on file</span><span class="v" style="color:var(--brand-2)">Yes</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div></div></div>
+    </div>
+  </section>
+
+  <!-- ================= build notes ================= -->
+  <section class="pv-sec">
+    <div class="pv-sec-head">
+      <div>
+        <div class="pv-eyebrow">06 — How it is built</div>
+        <h2>Behind the screens</h2>
+      </div>
+      <p class="pv-note">
+        One Next.js app on Vercel serves the member PWA, the admin portal and the APIs. Supabase holds
+        the database, the auth and the private document storage.
+      </p>
+    </div>
+
+    <div class="pv-specs">
+      <div class="pv-spec"><b>Installable</b><span>The member app is a PWA — &ldquo;Add to Home Screen&rdquo; gives it an icon, a splash screen and no browser chrome.</span></div>
+      <div class="pv-spec"><b>Private by default</b><span>CNICs, reports and bills live in a private bucket. Members see only their own files; admins open any, through a link that expires in ten minutes.</span></div>
+      <div class="pv-spec"><b>Enforced in the database</b><span>Row-level security means a member cannot read another member's application even if the API were bypassed entirely.</span></div>
+      <div class="pv-spec"><b>Audited automatically</b><span>Every status change writes a timeline row from a Postgres trigger — the history cannot drift from the record.</span></div>
+      <div class="pv-spec"><b>Funds are data</b><span>The four funds are rows, not code. Adding a fifth is an insert, with its own gradient, icon and limits.</span></div>
+      <div class="pv-spec"><b>References</b><span>Each application gets a human reference (SHF-26-01042) the office and the member can both quote on the phone.</span></div>
+    </div>
+  </section>
+
+  <footer class="pv-foot">
+    <span>Subaidar Hasnain Foundation · design review v1</span>
+    <span>Rendered from the app's own stylesheet</span>
+  </footer>
+</div>

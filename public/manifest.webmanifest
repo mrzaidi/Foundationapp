@@ -1,0 +1,15 @@
+{
+  "name": "Subaidar Hasnain Foundation",
+  "short_name": "SHF",
+  "description": "Apply for monthly, accidental, grocery and electricity bill assistance.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef4f1",
+  "theme_color": "#0e9d63",
+  "icons": [
+    { "src": "/img/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/img/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

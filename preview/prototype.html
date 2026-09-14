@@ -1,0 +1,3803 @@
+<title>Hasnain Foundation Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ===========================================================================
+   Subaidar Hasnain Foundation — design system
+   Member PWA (phone shell) + Admin portal (desktop) share these tokens.
+   =========================================================================== */
+
+:root {
+  /* brand */
+  --brand-1: #14b892;
+  --brand-2: #0e9d63;
+  --brand-3: #0b7a4e;
+  --gold-1: #ffd977;
+  --gold-2: #e0a52b;
+
+  --grad-brand: linear-gradient(135deg, #14b892 0%, #0e9d63 55%, #0b7a4e 100%);
+  --grad-gold: linear-gradient(135deg, #ffd977 0%, #e0a52b 100%);
+  --grad-blue: linear-gradient(135deg, #5aa9ff 0%, #2f6fe0 100%);
+  --grad-rose: linear-gradient(135deg, #ff9a8b 0%, #e0525f 100%);
+  --grad-plum: linear-gradient(135deg, #b28bff 0%, #6d4ad6 100%);
+  --grad-amber: linear-gradient(135deg, #ffc86b 0%, #f08a24 100%);
+
+  /* surfaces */
+  --bg: #eef4f1;
+  --card: #ffffff;
+  --card-soft: #f6faf8;
+  --border: #e3ebe7;
+  --border-strong: #d3ded8;
+
+  /* text */
+  --text: #10201a;
+  --text-dim: #5c6f67;
+  --text-faint: #93a49c;
+
+  /* status */
+  --st-requested: #2f80ed;
+  --st-review: #f0a323;
+  --st-accepted: #12b886;
+  --st-transfer: #6d4ad6;
+  --danger: #e0525f;
+
+  --r-xl: 28px;
+  --r-lg: 22px;
+  --r-md: 16px;
+  --r-sm: 11px;
+
+  --shadow-sm: 0 1px 2px rgba(13, 42, 32, 0.04), 0 4px 12px rgba(13, 42, 32, 0.05);
+  --shadow-md: 0 2px 6px rgba(13, 42, 32, 0.06), 0 12px 28px rgba(13, 42, 32, 0.08);
+  --shadow-brand: 0 10px 24px rgba(14, 157, 99, 0.28);
+
+  --nav-h: 74px;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+/* ===========================================================================
+   MEMBER APP — phone shell
+   =========================================================================== */
+
+.app-body {
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* ambient desktop backdrop behind the phone */
+.stage-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(700px 500px at 18% 12%, rgba(18, 184, 134, 0.16), transparent 60%),
+    radial-gradient(640px 480px at 84% 78%, rgba(224, 165, 43, 0.14), transparent 60%),
+    linear-gradient(180deg, #f3f8f6, #e7efeb);
+}
+.stage-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 150px 150px;
+  opacity: 0.5;
+}
+
+.phone {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 430px;
+  height: 100%;
+  background: var(--bg) url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MzAgOTMyIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImcxIiBjeD0iMjAlIiBjeT0iMTAlIiByPSI2MCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMTJiODg2IiBzdG9wLW9wYWNpdHk9Ii4yMiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMxMmI4ODYiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZzIiIGN4PSI5NSUiIGN5PSIyOCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmM2I2M2YiIHN0b3Atb3BhY2l0eT0iLjIwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2YzYjYzZiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJnMyIgY3g9IjglIiBjeT0iODIlIiByPSI2MCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMmY4MGVkIiBzdG9wLW9wYWNpdHk9Ii4xNCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyZjgwZWQiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZzQiIGN4PSI4OCUiIGN5PSI5NiUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMwZTlkNjMiIHN0b3Atb3BhY2l0eT0iLjE2Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzBlOWQ2MyIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJiYXNlIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmN2ZiZjkiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjZWVmNGYxIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iNDMwIiBoZWlnaHQ9IjkzMiIgZmlsbD0idXJsKCNiYXNlKSIvPgogIDxyZWN0IHdpZHRoPSI0MzAiIGhlaWdodD0iOTMyIiBmaWxsPSJ1cmwoI2cxKSIvPgogIDxyZWN0IHdpZHRoPSI0MzAiIGhlaWdodD0iOTMyIiBmaWxsPSJ1cmwoI2cyKSIvPgogIDxyZWN0IHdpZHRoPSI0MzAiIGhlaWdodD0iOTMyIiBmaWxsPSJ1cmwoI2czKSIvPgogIDxyZWN0IHdpZHRoPSI0MzAiIGhlaWdodD0iOTMyIiBmaWxsPSJ1cmwoI2c0KSIvPgo8L3N2Zz4K') center / cover;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 520px) and (min-height: 760px) {
+  .phone {
+    height: 900px;
+    border-radius: 42px;
+    box-shadow:
+      0 40px 90px rgba(10, 40, 30, 0.28),
+      0 0 0 10px #12211c,
+      0 0 0 11px #2b3d36;
+  }
+}
+.phone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 132px 132px;
+  opacity: 0.55;
+}
+
+.screen {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--nav-h) + 24px);
+}
+.screen.no-nav {
+  padding-bottom: 28px;
+}
+.screen::-webkit-scrollbar {
+  width: 0;
+}
+
+.pad {
+  padding: 0 20px;
+}
+
+/* ---- gradient header ---- */
+.hero {
+  position: relative;
+  background: var(--grad-brand);
+  padding: 18px 20px 30px;
+  border-radius: 0 0 30px 30px;
+  color: #fff;
+  overflow: hidden;
+  box-shadow: var(--shadow-brand);
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MzAgMjYwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS1vcGFjaXR5PSIuMTYiIHN0cm9rZS13aWR0aD0iMS40Ij4KICAgIDxjaXJjbGUgY3g9IjM2MCIgY3k9IjIwIiByPSIxMjAiLz4KICAgIDxjaXJjbGUgY3g9IjM2MCIgY3k9IjIwIiByPSIxNzAiLz4KICAgIDxjaXJjbGUgY3g9IjQwIiBjeT0iMjMwIiByPSI5MCIvPgogICAgPGNpcmNsZSBjeD0iNDAiIGN5PSIyMzAiIHI9IjE0MCIvPgogIDwvZz4KICA8cGF0aCBkPSJNMCAxOTBjOTAgNDAgMTgwLTMwIDI4MCAwczExMCAyMCAxNTAgMTB2NjBIMHoiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iLjA3Ii8+Cjwvc3ZnPgo=') no-repeat center / cover;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 118px 118px;
+  opacity: 0.25;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+.hero > * {
+  position: relative;
+  z-index: 1;
+}
+.hero.tight {
+  padding-bottom: 22px;
+}
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  opacity: 0.9;
+  padding: 2px 2px 12px;
+}
+.status-bar .dots {
+  display: flex;
+  gap: 5px;
+  align-items: flex-end;
+}
+.status-bar .dots i {
+  width: 4px;
+  height: 8px;
+  border-radius: 1px;
+  background: currentColor;
+  display: block;
+  opacity: 0.55;
+}
+.status-bar .dots i:nth-child(2) {
+  height: 11px;
+  opacity: 0.75;
+}
+.status-bar .dots i:nth-child(3) {
+  height: 14px;
+  opacity: 0.9;
+}
+
+.appbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.appbar h1 {
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+.appbar .sub {
+  font-size: 12.5px;
+  opacity: 0.88;
+  margin-top: 2px;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.icon-btn svg {
+  width: 19px;
+  height: 19px;
+}
+.icon-btn.dark {
+  background: #fff;
+  border-color: var(--border);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.greet {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: var(--grad-gold);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #6b4a06;
+  font-size: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  flex: 0 0 48px;
+}
+.greet .hi {
+  font-size: 12.5px;
+  opacity: 0.85;
+}
+.greet .name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  margin-top: 1px;
+}
+
+/* ---- cards ---- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+}
+.card.flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 22px 0 12px;
+}
+.section-head h2 {
+  font-size: 15.5px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.1px;
+}
+.section-head a {
+  font-size: 12.5px;
+  color: var(--brand-2);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.overlap {
+  margin-top: -22px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- stat row ---- */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.stat {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 11px 6px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.stat .n {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+.stat .l {
+  font-size: 9.5px;
+  color: var(--text-dim);
+  margin-top: 5px;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+}
+.stat .bar {
+  height: 3px;
+  border-radius: 2px;
+  margin-top: 8px;
+  opacity: 0.9;
+}
+
+/* ---- fund grid ---- */
+.fund-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.fund {
+  position: relative;
+  border-radius: var(--r-lg);
+  padding: 15px 14px 16px;
+  color: #fff;
+  overflow: hidden;
+  cursor: pointer;
+  border: none;
+  text-align: left;
+  font-family: inherit;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.16s ease;
+  min-height: 136px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.fund:active {
+  transform: scale(0.975);
+}
+.fund::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 100px 100px;
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+.fund::before {
+  content: '';
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  right: -45px;
+  top: -50px;
+  background: rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+}
+.fund > * {
+  position: relative;
+  z-index: 1;
+}
+.fund .ico {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: grid;
+  place-items: center;
+}
+.fund .ico svg {
+  width: 21px;
+  height: 21px;
+}
+.fund .t {
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.1px;
+}
+.fund .d {
+  font-size: 10.5px;
+  opacity: 0.86;
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+.g-brand { background: var(--grad-brand); }
+.g-rose  { background: var(--grad-rose); }
+.g-blue  { background: var(--grad-blue); }
+.g-amber { background: var(--grad-amber); }
+.g-plum  { background: var(--grad-plum); }
+.g-gold  { background: var(--grad-gold); color: #6b4a06; }
+
+/* ---- request list ---- */
+.req {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 13px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 10px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.req:active {
+  transform: scale(0.99);
+}
+.req:hover {
+  border-color: var(--border-strong);
+}
+.req .ico {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+.req .ico svg {
+  width: 20px;
+  height: 20px;
+}
+.req .mid {
+  flex: 1;
+  min-width: 0;
+}
+.req .ttl {
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.1px;
+}
+.req .meta {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-top: 4px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.req .amt {
+  font-size: 13.5px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
+  text-align: right;
+  white-space: nowrap;
+}
+.req .amt small {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-faint);
+  margin-top: 3px;
+}
+
+/* ---- badges / chips ---- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.badge i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.b-requested   { background: rgba(47, 128, 237, 0.12); color: #2069cc; }
+.b-review      { background: rgba(240, 163, 35, 0.15); color: #b57506; }
+.b-accepted    { background: rgba(18, 184, 134, 0.14); color: #0b8c65; }
+.b-transferred { background: rgba(109, 74, 214, 0.13); color: #5a3cc0; }
+.b-rejected    { background: rgba(224, 82, 95, 0.12); color: #c43a47; }
+
+.chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 4px;
+}
+.chips::-webkit-scrollbar {
+  height: 0;
+}
+.chip {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.chip.active {
+  background: var(--grad-brand);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: var(--shadow-brand);
+}
+
+/* ---- progress tracker ---- */
+.track {
+  display: flex;
+  align-items: flex-start;
+  padding: 4px 0;
+}
+.track .step {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+.track .step .dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin: 0 auto 7px;
+  display: grid;
+  place-items: center;
+  background: #eef2f0;
+  color: var(--text-faint);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--border);
+  position: relative;
+  z-index: 2;
+}
+.track .step .dot svg {
+  width: 14px;
+  height: 14px;
+}
+.track .step .lbl {
+  font-size: 10.5px;
+  font-weight: 650;
+  color: var(--text-faint);
+}
+.track .step .when {
+  font-size: 9.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+  opacity: 0.85;
+}
+.track .step::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: -50%;
+  width: 100%;
+  height: 3px;
+  background: #e8eeeb;
+  z-index: 1;
+}
+.track .step:first-child::before {
+  display: none;
+}
+.track .step.done .dot {
+  background: var(--grad-brand);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(14, 157, 99, 0.3);
+}
+.track .step.done .lbl {
+  color: var(--text);
+}
+.track .step.done::before {
+  background: var(--grad-brand);
+}
+.track .step.current .dot {
+  background: var(--grad-gold);
+  color: #6b4a06;
+  box-shadow: 0 0 0 4px rgba(224, 165, 43, 0.18);
+}
+.track .step.current .lbl {
+  color: var(--text);
+}
+
+/* vertical timeline */
+.timeline {
+  position: relative;
+  padding-left: 34px;
+}
+.timeline .ev {
+  position: relative;
+  padding-bottom: 20px;
+}
+.timeline .ev:last-child {
+  padding-bottom: 0;
+}
+.timeline .ev::before {
+  content: '';
+  position: absolute;
+  left: -24px;
+  top: 22px;
+  bottom: -2px;
+  width: 2px;
+  background: #e8eeeb;
+}
+.timeline .ev:last-child::before {
+  display: none;
+}
+.timeline .ev .mark {
+  position: absolute;
+  left: -34px;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #eef2f0;
+  color: var(--text-faint);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--border);
+}
+.timeline .ev .mark svg {
+  width: 11px;
+  height: 11px;
+}
+.timeline .ev.on .mark {
+  background: var(--grad-brand);
+  color: #fff;
+  box-shadow: none;
+}
+.timeline .ev .t {
+  font-size: 13.5px;
+  font-weight: 650;
+}
+.timeline .ev .d {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  margin-top: 3px;
+  line-height: 1.45;
+}
+.timeline .ev.off .t {
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.pbar {
+  height: 7px;
+  border-radius: 99px;
+  background: #e9efec;
+  overflow: hidden;
+}
+.pbar span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--grad-brand);
+  transition: width 0.5s ease;
+}
+
+/* ---- forms ---- */
+.field {
+  margin-bottom: 14px;
+}
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  letter-spacing: 0.1px;
+}
+.field label .req-star {
+  color: var(--danger);
+}
+.input,
+select.input,
+textarea.input {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--border);
+  background: #fff;
+  font-size: 14.5px;
+  font-family: inherit;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+}
+.input::placeholder {
+  color: #adbab4;
+}
+.input:focus,
+select.input:focus,
+textarea.input:focus {
+  border-color: var(--brand-1);
+  box-shadow: 0 0 0 4px rgba(20, 184, 146, 0.13);
+}
+.input.err {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 4px rgba(224, 82, 95, 0.1);
+}
+textarea.input {
+  resize: none;
+  min-height: 86px;
+  line-height: 1.5;
+}
+select.input {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c6f67' stroke-width='2.2' stroke-linecap='round'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-size: 17px;
+  padding-right: 40px;
+}
+.err-msg {
+  font-size: 11.5px;
+  color: var(--danger);
+  margin-top: 5px;
+  font-weight: 600;
+}
+
+.row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.input-icon {
+  position: relative;
+}
+.input-icon > svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.input-icon .input {
+  padding-left: 42px;
+}
+.input-icon .eye {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.input-icon .eye svg {
+  position: static;
+  transform: none;
+  width: 18px;
+  height: 18px;
+}
+
+.amount-wrap {
+  position: relative;
+}
+.amount-wrap .cur {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.amount-wrap .input {
+  padding-left: 52px;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
+}
+
+.quick-amounts {
+  display: flex;
+  gap: 7px;
+  margin-top: 9px;
+  flex-wrap: wrap;
+}
+.quick-amounts button {
+  flex: 1;
+  min-width: 68px;
+  padding: 8px 6px;
+  border-radius: 11px;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.quick-amounts button:hover {
+  border-color: var(--brand-1);
+  color: var(--brand-2);
+}
+
+/* segmented control */
+.seg {
+  display: flex;
+  gap: 6px;
+  background: #eef3f1;
+  padding: 4px;
+  border-radius: 14px;
+}
+.seg button {
+  flex: 1;
+  padding: 9px 4px;
+  border: none;
+  border-radius: 11px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.seg button.active {
+  background: #fff;
+  color: var(--brand-3);
+  box-shadow: var(--shadow-sm);
+}
+
+/* upload */
+.upload {
+  display: block;
+  border: 1.8px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--card-soft);
+  padding: 18px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.upload:hover {
+  border-color: var(--brand-1);
+  background: rgba(20, 184, 146, 0.05);
+}
+.upload .u-ico {
+  width: 44px;
+  height: 44px;
+  border-radius: 15px;
+  margin: 0 auto 9px;
+  background: var(--grad-brand);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-brand);
+}
+.upload .u-ico svg {
+  width: 21px;
+  height: 21px;
+}
+.upload .u-t {
+  font-size: 13px;
+  font-weight: 650;
+}
+.upload .u-d {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 3px;
+}
+.upload input[type='file'] {
+  display: none;
+}
+.upload.small {
+  padding: 14px 10px;
+}
+.upload.small .u-ico {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  margin-bottom: 7px;
+}
+.upload.small .u-ico svg {
+  width: 17px;
+  height: 17px;
+}
+.upload.small .u-t {
+  font-size: 12px;
+}
+
+.filelist {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fileitem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 9px 11px;
+}
+.fileitem .fi {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 10px;
+  background: rgba(18, 184, 134, 0.12);
+  color: var(--brand-2);
+  display: grid;
+  place-items: center;
+}
+.fileitem .fi svg {
+  width: 15px;
+  height: 15px;
+}
+.fileitem .fmid {
+  flex: 1;
+  min-width: 0;
+}
+.fileitem .fn {
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fileitem .fs {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+.fileitem .rm {
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+}
+.fileitem .rm svg {
+  width: 16px;
+  height: 16px;
+}
+.fileitem .rm:hover {
+  color: var(--danger);
+}
+.badge svg {
+  width: 12px;
+  height: 12px;
+}
+.fileitem img.thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  object-fit: cover;
+  flex: 0 0 32px;
+}
+
+/* ---- buttons ---- */
+.btn {
+  width: 100%;
+  padding: 15px 18px;
+  border: none;
+  border-radius: var(--r-md);
+  background: var(--grad-brand);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.1px;
+  cursor: pointer;
+  box-shadow: var(--shadow-brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.14s ease, filter 0.14s;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+}
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 110px 110px;
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+.btn:active {
+  transform: scale(0.985);
+  filter: brightness(0.97);
+}
+.btn svg,
+.btn span {
+  position: relative;
+  z-index: 1;
+}
+.btn svg {
+  width: 18px;
+  height: 18px;
+}
+.btn.gold {
+  background: var(--grad-gold);
+  color: #6b4a06;
+  box-shadow: 0 10px 24px rgba(224, 165, 43, 0.32);
+}
+.btn.ghost {
+  background: #fff;
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  box-shadow: none;
+}
+.btn.ghost::after,
+.btn.danger-ghost::after,
+.btn.plain::after {
+  display: none;
+}
+.btn.danger-ghost {
+  background: #fff;
+  color: var(--danger);
+  border: 1.5px solid rgba(224, 82, 95, 0.3);
+  box-shadow: none;
+}
+.btn.danger {
+  background: linear-gradient(135deg, #ff8a94 0%, #d33f4d 100%);
+  box-shadow: 0 10px 24px rgba(224, 82, 95, 0.28);
+}
+.btn.sm {
+  padding: 11px 14px;
+  font-size: 13.5px;
+  border-radius: 13px;
+}
+.btn[disabled] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+.btn-row {
+  display: flex;
+  gap: 10px;
+}
+
+.link {
+  color: var(--brand-2);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+/* spinner */
+.spin {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 2.2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: spin 0.7s linear infinite;
+  position: relative;
+  z-index: 1;
+}
+.spin.dark {
+  border-color: rgba(16, 32, 26, 0.2);
+  border-top-color: var(--brand-2);
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- bottom nav ---- */
+.nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  height: var(--nav-h);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 8px 6px;
+}
+.nav a {
+  flex: 1;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-faint);
+  font-size: 10.5px;
+  font-weight: 650;
+  padding-top: 8px;
+  transition: color 0.15s;
+}
+.nav a svg {
+  width: 21px;
+  height: 21px;
+}
+.nav a.on {
+  color: var(--brand-2);
+}
+.nav a.on .nav-ico {
+  background: rgba(18, 184, 134, 0.12);
+}
+.nav .nav-ico {
+  width: 40px;
+  height: 26px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s;
+}
+.nav .fab-wrap {
+  flex: 0 0 66px;
+  display: flex;
+  justify-content: center;
+}
+.fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 20px;
+  background: var(--grad-brand);
+  color: #fff;
+  border: 4px solid #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-brand);
+  margin-top: -26px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.fab:active {
+  transform: scale(0.94);
+}
+.fab svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* ---- sheet / dialog ---- */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: rgba(10, 30, 24, 0.48);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  background: #fff;
+  border-radius: 30px 30px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.22, 0.9, 0.3, 1);
+  max-height: 93%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -14px 40px rgba(10, 40, 30, 0.2);
+}
+.sheet.open {
+  transform: translateY(0);
+}
+.sheet .grab {
+  width: 42px;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--border-strong);
+  margin: 11px auto 4px;
+  flex: 0 0 auto;
+}
+.sheet .sheet-body {
+  overflow-y: auto;
+  padding: 8px 20px 22px;
+}
+.sheet .sheet-body::-webkit-scrollbar {
+  width: 0;
+}
+
+.sheet-head {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  padding: 6px 0 16px;
+}
+.sheet-head .ico {
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
+  border-radius: 17px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+.sheet-head .ico svg {
+  width: 24px;
+  height: 24px;
+}
+.sheet-head h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 750;
+  letter-spacing: -0.2px;
+}
+.sheet-head p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.dialog {
+  position: absolute;
+  z-index: 50;
+  left: 22px;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-46%) scale(0.94);
+  background: #fff;
+  border-radius: var(--r-xl);
+  padding: 26px 22px 22px;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.26s cubic-bezier(0.22, 0.9, 0.3, 1);
+  box-shadow: 0 24px 60px rgba(10, 40, 30, 0.28);
+}
+.dialog.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+}
+.dialog .big-ico {
+  width: 72px;
+  height: 72px;
+  border-radius: 26px;
+  margin: 0 auto 16px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--grad-brand);
+  box-shadow: var(--shadow-brand);
+}
+.dialog .big-ico svg {
+  width: 34px;
+  height: 34px;
+}
+.dialog h3 {
+  margin: 0 0 7px;
+  font-size: 19px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
+}
+.dialog p {
+  margin: 0 0 20px;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* ---- misc ---- */
+.kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.kv:last-child {
+  border-bottom: none;
+}
+.kv .k {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  flex: 0 0 auto;
+}
+.kv .v {
+  font-size: 13.5px;
+  font-weight: 650;
+  text-align: right;
+  word-break: break-word;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 15px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  margin-bottom: 9px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s;
+  width: 100%;
+  font-family: inherit;
+  text-align: left;
+}
+.list-row:hover {
+  border-color: var(--border-strong);
+}
+.list-row .li {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: rgba(18, 184, 134, 0.1);
+  color: var(--brand-2);
+}
+.list-row .li svg {
+  width: 18px;
+  height: 18px;
+}
+.list-row .lmid {
+  flex: 1;
+  min-width: 0;
+}
+.list-row .lt {
+  font-size: 14px;
+  font-weight: 620;
+}
+.list-row .ld {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+  font-weight: 500;
+}
+.list-row .chev {
+  color: var(--text-faint);
+  display: grid;
+  place-items: center;
+}
+.list-row .chev svg {
+  width: 17px;
+  height: 17px;
+}
+
+.empty {
+  text-align: center;
+  padding: 40px 26px;
+}
+.empty .e-ico {
+  width: 78px;
+  height: 78px;
+  border-radius: 28px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, rgba(20, 184, 146, 0.14), rgba(224, 165, 43, 0.14));
+  display: grid;
+  place-items: center;
+  color: var(--brand-2);
+}
+.empty .e-ico svg {
+  width: 34px;
+  height: 34px;
+}
+.empty h3 {
+  margin: 0 0 6px;
+  font-size: 15.5px;
+  font-weight: 700;
+}
+.empty p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.toast {
+  position: fixed;
+  z-index: 90;
+  left: 50%;
+  transform: translate(-50%, 140%);
+  bottom: 30px;
+  width: min(390px, calc(100vw - 40px));
+  background: #10201a;
+  color: #fff;
+  border-radius: var(--r-md);
+  padding: 13px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.22, 0.9, 0.3, 1);
+  box-shadow: 0 12px 30px rgba(10, 40, 30, 0.3);
+}
+.toast.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+.toast svg {
+  width: 18px;
+  height: 18px;
+  color: var(--brand-1);
+  flex: 0 0 18px;
+}
+.toast.bad svg {
+  color: #ff9aa3;
+}
+
+.muted {
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.center { text-align: center; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-20 { margin-top: 20px; }
+.mt-24 { margin-top: 24px; }
+.mb-0 { margin-bottom: 0; }
+
+.steps {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.steps i {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.34);
+  flex: 1;
+  transition: background 0.3s;
+}
+.steps i.on {
+  background: #fff;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.4s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+.rise-2 { animation-delay: 0.06s; }
+.rise-3 { animation-delay: 0.12s; }
+.rise-4 { animation-delay: 0.18s; }
+
+/* ===========================================================================
+   AUTH SCREENS
+   =========================================================================== */
+.auth-hero {
+  position: relative;
+  background: var(--grad-brand);
+  color: #fff;
+  padding: 34px 24px 46px;
+  border-radius: 0 0 36px 36px;
+  overflow: hidden;
+  text-align: center;
+  box-shadow: var(--shadow-brand);
+}
+.auth-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MzAgMjYwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS1vcGFjaXR5PSIuMTYiIHN0cm9rZS13aWR0aD0iMS40Ij4KICAgIDxjaXJjbGUgY3g9IjM2MCIgY3k9IjIwIiByPSIxMjAiLz4KICAgIDxjaXJjbGUgY3g9IjM2MCIgY3k9IjIwIiByPSIxNzAiLz4KICAgIDxjaXJjbGUgY3g9IjQwIiBjeT0iMjMwIiByPSI5MCIvPgogICAgPGNpcmNsZSBjeD0iNDAiIGN5PSIyMzAiIHI9IjE0MCIvPgogIDwvZz4KICA8cGF0aCBkPSJNMCAxOTBjOTAgNDAgMTgwLTMwIDI4MCAwczExMCAyMCAxNTAgMTB2NjBIMHoiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iLjA3Ii8+Cjwvc3ZnPgo=') no-repeat center / cover;
+  opacity: 0.9;
+}
+.auth-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 120px 120px;
+  opacity: 0.28;
+  mix-blend-mode: overlay;
+}
+.auth-hero > * {
+  position: relative;
+  z-index: 1;
+}
+.auth-hero .mark {
+  width: 74px;
+  height: 74px;
+  margin: 0 auto 14px;
+  border-radius: 26px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(5, 45, 30, 0.3);
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  background: #fff;
+}
+.auth-hero .mark img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.auth-hero h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -0.4px;
+  line-height: 1.25;
+}
+.auth-hero p {
+  margin: 7px 0 0;
+  font-size: 12.5px;
+  opacity: 0.9;
+  letter-spacing: 0.3px;
+}
+
+/* ===========================================================================
+   ADMIN PORTAL (desktop)
+   =========================================================================== */
+.admin-body {
+  background: #f2f6f4;
+  display: block;
+}
+.admin-body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 600px at 12% -5%, rgba(18, 184, 134, 0.13), transparent 60%),
+    radial-gradient(800px 600px at 95% 10%, rgba(224, 165, 43, 0.1), transparent 60%);
+}
+.admin-body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 160px 160px;
+  opacity: 0.4;
+}
+
+.admin-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  min-height: 100vh;
+}
+
+.side {
+  background: linear-gradient(180deg, #0d1f19 0%, #0b3b2a 55%, #0a4a33 100%);
+  color: #fff;
+  padding: 22px 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.side::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 130px 130px;
+  opacity: 0.18;
+  pointer-events: none;
+}
+.side > * {
+  position: relative;
+  z-index: 1;
+}
+.side .brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 4px 6px 22px;
+}
+.side .brand img {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+}
+.side .brand .bt {
+  font-size: 13.5px;
+  font-weight: 750;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+.side .brand .bs {
+  font-size: 10.5px;
+  opacity: 0.62;
+  margin-top: 2px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.side nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+.side .nav-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  opacity: 0.45;
+  padding: 16px 10px 7px;
+  font-weight: 700;
+}
+.side nav a {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 12px;
+  border-radius: 13px;
+  color: rgba(255, 255, 255, 0.74);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.side nav a svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+.side nav a:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.side nav a.on {
+  background: var(--grad-brand);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(14, 157, 99, 0.35);
+}
+.side nav a .count {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 99px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.side .side-foot {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 14px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.side .side-foot .av {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--grad-gold);
+  color: #6b4a06;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 13px;
+  flex: 0 0 36px;
+}
+.side .side-foot .who {
+  flex: 1;
+  min-width: 0;
+}
+.side .side-foot .wn {
+  font-size: 12.5px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.side .side-foot .we {
+  font-size: 10.5px;
+  opacity: 0.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.side .side-foot .out {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.side .side-foot .out:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.side .side-foot .out svg {
+  width: 16px;
+  height: 16px;
+}
+
+.main {
+  padding: 26px 30px 46px;
+  min-width: 0;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.topbar h1 {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 750;
+  letter-spacing: -0.5px;
+}
+.topbar .crumb {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  gap: 14px;
+}
+.kpi {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 17px 18px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.kpi .kico {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  margin-bottom: 13px;
+  box-shadow: var(--shadow-sm);
+}
+.kpi .kico svg {
+  width: 19px;
+  height: 19px;
+}
+.kpi .kn {
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.kpi .kl {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  font-weight: 600;
+}
+.kpi .kedge {
+  position: absolute;
+  right: -30px;
+  top: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  opacity: 0.08;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.panel-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.panel-head .ph-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+.panel-body {
+  padding: 20px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.search {
+  position: relative;
+  flex: 1;
+  min-width: 210px;
+}
+.search svg {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 17px;
+  height: 17px;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.search input {
+  width: 100%;
+  padding: 10px 14px 10px 39px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  font-family: inherit;
+  font-size: 13.5px;
+  outline: none;
+  background: #fff;
+  color: var(--text);
+}
+.search input:focus {
+  border-color: var(--brand-1);
+  box-shadow: 0 0 0 4px rgba(20, 184, 146, 0.12);
+}
+
+table.grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+table.grid th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-faint);
+  font-weight: 700;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card-soft);
+  white-space: nowrap;
+}
+table.grid td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+table.grid tbody tr {
+  transition: background 0.12s;
+}
+table.grid tbody tr:hover {
+  background: var(--card-soft);
+}
+table.grid tbody tr:last-child td {
+  border-bottom: none;
+}
+table.grid .who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+table.grid .who .av {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  font-weight: 750;
+  font-size: 12px;
+  background: linear-gradient(135deg, rgba(20, 184, 146, 0.16), rgba(224, 165, 43, 0.2));
+  color: var(--brand-3);
+}
+table.grid .who .wn {
+  font-weight: 650;
+}
+table.grid .who .we {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+table.grid .ref {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--brand-3);
+}
+table.grid .num {
+  font-weight: 750;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+table.grid .rowlink {
+  color: var(--brand-2);
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 12.5px;
+}
+table.grid .rowlink:hover {
+  text-decoration: underline;
+}
+
+.fundtag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 620;
+  white-space: nowrap;
+}
+.fundtag .fdot {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  flex: 0 0 24px;
+}
+.fundtag .fdot svg {
+  width: 13px;
+  height: 13px;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 1080px) {
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+  .admin-shell {
+    grid-template-columns: 76px 1fr;
+  }
+  .side .brand .bt,
+  .side .brand .bs,
+  .side nav a span,
+  .side .nav-label,
+  .side .side-foot .who {
+    display: none;
+  }
+  .side nav a {
+    justify-content: center;
+  }
+  .side .side-foot {
+    justify-content: center;
+  }
+  .main {
+    padding: 20px 18px 40px;
+  }
+}
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+.bar-row .bl {
+  flex: 0 0 118px;
+  font-size: 12.5px;
+  font-weight: 620;
+}
+.bar-row .btrack {
+  flex: 1;
+  height: 9px;
+  border-radius: 99px;
+  background: #eef3f1;
+  overflow: hidden;
+}
+.bar-row .btrack span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+}
+.bar-row .bv {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  min-width: 34px;
+  text-align: right;
+}
+
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.doc {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--card-soft);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.doc:hover {
+  border-color: var(--brand-1);
+  transform: translateY(-2px);
+}
+.doc .dprev {
+  height: 104px;
+  background: #eef3f1;
+  display: grid;
+  place-items: center;
+  color: var(--text-faint);
+  overflow: hidden;
+}
+.doc .dprev img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.doc .dprev svg {
+  width: 28px;
+  height: 28px;
+}
+.doc .dmeta {
+  padding: 9px 11px;
+}
+.doc .dn {
+  font-size: 12px;
+  font-weight: 620;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.doc .ds {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+
+.admin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.note {
+  background: var(--card-soft);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold-2);
+  border-radius: var(--r-sm);
+  padding: 11px 13px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 20px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.pager .pbtns {
+  display: flex;
+  gap: 8px;
+}
+.pager button {
+  padding: 7px 13px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 620;
+  cursor: pointer;
+  color: var(--text);
+}
+.pager button:hover:not(:disabled) {
+  border-color: var(--brand-1);
+  color: var(--brand-2);
+}
+.pager button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.admin-btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  background: var(--grad-brand);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 680;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-brand);
+  text-decoration: none;
+  transition: transform 0.14s;
+}
+.admin-btn:active {
+  transform: scale(0.98);
+}
+.admin-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.admin-btn.ghost {
+  background: #fff;
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  box-shadow: none;
+}
+.admin-btn.gold {
+  background: var(--grad-gold);
+  color: #6b4a06;
+  box-shadow: 0 8px 20px rgba(224, 165, 43, 0.3);
+}
+.admin-btn.plum {
+  background: var(--grad-plum);
+  box-shadow: 0 8px 20px rgba(109, 74, 214, 0.28);
+}
+.admin-btn.red {
+  background: #fff;
+  color: var(--danger);
+  border: 1.5px solid rgba(224, 82, 95, 0.3);
+  box-shadow: none;
+}
+.admin-btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* admin modal */
+.amodal-back {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(10, 30, 24, 0.5);
+  backdrop-filter: blur(3px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.amodal {
+  background: #fff;
+  border-radius: var(--r-xl);
+  width: min(440px, 100%);
+  padding: 24px;
+  box-shadow: 0 30px 70px rgba(10, 40, 30, 0.3);
+  animation: rise 0.25s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+.amodal h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
+}
+.amodal p.sub {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* ===========================================================================
+   BILINGUAL — English (LTR) / Urdu (RTL)
+   Only direction-sensitive rules live here; everything else is shared.
+   =========================================================================== */
+
+/* Urdu typography: Nastaliq needs far more line height than Latin faces. */
+:root[lang='ur'] body,
+[lang='ur'] {
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Inter', sans-serif;
+}
+:root[lang='ur'] {
+  line-height: 2.05;
+}
+:root[lang='ur'] .input,
+:root[lang='ur'] textarea.input,
+:root[lang='ur'] select.input {
+  line-height: 2.1;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+:root[lang='ur'] .badge {
+  letter-spacing: 0;
+  text-transform: none;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+:root[lang='ur'] .stat .l,
+:root[lang='ur'] .track .step .lbl,
+:root[lang='ur'] .nav a {
+  line-height: 1.6;
+}
+:root[lang='ur'] h1,
+:root[lang='ur'] h2,
+:root[lang='ur'] h3 {
+  letter-spacing: 0;
+  line-height: 1.75;
+}
+
+/* Amounts, references and dates stay Latin and stay LTR inside Urdu text. */
+.num,
+.ref,
+.amt,
+.amount-wrap .input,
+.quick-amounts button {
+  font-family: 'Inter', sans-serif;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* ---- direction flips ---- */
+[dir='rtl'] .input-icon > svg {
+  left: auto;
+  right: 14px;
+}
+[dir='rtl'] .input-icon .input {
+  padding-left: 14px;
+  padding-right: 42px;
+}
+[dir='rtl'] .input-icon .eye {
+  right: auto;
+  left: 10px;
+}
+[dir='rtl'] .amount-wrap .cur {
+  left: auto;
+  right: 14px;
+}
+[dir='rtl'] .amount-wrap .input {
+  padding-left: 14px;
+  padding-right: 52px;
+  text-align: right;
+}
+[dir='rtl'] select.input {
+  background-position: left 13px center;
+  padding-right: 14px;
+  padding-left: 40px;
+}
+[dir='rtl'] .req .amt,
+[dir='rtl'] .kv .v {
+  text-align: left;
+}
+[dir='rtl'] .timeline {
+  padding-left: 0;
+  padding-right: 34px;
+}
+[dir='rtl'] .timeline .ev::before {
+  left: auto;
+  right: -24px;
+}
+[dir='rtl'] .timeline .ev .mark {
+  left: auto;
+  right: -34px;
+}
+[dir='rtl'] .track .step::before {
+  left: auto;
+  right: -50%;
+}
+[dir='rtl'] .fund::before {
+  right: auto;
+  left: -45px;
+}
+[dir='rtl'] .kpi .kedge {
+  right: auto;
+  left: -30px;
+}
+[dir='rtl'] .note {
+  border-left: 1px solid var(--border);
+  border-right: 3px solid var(--gold-2);
+}
+[dir='rtl'] .side nav a .count {
+  margin-left: 0;
+  margin-right: auto;
+}
+[dir='rtl'] table.grid th,
+[dir='rtl'] table.grid td {
+  text-align: right;
+}
+/* chevrons point the way the reader travels */
+[dir='rtl'] .list-row .chev svg,
+[dir='rtl'] .btn svg.flip,
+[dir='rtl'] .admin-btn svg.flip {
+  transform: scaleX(-1);
+}
+
+/* ---- language switch ---- */
+.lang-toggle {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  flex: 0 0 auto;
+}
+.lang-toggle[data-pending] {
+  opacity: 0.6;
+}
+.lang-toggle button {
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  line-height: 1.5;
+  transition: background 0.15s, color 0.15s;
+}
+.lang-toggle button[lang='ur'] {
+  font-family: 'Noto Nastaliq Urdu', serif;
+  font-size: 11px;
+  padding-bottom: 7px;
+}
+.lang-toggle button.on {
+  background: #fff;
+  color: var(--brand-3);
+}
+.lang-toggle[data-tone='dark'] {
+  background: #fff;
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.lang-toggle[data-tone='dark'] button {
+  color: var(--text-dim);
+}
+.lang-toggle[data-tone='dark'] button.on {
+  background: var(--grad-brand);
+  color: #fff;
+}
+
+
+/* ---- prototype chrome ---- */
+body { background: #e7efeb; }
+.proto {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 26px 16px;
+  position: relative;
+  z-index: 1;
+}
+.proto-inner { display: flex; gap: 34px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.proto-copy { max-width: 300px; }
+.proto-copy .eyebrow {
+  font-size: 10.5px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+  color: #b8801a; font-family: 'Inter', sans-serif;
+}
+.proto-copy h1 {
+  font-size: 27px; font-weight: 800; letter-spacing: -.8px; margin: 12px 0 0; line-height: 1.15;
+  color: #10201a; font-family: 'Inter', sans-serif;
+}
+.proto-copy p {
+  font-size: 13.5px; line-height: 1.65; color: #5c6f67; margin: 12px 0 0; font-family: 'Inter', sans-serif;
+}
+.proto-copy ol {
+  margin: 18px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.9; color: #5c6f67;
+  font-family: 'Inter', sans-serif;
+}
+.proto-copy .reset {
+  margin-top: 20px; display: inline-flex; align-items: center; gap: 7px;
+  background: #fff; border: 1.5px solid #e3ebe7; border-radius: 12px;
+  padding: 9px 15px; font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 650;
+  color: #10201a; cursor: pointer;
+}
+.proto-copy .reset:hover { border-color: #14b892; color: #0e9d63; }
+.proto-stage {
+  width: 400px; height: 830px;
+  border-radius: 44px;
+  overflow: hidden;
+  box-shadow: 0 40px 90px rgba(10, 40, 30, .3), 0 0 0 10px #12211c, 0 0 0 11px #35493f;
+  position: relative;
+  background: #eef4f1;
+  flex: 0 0 auto;
+}
+.proto-stage .phone { max-width: none; width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
+@media (max-width: 900px) {
+  .proto-copy { max-width: 400px; text-align: center; }
+  .proto-copy ol { text-align: left; }
+  .proto-stage { width: 100%; max-width: 400px; height: 760px; }
+}
+
+/* only one screen at a time */
+.scr { display: none; }
+.scr.on { display: block; }
+[hidden] { display: none !important; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-5.5h5V20"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 9h8M8 13h8M8 17h4"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20c0-3.6 3.4-6 7.5-6s7.5 2.4 7.5 6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M2.8 20c0-3.3 2.9-5.6 6.2-5.6s6.2 2.3 6.2 5.6"/><path d="M16.5 5.2a3.4 3.4 0 0 1 0 6.6M17.5 14.8c2.3.6 3.9 2.3 3.9 5.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.8v.6"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7.5 8 5 8-5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10.5" rx="3"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3.2"/></symbol>
+  <symbol id="i-arrowRight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-chevL" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-chevR" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 7"/></symbol>
+  <symbol id="i-checkCircle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.4l2.8 2.8L16 9.8"/></symbol>
+  <symbol id="i-xCircle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.3l3.2 2"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 9.8 21 3Z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18"/><circle cx="17" cy="14.5" r="1.3"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M7.5 8.5 12 4l4.5 4.5"/><path d="M4 15v3.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V15"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5H7A2 2 0 0 0 5 5.5v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9l-5.5-5.5Z"/><path d="M13.5 3.5V9H19"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m4.5 17 4.2-4 3.3 3 2.8-2.6 4.7 4.4"/></symbol>
+  <symbol id="i-idcard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="3"/><circle cx="8.5" cy="11" r="2.2"/><path d="M5 16.2c.6-1.5 2-2.2 3.5-2.2s2.9.7 3.5 2.2"/><path d="M14.5 10h4M14.5 13.5h4"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 15h3"/></symbol>
+  <symbol id="i-health" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-7.5-4.6-7.5-10A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 7.5 3.5c0 5.4-7.5 10-7.5 10Z"/><path d="M8.5 12h2l1-2 1.5 4 1-2h2"/></symbol>
+  <symbol id="i-basket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16l-1.4 9.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8L4 9Z"/><path d="M9 9 12 3l3 6"/><path d="M10 13v3M14 13v3"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5.5c0 4.4 3 8 7 9.5 4-1.5 7-5.1 7-9.5V6l-7-3Z"/><path d="M9.2 12.2 11.2 14.2 15 10.4"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13.5 6 5.5h12l2.5 8v5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-5Z"/><path d="M3.5 13.5h4l1 2.5h7l1-2.5h4"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="2.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2.2"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 16.5 9 11l3.5 3.5L20 7"/><path d="M15.5 7H20v4.5"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V20a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.56V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.56 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.03Z"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 4.5H6A2 2 0 0 0 4 6.5v11a2 2 0 0 0 2 2h3.5"/><path d="M15 8l4 4-4 4"/><path d="M19 12H9.5"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h3l1.6 4-2 1.4a12 12 0 0 0 5.5 5.5l1.4-2 4 1.6v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4 5.7 2 2 0 0 1 6 3.5Z"/></symbol>
+  <symbol id="i-battery" viewBox="0 0 22 11" fill="none"><rect x=".6" y=".6" width="17" height="9.8" rx="2.6" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="13" height="7" rx="1.6" fill="currentColor"/><path d="M19.4 4v3a1.9 1.9 0 0 0 0-3Z" fill="currentColor" opacity=".5"/></symbol>
+</defs></svg>
+
+<div class="stage-bg"></div>
+<div class="proto">
+  <div class="proto-inner">
+
+    <div class="proto-copy">
+      <div class="eyebrow">Clickable prototype</div>
+      <h1>Subaidar Hasnain Foundation</h1>
+      <p>Tap through the whole member journey. Nothing is saved — it resets when you reload.</p>
+      <ol>
+        <li>Sign in (any details work)</li>
+        <li>Tap a fund on the dashboard</li>
+        <li>Confirm, enter an amount, attach a bill</li>
+        <li>Watch it appear under Requests</li>
+      </ol>
+      <p style="margin-top:16px"><strong style="color:#10201a">EN / اردو</strong> switches the whole app, including right-to-left layout.</p>
+      <button class="reset" onclick="location.reload()">↻ Start over</button>
+    </div>
+
+    <div class="proto-stage">
+      <div class="phone">
+
+        <!-- ================= LOGIN ================= -->
+        <div class="scr on" id="s-login">
+          <div class="screen no-nav">
+            <div class="auth-hero">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div style="display:flex;justify-content:flex-end;margin-bottom:6px"><span id="lang-1"></span></div>
+              <div class="mark"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NiA5NiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImxnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMxNGI4OTIiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1NSUiIHN0b3AtY29sb3I9IiMwZTlkNjMiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMGI3YTRlIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJsZ29sZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZmZkOTc3Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2UwYTUyYiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9Ijg4IiBoZWlnaHQ9Ijg4IiByeD0iMjYiIGZpbGw9InVybCgjbGcpIi8+CiAgPHBhdGggZD0iTTQ4IDI0IDU4IDQwIDc2IDQwIDY0IDU0IDcwIDcyIDQ4IDYyIDI2IDcyIDMyIDU0IDIwIDQwIDM4IDQwWiIgZmlsbD0idXJsKCNsZ29sZCkiIGZpbGwtb3BhY2l0eT0iLjk1Ii8+CiAgPHBhdGggZD0iTTQ4IDQyYy02IDAtMTAgNC0xMCA5IDAgOSAxMCAxMyAxMCAxM3MxMC00IDEwLTEzYzAtNS00LTktMTAtOXoiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iLjkyIi8+Cjwvc3ZnPgo=" alt=""></div>
+              <h1 data-t="common.appName"></h1>
+              <p data-t="common.tagline"></p>
+            </div>
+            <div class="pad mt-24">
+              <h2 style="font-size:20px;font-weight:750;margin:0 0 5px;letter-spacing:-.4px" data-t="login.title"></h2>
+              <p class="muted" style="margin:0 0 20px" data-t="login.lede"></p>
+              <div class="field">
+                <label data-t="login.email"></label>
+                <div class="input-icon"><svg><use href="#i-mail"/></svg>
+                  <input class="input" type="email" dir="ltr" value="fatima.bibi@gmail.com">
+                </div>
+              </div>
+              <div class="field">
+                <label data-t="login.password"></label>
+                <div class="input-icon"><svg><use href="#i-lock"/></svg>
+                  <input class="input" type="password" dir="ltr" value="demo1234">
+                </div>
+              </div>
+              <button class="btn mt-8" onclick="go('s-home')"><svg class="flip"><use href="#i-arrowRight"/></svg><span data-t="login.submit"></span></button>
+              <p class="center muted mt-20" style="font-size:13.5px">
+                <span data-t="login.newHere"></span>
+                <a class="link" onclick="go('s-reg')" style="cursor:pointer" data-t="login.createAccount"></a>
+              </p>
+              <div class="note mt-24"><strong style="color:var(--text)" data-t="login.helpTitle"></strong> <span data-t="login.helpBody"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= REGISTER ================= -->
+        <div class="scr" id="s-reg">
+          <div class="screen no-nav">
+            <div class="hero tight">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="appbar">
+                <button class="icon-btn" onclick="regBack()"><svg class="flip"><use href="#i-chevL"/></svg></button>
+                <div style="flex:1"><h1 data-t="register.title"></h1><div class="sub" id="reg-step"></div></div>
+                <span id="lang-2"></span>
+              </div>
+              <div class="steps mt-16"><i class="on"></i><i id="dot2"></i><i id="dot3"></i></div>
+            </div>
+
+            <div class="pad mt-24">
+              <!-- step 1 -->
+              <div id="rs1">
+                <div class="field">
+                  <label><span data-t="register.fullName"></span> <span class="req-star">*</span></label>
+                  <div class="input-icon"><svg><use href="#i-user"/></svg><input class="input" data-tp="register.fullNameHint" value="Fatima Bibi"></div>
+                </div>
+                <div class="field">
+                  <label><span data-t="register.gender"></span> <span class="req-star">*</span></label>
+                  <div class="seg">
+                    <button onclick="pickSeg(this)" data-t="register.male"></button>
+                    <button class="active" onclick="pickSeg(this)" data-t="register.female"></button>
+                    <button onclick="pickSeg(this)" data-t="register.other"></button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label><span data-t="register.age"></span> <span class="req-star">*</span></label>
+                  <input class="input" type="number" value="41">
+                </div>
+              </div>
+
+              <!-- step 2 -->
+              <div id="rs2" hidden>
+                <div class="row-2">
+                  <div class="field">
+                    <label><span data-t="register.country"></span> <span class="req-star">*</span></label>
+                    <select class="input"><option>Pakistan</option><option>Saudi Arabia</option><option>United Arab Emirates</option></select>
+                  </div>
+                  <div class="field">
+                    <label><span data-t="register.city"></span> <span class="req-star">*</span></label>
+                    <input class="input" value="Lahore">
+                  </div>
+                </div>
+                <div class="field">
+                  <label><span data-t="register.email"></span> <span class="req-star">*</span></label>
+                  <div class="input-icon"><svg><use href="#i-mail"/></svg><input class="input" dir="ltr" value="fatima.bibi@gmail.com"></div>
+                </div>
+                <div class="field">
+                  <label><span data-t="register.mobile"></span> <span class="req-star">*</span></label>
+                  <div class="input-icon"><svg><use href="#i-phone"/></svg><input class="input" dir="ltr" value="+92 301 4477210"></div>
+                </div>
+              </div>
+
+              <!-- step 3 -->
+              <div id="rs3" hidden>
+                <div class="field">
+                  <label><span data-t="register.cnic"></span> <span class="req-star">*</span></label>
+                  <div class="upload" onclick="addCnic()">
+                    <div class="u-ico"><svg><use href="#i-idcard" id="cnic-ico"/></svg></div>
+                    <div class="u-t" data-t="register.cnicUpload" id="cnic-t"></div>
+                    <div class="u-d" data-t="register.cnicHint"></div>
+                  </div>
+                  <div class="filelist" id="cnic-list" hidden>
+                    <div class="fileitem">
+                      <div class="fi"><svg><use href="#i-idcard"/></svg></div>
+                      <div class="fmid"><div class="fn" dir="ltr">cnic-front.jpg</div><div class="fs">1.2 MB</div></div>
+                      <button class="rm" onclick="event.stopPropagation();removeCnic()"><svg><use href="#i-x"/></svg></button>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label><span data-t="register.password"></span> <span class="req-star">*</span></label>
+                  <div class="input-icon"><svg><use href="#i-lock"/></svg><input class="input" type="password" dir="ltr" value="demo1234"></div>
+                </div>
+                <div class="field">
+                  <label><span data-t="register.confirm"></span> <span class="req-star">*</span></label>
+                  <div class="input-icon"><svg><use href="#i-lock"/></svg><input class="input" type="password" dir="ltr" value="demo1234"></div>
+                </div>
+                <div class="note" data-t="register.privacy"></div>
+              </div>
+
+              <button class="btn mt-20" onclick="regNext()"><svg class="flip"><use href="#i-arrowRight" id="reg-ico"/></svg><span id="reg-cta"></span></button>
+              <p class="center muted mt-16" style="font-size:13px">
+                <span data-t="register.already"></span>
+                <a class="link" onclick="go('s-login')" style="cursor:pointer" data-t="register.signIn"></a>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= HOME ================= -->
+        <div class="scr" id="s-home">
+          <div class="screen">
+            <div class="hero">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="greet">
+                <div class="avatar">FB</div>
+                <div style="flex:1;min-width:0"><div class="hi" data-t="dashboard.greeting"></div><div class="name">Fatima Bibi</div></div>
+                <span id="lang-3"></span>
+                <button class="icon-btn" onclick="go('s-profile')"><svg><use href="#i-user"/></svg></button>
+              </div>
+              <div class="mt-20" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:15px 17px">
+                <div style="font-size:11.5px;opacity:.85;letter-spacing:.3px" data-t="dashboard.totalReceived"></div>
+                <div class="num" style="font-size:28px;font-weight:800;letter-spacing:-1px;margin-top:4px;line-height:1">PKR 74,000</div>
+                <div style="font-size:11.5px;opacity:.85;margin-top:7px" id="home-across"></div>
+              </div>
+            </div>
+
+            <div class="pad overlap">
+              <div class="stat-row" id="home-stats"></div>
+            </div>
+
+            <div class="pad">
+              <div class="section-head">
+                <h2 data-t="dashboard.applyHeading"></h2>
+                <span style="font-size:12px;color:var(--text-faint)" id="home-avail"></span>
+              </div>
+              <div class="fund-grid" id="fund-grid"></div>
+            </div>
+
+            <div class="pad">
+              <div class="section-head">
+                <h2 data-t="dashboard.yourApplications"></h2>
+                <a onclick="go('s-requests')" style="cursor:pointer" data-t="common.viewAll"></a>
+              </div>
+              <div id="home-recent"></div>
+            </div>
+
+            <div class="pad mt-8">
+              <div class="card" style="background:linear-gradient(135deg,rgba(20,184,146,.09),rgba(224,165,43,.11));border-color:rgba(20,184,146,.2)">
+                <div style="display:flex;gap:12px;align-items:flex-start">
+                  <div style="width:38px;height:38px;flex:0 0 38px;border-radius:13px;background:var(--grad-gold);color:#6b4a06;display:grid;place-items:center"><svg style="width:18px;height:18px"><use href="#i-shield"/></svg></div>
+                  <div>
+                    <div style="font-size:13.5px;font-weight:700" data-t="dashboard.privateTitle"></div>
+                    <p class="muted mb-0" style="font-size:12.5px;margin-top:4px" data-t="dashboard.privateBody"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= REQUESTS ================= -->
+        <div class="scr" id="s-requests">
+          <div class="screen">
+            <div class="hero tight">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="appbar">
+                <button class="icon-btn" onclick="go('s-home')"><svg class="flip"><use href="#i-chevL"/></svg></button>
+                <div style="flex:1"><h1 data-t="requests.title"></h1><div class="sub" data-t="requests.subtitle"></div></div>
+              </div>
+            </div>
+            <div class="pad mt-16"><div class="chips" id="req-chips"></div></div>
+            <div class="pad mt-16" id="req-list"></div>
+          </div>
+        </div>
+
+        <!-- ================= DETAIL ================= -->
+        <div class="scr" id="s-detail">
+          <div class="screen">
+            <div class="hero tight">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="appbar">
+                <button class="icon-btn" onclick="go('s-requests')"><svg class="flip"><use href="#i-chevL"/></svg></button>
+                <div style="flex:1"><h1 id="det-fund"></h1><div class="sub ref" id="det-ref"></div></div>
+              </div>
+              <div class="mt-20" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:15px 17px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
+                <div>
+                  <div style="font-size:11.5px;opacity:.85;letter-spacing:.3px" id="det-amt-lbl"></div>
+                  <div class="num" id="det-amt" style="font-size:26px;font-weight:800;letter-spacing:-.8px;margin-top:4px;line-height:1"></div>
+                </div>
+                <span id="det-badge"></span>
+              </div>
+            </div>
+            <div class="pad overlap">
+              <div class="card">
+                <div class="track" id="det-track"></div>
+                <p class="muted mb-0 mt-16" style="font-size:12.5px;text-align:center" id="det-blurb"></p>
+              </div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2 data-t="detail.details"></h2></div>
+              <div class="card" id="det-kv"></div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2 data-t="detail.documents"></h2><span style="font-size:12px;color:var(--text-faint)" id="det-files"></span></div>
+              <div id="det-docs"></div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2 data-t="detail.history"></h2></div>
+              <div class="card"><div class="timeline" id="det-time"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= PROFILE ================= -->
+        <div class="scr" id="s-profile">
+          <div class="screen">
+            <div class="hero">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="appbar">
+                <button class="icon-btn" onclick="go('s-home')"><svg class="flip"><use href="#i-chevL"/></svg></button>
+                <div style="flex:1"><h1 data-t="profile.title"></h1></div>
+                <span id="lang-4"></span>
+              </div>
+              <div class="center mt-20">
+                <div class="avatar" style="width:76px;height:76px;border-radius:26px;font-size:25px;margin:0 auto 12px">FB</div>
+                <div style="font-size:19px;font-weight:750;letter-spacing:-.3px">Fatima Bibi</div>
+                <div style="font-size:12.5px;opacity:.85;margin-top:3px">Lahore, Pakistan</div>
+              </div>
+            </div>
+            <div class="pad overlap">
+              <div class="card" style="display:flex;text-align:center">
+                <div style="flex:1"><div class="num" id="prof-count" style="font-size:19px;font-weight:800;letter-spacing:-.5px"></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:600" data-t="profile.applications"></div></div>
+                <div style="width:1px;background:var(--border)"></div>
+                <div style="flex:1"><div class="num" style="font-size:19px;font-weight:800;letter-spacing:-.5px;color:var(--brand-2)">74,000</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:600" data-t="profile.received"></div></div>
+                <div style="width:1px;background:var(--border)"></div>
+                <div style="flex:1"><div class="num" style="font-size:19px;font-weight:800;letter-spacing:-.5px">2024</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:600" data-t="profile.memberSince"></div></div>
+              </div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2 data-t="profile.registrationDetails"></h2></div>
+              <div class="card" id="prof-kv"></div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2 data-t="profile.identity"></h2></div>
+              <button class="list-row">
+                <span class="li"><svg><use href="#i-idcard"/></svg></span>
+                <span class="lmid"><span class="lt" style="display:block" data-t="profile.cnicOnFile"></span><span class="ld" style="display:block" data-t="profile.cnicVerified"></span></span>
+                <span class="chev"><svg><use href="#i-eye"/></svg></span>
+              </button>
+            </div>
+            <div class="pad mt-8">
+              <div class="mt-16" style="display:flex;justify-content:center"><span id="lang-5"></span></div>
+              <button class="btn danger-ghost mt-16" onclick="go('s-login')"><svg><use href="#i-logout"/></svg><span data-t="common.signOut"></span></button>
+              <p class="center muted mt-16" style="font-size:11px"><span data-t="common.appName"></span> · v1.0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= HELP ================= -->
+        <div class="scr" id="s-help">
+          <div class="screen">
+            <div class="hero tight">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="appbar">
+                <button class="icon-btn" onclick="go('s-home')"><svg class="flip"><use href="#i-chevL"/></svg></button>
+                <div style="flex:1"><h1 data-t="help.title"></h1><div class="sub" data-t="help.subtitle"></div></div>
+              </div>
+            </div>
+            <div class="pad mt-20">
+              <div class="section-head" style="margin-top:0"><h2 data-t="help.howItWorks"></h2></div>
+              <div class="card"><div class="timeline" id="help-stages"></div></div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2 data-t="help.beforeYouApply"></h2></div>
+              <div class="card">
+                <p class="muted" style="margin-top:0" data-t="help.beforeLede"></p>
+                <ul class="muted" style="margin:0;padding-inline-start:18px;line-height:1.9" id="help-tips"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= overlays ================= -->
+        <div class="backdrop" id="backdrop" onclick="closeAll()"></div>
+
+        <div class="dialog" id="dlg-confirm">
+          <div class="big-ico" id="cf-ico"><svg><use href="#i-bolt" id="cf-ico-use"/></svg></div>
+          <h3 id="cf-title"></h3>
+          <p id="cf-body"></p>
+          <div class="btn-row">
+            <button class="btn ghost" onclick="closeAll()"><span data-t="common.cancel"></span></button>
+            <button class="btn" onclick="openSheet()"><svg class="flip"><use href="#i-arrowRight"/></svg><span data-t="common.continue"></span></button>
+          </div>
+        </div>
+
+        <div class="sheet" id="sheet">
+          <div class="grab"></div>
+          <div class="sheet-body">
+            <div class="sheet-head">
+              <div class="ico" id="sh-ico"><svg><use href="#i-bolt" id="sh-ico-use"/></svg></div>
+              <div style="flex:1"><h3 id="sh-title"></h3><p id="sh-sub"></p></div>
+              <button class="icon-btn dark" onclick="closeAll()"><svg><use href="#i-x"/></svg></button>
+            </div>
+            <div class="field">
+              <label><span data-t="apply.amount"></span> <span class="req-star">*</span></label>
+              <div class="amount-wrap"><span class="cur" data-t="common.currency"></span><input class="input" id="sh-amount" type="number" placeholder="0"></div>
+              <div class="quick-amounts" id="sh-quick"></div>
+            </div>
+            <div class="field">
+              <label id="sh-doclabel"></label>
+              <div class="upload small" onclick="addDoc()">
+                <div class="u-ico"><svg><use href="#i-upload"/></svg></div>
+                <div class="u-t" data-t="apply.uploadTitle"></div>
+                <div class="u-d" data-t="apply.uploadHint"></div>
+              </div>
+              <div class="filelist" id="sh-files"></div>
+            </div>
+            <div class="field">
+              <label data-t="apply.reason"></label>
+              <textarea class="input" id="sh-reason" data-tp="apply.reasonPlaceholder"></textarea>
+            </div>
+            <p class="err-msg" id="sh-err" hidden></p>
+            <button class="btn" onclick="submitApp()"><svg><use href="#i-send"/></svg><span data-t="apply.submit"></span></button>
+            <p class="muted center mt-12" style="font-size:11.5px" data-t="apply.disclaimer"></p>
+          </div>
+        </div>
+
+        <div class="dialog" id="dlg-success">
+          <div class="big-ico"><svg><use href="#i-checkCircle"/></svg></div>
+          <h3 data-t="apply.successTitle"></h3>
+          <p id="ok-body"></p>
+          <div class="btn-row">
+            <button class="btn ghost" onclick="closeAll()"><span data-t="common.done"></span></button>
+            <button class="btn" onclick="closeAll();go('s-requests')"><svg><use href="#i-list"/></svg><span data-t="apply.track"></span></button>
+          </div>
+        </div>
+
+        <!-- ================= bottom nav ================= -->
+        <nav class="nav" id="nav">
+          <a onclick="go('s-home')" data-nav="s-home"><span class="nav-ico"><svg><use href="#i-home"/></svg></span><span data-t="nav.home"></span></a>
+          <a onclick="go('s-requests')" data-nav="s-requests"><span class="nav-ico"><svg><use href="#i-list"/></svg></span><span data-t="nav.requests"></span></a>
+          <div class="fab-wrap"><button class="fab" onclick="go('s-home')"><svg><use href="#i-plus"/></svg></button></div>
+          <a onclick="go('s-help')" data-nav="s-help"><span class="nav-ico"><svg><use href="#i-info"/></svg></span><span data-t="nav.help"></span></a>
+          <a onclick="go('s-profile')" data-nav="s-profile"><span class="nav-ico"><svg><use href="#i-user"/></svg></span><span data-t="nav.profile"></span></a>
+        </nav>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== dictionaries (mirrors src/lib/i18n) ===================== */
+const DICT = {
+  "en": {
+    "meta": {
+      "name": "English",
+      "native": "English",
+      "short": "EN",
+      "dir": "ltr"
+    },
+    "common": {
+      "appName": "Subaidar Hasnain Foundation",
+      "tagline": "WELFARE • RELIEF • DIGNITY",
+      "continue": "Continue",
+      "cancel": "Cancel",
+      "done": "Done",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "back": "Back",
+      "close": "Close",
+      "optional": "(optional)",
+      "viewAll": "View all",
+      "language": "Language",
+      "currency": "PKR",
+      "signOut": "Sign out",
+      "somethingWrong": "Something went wrong."
+    },
+    "nav": {
+      "home": "Home",
+      "requests": "Requests",
+      "apply": "Apply for a fund",
+      "help": "Help",
+      "profile": "Profile"
+    },
+    "status": {
+      "requested": "Requested",
+      "review": "Review",
+      "accepted": "Accepted",
+      "transferred": "Transferred",
+      "rejected": "Rejected",
+      "blurb": {
+        "requested": "Your application has been received by the foundation.",
+        "review": "The committee is reviewing your documents and details.",
+        "accepted": "Approved. The transfer is being arranged.",
+        "transferred": "Funds have been transferred to you.",
+        "rejected": "This application could not be approved."
+      }
+    },
+    "login": {
+      "title": "Sign in",
+      "lede": "Welcome back. Sign in to apply for a fund or track an existing application.",
+      "email": "Email address",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "welcome": "Welcome back",
+      "badCredentials": "That email and password combination is not recognised.",
+      "newHere": "New to the foundation?",
+      "createAccount": "Create an account",
+      "helpTitle": "Need help?",
+      "helpBody": "Visit the foundation office with your CNIC, or call the helpline. Registration requires a valid CNIC image.",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
+    },
+    "register": {
+      "title": "Create account",
+      "step": (n) => `Step ${n} of 3`,
+      "stepNames": ["Personal details", "Contact & location", "ID & password"],
+      "fullName": "Full name",
+      "fullNameHint": "As printed on your CNIC",
+      "gender": "Gender",
+      "male": "Male",
+      "female": "Female",
+      "other": "Other",
+      "age": "Age",
+      "agePlaceholder": "e.g. 34",
+      "country": "Country",
+      "city": "City",
+      "cityPlaceholder": "e.g. Lahore",
+      "email": "Email address",
+      "mobile": "Mobile number",
+      "mobilePlaceholder": "+92 300 1234567",
+      "cnic": "CNIC / ID card image",
+      "cnicUpload": "Upload your CNIC",
+      "cnicChange": "Change CNIC image",
+      "cnicHint": "JPG, PNG or PDF — up to 10 MB",
+      "password": "Password",
+      "passwordHint": "At least 8 characters",
+      "confirm": "Confirm password",
+      "confirmHint": "Re-enter your password",
+      "privacy": "Your CNIC is stored privately and is only visible to foundation administrators reviewing your applications.",
+      "submit": "Complete registration",
+      "submitting": "Creating account…",
+      "complete": "Registration complete. Welcome!",
+      "already": "Already registered?",
+      "signIn": "Sign in",
+      "removeFile": "Remove file",
+      "errors": {
+        "fullName": "Enter your full name.",
+        "gender": "Select a gender.",
+        "age": "Enter a valid age between 12 and 120.",
+        "country": "Select your country.",
+        "city": "Enter your city.",
+        "email": "Enter a valid email.",
+        "mobile": "Enter a valid mobile number.",
+        "cnic": "A CNIC / ID card image is required.",
+        "password": "Use at least 8 characters.",
+        "confirm": "Passwords do not match.",
+        "fileTooBig": "File must be under 10 MB.",
+        "cnicUploadFailed": "Account created, but the CNIC upload failed. Add it from your profile."
+      }
+    },
+    "dashboard": {
+      "greeting": "Assalam-u-Alaikum",
+      "totalReceived": "TOTAL SUPPORT RECEIVED",
+      "across": (apps, transferred) =>
+      `Across ${apps} application${apps === 1 ? '' : 's'} · ${transferred} transferred`,
+      "applyHeading": "Apply for a fund",
+      "available": (n) => `${n} available`,
+      "yourApplications": "Your applications",
+      "noApplications": "No applications yet",
+      "noApplicationsBody": "Choose a fund above to submit your first request.",
+      "noFunds": "No funds are configured yet.",
+      "privateTitle": "Your documents are private",
+      "privateBody": "Reports, bills and your CNIC are stored securely and are only opened by foundation administrators reviewing your application.",
+      "footer": (amount) => `Subaidar Hasnain Foundation · ${amount} PKR received to date`
+    },
+    "apply": {
+      "confirmTitle": (fund) => `Apply for ${fund}?`,
+      "confirmBody": (desc, doc) =>
+      `${desc}. You will be asked to upload ${doc} and the estimated amount you need.`,
+      "range": (min, max) => `${min} – ${max}`,
+      "from": (min) => `From ${min}`,
+      "reviewedBy": "reviewed by the foundation committee",
+      "amount": "Estimated amount required",
+      "uploadTitle": "Upload report or bill",
+      "uploadHint": "Images or PDF · up to 5 files · 10 MB each",
+      "reason": "Reason for the request",
+      "reasonPlaceholder": "Briefly describe your situation so the committee can review it faster…",
+      "submit": "Submit application",
+      "submitting": "Submitting…",
+      "disclaimer": "Submitting does not guarantee approval. The committee reviews every application.",
+      "successTitle": "Application submitted",
+      "successBody": (fund) => `Your ${fund.toLowerCase()} request has been received.`,
+      "reference": "Reference",
+      "trackHint": "Track its progress under Requests.",
+      "track": "Track",
+      "errors": {
+        "amountRequired": "Enter the amount you are requesting.",
+        "min": (v) => `The minimum request for this fund is ${v}.`,
+        "max": (v) => `The maximum request for this fund is ${v}.`,
+        "docRequired": (doc) => `${doc} is required for this fund.`,
+        "tooBig": (name) => `${name} is larger than 10 MB.`,
+        "uploadFailed": (name) => `Could not upload ${name}.`
+      }
+    },
+    "requests": {
+      "title": "My applications",
+      "subtitle": "Track every request you have submitted",
+      "all": "All",
+      "emptyTitle": "Nothing here yet",
+      "emptyAll": "You have not submitted any applications.",
+      "emptyFiltered": (s) => `No applications are currently marked "${s}".`,
+      "applyCta": "Apply for a fund"
+    },
+    "detail": {
+      "requestedAmount": "REQUESTED AMOUNT",
+      "approvedAmount": "APPROVED AMOUNT",
+      "youRequested": (v) => `You requested ${v}`,
+      "details": "Application details",
+      "fund": "Fund",
+      "reference": "Reference",
+      "submitted": "Submitted",
+      "requested": "Requested",
+      "approved": "Approved",
+      "transferRef": "Transfer ref",
+      "transferred": "Transferred",
+      "yourReason": "Your reason",
+      "noteFromFoundation": "Note from the foundation:",
+      "documents": "Attached documents",
+      "files": (n) => `${n} file${n === 1 ? '' : 's'}`,
+      "noDocuments": "No documents were attached to this application.",
+      "history": "Progress history",
+      "submittedByMember": "Application submitted by member"
+    },
+    "profile": {
+      "title": "My profile",
+      "edit": "Edit profile",
+      "cancelEdit": "Cancel editing",
+      "applications": "Applications",
+      "received": "PKR received",
+      "memberSince": "Member since",
+      "registrationDetails": "Registration details",
+      "editDetails": "Edit details",
+      "gender": "Gender",
+      "age": "Age",
+      "years": "years",
+      "country": "Country",
+      "city": "City",
+      "email": "Email",
+      "mobile": "Mobile",
+      "registered": "Registered",
+      "identity": "Identity document",
+      "cnicOnFile": "CNIC on file",
+      "cnicVerified": "Verified against your registration",
+      "noCnic": "No CNIC image is on file. Contact the foundation office to add one — applications may be held for review without it.",
+      "myApplications": "My applications",
+      "submittedCount": (n) => `${n} submitted`,
+      "helpContact": "Help & contact",
+      "helpContactSub": "How applications are reviewed",
+      "adminBadge": "Administrator · open portal",
+      "updated": "Profile updated",
+      "saveFailed": "Could not save your profile.",
+      "cnicFailed": "Could not open your CNIC."
+    },
+    "help": {
+      "title": "Help & contact",
+      "subtitle": "How the foundation reviews applications",
+      "howItWorks": "How it works",
+      "stages": [{
+          "title": "Requested",
+          "body": "You submit the application with the amount you need and any supporting report or bill."
+        }, {
+          "title": "Review",
+          "body": "The committee checks your documents, CNIC and previous history. This usually takes 3–7 days."
+        }, {
+          "title": "Accepted",
+          "body": "Your application is approved. The approved amount may differ from what you requested."
+        }, {
+          "title": "Transferred",
+          "body": "Funds are sent to you and a transfer reference is recorded against your application."
+        }],
+      "beforeYouApply": "Before you apply",
+      "beforeLede": "Applications move faster when the documents are clear and complete:",
+      "tips": ["Photograph bills and reports in good light, with all corners visible.", "Medical claims need a report, prescription or hospital bill.", "Electricity claims need the latest bill showing the outstanding amount.", "Request the amount you genuinely need — the committee verifies against documents."],
+      "contact": "Contact the foundation",
+      "helpline": "Helpline",
+      "helplineHours": "Mon–Sat, 9am – 5pm",
+      "emailOffice": "Email the office"
+    },
+    "docs": {
+      "open": "Open document",
+      "failed": "Could not open the document."
+    },
+    "funds": {
+      "monthly": {
+        "name": "Monthly Fund",
+        "desc": "Recurring monthly support for registered families",
+        "doc": "Income / need proof (optional)"
+      },
+      "accidental": {
+        "name": "Accidental Fund",
+        "desc": "Emergency help after an accident or medical event",
+        "doc": "Medical report, prescription or hospital bill"
+      },
+      "grocery": {
+        "name": "Grocery Fund",
+        "desc": "Ration and household grocery assistance",
+        "doc": "Grocery estimate or shop bill"
+      },
+      "electricity": {
+        "name": "Electricity Bill Fund",
+        "desc": "Help clearing an outstanding electricity bill",
+        "doc": "Latest electricity bill"
+      }
+    }
+  },
+  "ur": {
+    "meta": {
+      "name": "Urdu",
+      "native": "اردو",
+      "short": "اردو",
+      "dir": "rtl"
+    },
+    "common": {
+      "appName": "صوبیدار حسنین فاؤنڈیشن",
+      "tagline": "فلاح • امداد • عزتِ نفس",
+      "continue": "آگے بڑھیں",
+      "cancel": "منسوخ کریں",
+      "done": "مکمل",
+      "save": "تبدیلیاں محفوظ کریں",
+      "saving": "محفوظ ہو رہا ہے…",
+      "back": "واپس",
+      "close": "بند کریں",
+      "optional": "(اختیاری)",
+      "viewAll": "سب دیکھیں",
+      "language": "زبان",
+      "currency": "روپے",
+      "signOut": "لاگ آؤٹ",
+      "somethingWrong": "کچھ غلط ہو گیا۔"
+    },
+    "nav": {
+      "home": "ہوم",
+      "requests": "درخواستیں",
+      "apply": "فنڈ کی درخواست دیں",
+      "help": "مدد",
+      "profile": "پروفائل"
+    },
+    "status": {
+      "requested": "درخواست دی",
+      "review": "زیرِ جائزہ",
+      "accepted": "منظور شدہ",
+      "transferred": "رقم منتقل",
+      "rejected": "مسترد",
+      "blurb": {
+        "requested": "آپ کی درخواست فاؤنڈیشن کو موصول ہو گئی ہے۔",
+        "review": "کمیٹی آپ کے کاغذات اور تفصیلات کا جائزہ لے رہی ہے۔",
+        "accepted": "منظور ہو گئی۔ رقم کی منتقلی کا بندوبست کیا جا رہا ہے۔",
+        "transferred": "رقم آپ کو منتقل کر دی گئی ہے۔",
+        "rejected": "یہ درخواست منظور نہیں کی جا سکی۔"
+      }
+    },
+    "login": {
+      "title": "لاگ ان کریں",
+      "lede": "خوش آمدید۔ فنڈ کی درخواست دینے یا پرانی درخواست دیکھنے کے لیے لاگ ان کریں۔",
+      "email": "ای میل ایڈریس",
+      "emailPlaceholder": "you@example.com",
+      "password": "پاس ورڈ",
+      "submit": "لاگ ان کریں",
+      "submitting": "لاگ ان ہو رہا ہے…",
+      "welcome": "خوش آمدید",
+      "badCredentials": "یہ ای میل اور پاس ورڈ درست نہیں ہیں۔",
+      "newHere": "فاؤنڈیشن میں نئے ہیں؟",
+      "createAccount": "اکاؤنٹ بنائیں",
+      "helpTitle": "مدد درکار ہے؟",
+      "helpBody": "اپنا شناختی کارڈ لے کر فاؤنڈیشن کے دفتر تشریف لائیں، یا ہیلپ لائن پر کال کریں۔ رجسٹریشن کے لیے شناختی کارڈ کی تصویر ضروری ہے۔",
+      "showPassword": "پاس ورڈ دکھائیں",
+      "hidePassword": "پاس ورڈ چھپائیں"
+    },
+    "register": {
+      "title": "اکاؤنٹ بنائیں",
+      "step": (n) => `مرحلہ ${n} از 3`,
+      "stepNames": ["ذاتی تفصیلات", "رابطہ و مقام", "شناخت اور پاس ورڈ"],
+      "fullName": "پورا نام",
+      "fullNameHint": "جیسا شناختی کارڈ پر درج ہے",
+      "gender": "جنس",
+      "male": "مرد",
+      "female": "عورت",
+      "other": "دیگر",
+      "age": "عمر",
+      "agePlaceholder": "مثلاً 34",
+      "country": "ملک",
+      "city": "شہر",
+      "cityPlaceholder": "مثلاً لاہور",
+      "email": "ای میل ایڈریس",
+      "mobile": "موبائل نمبر",
+      "mobilePlaceholder": "+92 300 1234567",
+      "cnic": "شناختی کارڈ کی تصویر",
+      "cnicUpload": "شناختی کارڈ اپ لوڈ کریں",
+      "cnicChange": "شناختی کارڈ کی تصویر بدلیں",
+      "cnicHint": "JPG، PNG یا PDF — زیادہ سے زیادہ 10 MB",
+      "password": "پاس ورڈ",
+      "passwordHint": "کم از کم 8 حروف",
+      "confirm": "پاس ورڈ کی تصدیق",
+      "confirmHint": "پاس ورڈ دوبارہ لکھیں",
+      "privacy": "آپ کا شناختی کارڈ محفوظ رکھا جاتا ہے اور صرف وہی منتظمین دیکھ سکتے ہیں جو آپ کی درخواست کا جائزہ لے رہے ہوں۔",
+      "submit": "رجسٹریشن مکمل کریں",
+      "submitting": "اکاؤنٹ بن رہا ہے…",
+      "complete": "رجسٹریشن مکمل ہو گئی۔ خوش آمدید!",
+      "already": "پہلے سے رجسٹرڈ ہیں؟",
+      "signIn": "لاگ ان کریں",
+      "removeFile": "فائل ہٹائیں",
+      "errors": {
+        "fullName": "اپنا پورا نام لکھیں۔",
+        "gender": "جنس منتخب کریں۔",
+        "age": "12 سے 120 کے درمیان درست عمر لکھیں۔",
+        "country": "اپنا ملک منتخب کریں۔",
+        "city": "اپنا شہر لکھیں۔",
+        "email": "درست ای میل لکھیں۔",
+        "mobile": "درست موبائل نمبر لکھیں۔",
+        "cnic": "شناختی کارڈ کی تصویر لازمی ہے۔",
+        "password": "کم از کم 8 حروف استعمال کریں۔",
+        "confirm": "دونوں پاس ورڈ ایک جیسے نہیں ہیں۔",
+        "fileTooBig": "فائل 10 MB سے کم ہونی چاہیے۔",
+        "cnicUploadFailed": "اکاؤنٹ بن گیا، مگر شناختی کارڈ اپ لوڈ نہیں ہو سکا۔ اسے پروفائل سے شامل کریں۔"
+      }
+    },
+    "dashboard": {
+      "greeting": "السلام علیکم",
+      "totalReceived": "اب تک موصول شدہ امداد",
+      "across": (apps, transferred) =>
+      `${apps} درخواستوں میں سے ${transferred} کی رقم منتقل ہو چکی`,
+      "applyHeading": "فنڈ کی درخواست دیں",
+      "available": (n) => `${n} دستیاب`,
+      "yourApplications": "آپ کی درخواستیں",
+      "noApplications": "ابھی کوئی درخواست نہیں",
+      "noApplicationsBody": "اپنی پہلی درخواست دینے کے لیے اوپر سے کوئی فنڈ منتخب کریں۔",
+      "noFunds": "ابھی کوئی فنڈ ترتیب نہیں دیا گیا۔",
+      "privateTitle": "آپ کے کاغذات محفوظ ہیں",
+      "privateBody": "رپورٹس، بل اور شناختی کارڈ محفوظ طریقے سے رکھے جاتے ہیں اور صرف وہی منتظمین کھولتے ہیں جو آپ کی درخواست کا جائزہ لے رہے ہوں۔",
+      "footer": (amount) => `صوبیدار حسنین فاؤنڈیشن · اب تک ${amount} روپے موصول`
+    },
+    "apply": {
+      "confirmTitle": (fund) => `${fund} کی درخواست دیں؟`,
+      "confirmBody": (desc, doc) =>
+      `${desc}۔ آپ سے ${doc} اور مطلوبہ تخمینی رقم درج کرنے کو کہا جائے گا۔`,
+      "range": (min, max) => `${min} – ${max}`,
+      "from": (min) => `${min} سے`,
+      "reviewedBy": "فاؤنڈیشن کمیٹی جائزہ لے گی",
+      "amount": "مطلوبہ تخمینی رقم",
+      "uploadTitle": "رپورٹ یا بل اپ لوڈ کریں",
+      "uploadHint": "تصاویر یا PDF · زیادہ سے زیادہ 5 فائلیں · فی فائل 10 MB",
+      "reason": "درخواست کی وجہ",
+      "reasonPlaceholder": "مختصراً اپنی صورتحال بتائیں تاکہ کمیٹی جلد جائزہ لے سکے…",
+      "submit": "درخواست جمع کرائیں",
+      "submitting": "جمع ہو رہی ہے…",
+      "disclaimer": "درخواست جمع کرانا منظوری کی ضمانت نہیں۔ کمیٹی ہر درخواست کا جائزہ لیتی ہے۔",
+      "successTitle": "درخواست جمع ہو گئی",
+      "successBody": (fund) => `${fund} کے لیے آپ کی درخواست موصول ہو گئی ہے۔`,
+      "reference": "حوالہ نمبر",
+      "trackHint": "اس کی پیش رفت درخواستوں میں دیکھیں۔",
+      "track": "پیش رفت دیکھیں",
+      "errors": {
+        "amountRequired": "مطلوبہ رقم درج کریں۔",
+        "min": (v) => `اس فنڈ کے لیے کم از کم رقم ${v} ہے۔`,
+        "max": (v) => `اس فنڈ کے لیے زیادہ سے زیادہ رقم ${v} ہے۔`,
+        "docRequired": (doc) => `اس فنڈ کے لیے ${doc} لازمی ہے۔`,
+        "tooBig": (name) => `${name} کا حجم 10 MB سے زیادہ ہے۔`,
+        "uploadFailed": (name) => `${name} اپ لوڈ نہیں ہو سکی۔`
+      }
+    },
+    "requests": {
+      "title": "میری درخواستیں",
+      "subtitle": "اپنی ہر درخواست کی پیش رفت دیکھیں",
+      "all": "سب",
+      "emptyTitle": "ابھی کچھ نہیں",
+      "emptyAll": "آپ نے ابھی کوئی درخواست جمع نہیں کرائی۔",
+      "emptyFiltered": (s) => `اس وقت کوئی درخواست «${s}» کے مرحلے میں نہیں ہے۔`,
+      "applyCta": "فنڈ کی درخواست دیں"
+    },
+    "detail": {
+      "requestedAmount": "درخواست کردہ رقم",
+      "approvedAmount": "منظور شدہ رقم",
+      "youRequested": (v) => `آپ نے ${v} کی درخواست دی تھی`,
+      "details": "درخواست کی تفصیلات",
+      "fund": "فنڈ",
+      "reference": "حوالہ نمبر",
+      "submitted": "جمع کرائی گئی",
+      "requested": "درخواست کردہ",
+      "approved": "منظور شدہ",
+      "transferRef": "منتقلی کا حوالہ",
+      "transferred": "منتقل شدہ",
+      "yourReason": "آپ کی بیان کردہ وجہ",
+      "noteFromFoundation": "فاؤنڈیشن کی جانب سے نوٹ:",
+      "documents": "منسلک کاغذات",
+      "files": (n) => `${n} فائلیں`,
+      "noDocuments": "اس درخواست کے ساتھ کوئی کاغذ منسلک نہیں کیا گیا۔",
+      "history": "پیش رفت کی تفصیل",
+      "submittedByMember": "رکن کی جانب سے درخواست جمع کرائی گئی"
+    },
+    "profile": {
+      "title": "میری پروفائل",
+      "edit": "پروفائل میں ترمیم",
+      "cancelEdit": "ترمیم منسوخ کریں",
+      "applications": "درخواستیں",
+      "received": "روپے موصول",
+      "memberSince": "رکنیت",
+      "registrationDetails": "رجسٹریشن کی تفصیلات",
+      "editDetails": "تفصیلات میں ترمیم",
+      "gender": "جنس",
+      "age": "عمر",
+      "years": "سال",
+      "country": "ملک",
+      "city": "شہر",
+      "email": "ای میل",
+      "mobile": "موبائل",
+      "registered": "رجسٹرڈ",
+      "identity": "شناختی دستاویز",
+      "cnicOnFile": "شناختی کارڈ محفوظ ہے",
+      "cnicVerified": "آپ کی رجسٹریشن سے تصدیق شدہ",
+      "noCnic": "شناختی کارڈ کی تصویر موجود نہیں۔ اسے شامل کرانے کے لیے فاؤنڈیشن کے دفتر سے رابطہ کریں — اس کے بغیر درخواستیں روکی جا سکتی ہیں۔",
+      "myApplications": "میری درخواستیں",
+      "submittedCount": (n) => `${n} جمع کرائی گئیں`,
+      "helpContact": "مدد و رابطہ",
+      "helpContactSub": "درخواستوں کا جائزہ کیسے لیا جاتا ہے",
+      "adminBadge": "منتظم · پورٹل کھولیں",
+      "updated": "پروفائل اپ ڈیٹ ہو گئی",
+      "saveFailed": "آپ کی پروفائل محفوظ نہیں ہو سکی۔",
+      "cnicFailed": "آپ کا شناختی کارڈ نہیں کھل سکا۔"
+    },
+    "help": {
+      "title": "مدد و رابطہ",
+      "subtitle": "فاؤنڈیشن درخواستوں کا جائزہ کیسے لیتی ہے",
+      "howItWorks": "طریقۂ کار",
+      "stages": [{
+          "title": "درخواست دی",
+          "body": "آپ مطلوبہ رقم اور متعلقہ رپورٹ یا بل کے ساتھ درخواست جمع کراتے ہیں۔"
+        }, {
+          "title": "زیرِ جائزہ",
+          "body": "کمیٹی آپ کے کاغذات، شناختی کارڈ اور سابقہ ریکارڈ کی جانچ کرتی ہے۔ اس میں عموماً 3 سے 7 دن لگتے ہیں۔"
+        }, {
+          "title": "منظور شدہ",
+          "body": "آپ کی درخواست منظور ہو گئی۔ منظور شدہ رقم درخواست کردہ رقم سے مختلف ہو سکتی ہے۔"
+        }, {
+          "title": "رقم منتقل",
+          "body": "رقم آپ کو بھیج دی جاتی ہے اور منتقلی کا حوالہ نمبر آپ کی درخواست کے ساتھ محفوظ کر دیا جاتا ہے۔"
+        }],
+      "beforeYouApply": "درخواست سے پہلے",
+      "beforeLede": "کاغذات واضح اور مکمل ہوں تو درخواست جلد آگے بڑھتی ہے:",
+      "tips": ["بل اور رپورٹس کی تصویر اچھی روشنی میں، تمام کونے شامل کرتے ہوئے لیں۔", "طبی درخواست کے لیے رپورٹ، نسخہ یا ہسپتال کا بل ضروری ہے۔", "بجلی کی درخواست کے لیے بقایا رقم دکھاتا تازہ ترین بل ضروری ہے۔", "اتنی ہی رقم مانگیں جتنی واقعی درکار ہے — کمیٹی کاغذات سے تصدیق کرتی ہے۔"],
+      "contact": "فاؤنڈیشن سے رابطہ",
+      "helpline": "ہیلپ لائن",
+      "helplineHours": "پیر تا ہفتہ، صبح 9 سے شام 5",
+      "emailOffice": "دفتر کو ای میل کریں"
+    },
+    "docs": {
+      "open": "دستاویز کھولیں",
+      "failed": "دستاویز نہیں کھل سکی۔"
+    },
+    "funds": {
+      "monthly": {
+        "name": "ماہانہ فنڈ",
+        "desc": "رجسٹرڈ خاندانوں کے لیے ہر ماہ باقاعدہ امداد",
+        "doc": "آمدنی یا ضرورت کا ثبوت (اختیاری)"
+      },
+      "accidental": {
+        "name": "حادثاتی فنڈ",
+        "desc": "حادثے یا طبی ایمرجنسی کے بعد فوری مدد",
+        "doc": "میڈیکل رپورٹ، نسخہ یا ہسپتال کا بل"
+      },
+      "grocery": {
+        "name": "راشن فنڈ",
+        "desc": "گھریلو راشن اور اشیائے خوردونوش کی امداد",
+        "doc": "راشن کا تخمینہ یا دکان کا بل"
+      },
+      "electricity": {
+        "name": "بجلی بل فنڈ",
+        "desc": "بقایا بجلی کا بل ادا کرنے میں مدد",
+        "doc": "تازہ ترین بجلی کا بل"
+      }
+    }
+  }
+};
+
+/* ===================== state ===================== */
+const FUNDS = [
+  { id:'monthly',     grad:'g-brand', icon:'i-calendar', min:2000, max:50000,  req:false },
+  { id:'accidental',  grad:'g-rose',  icon:'i-health',   min:5000, max:500000, req:true  },
+  { id:'grocery',     grad:'g-amber', icon:'i-basket',   min:1000, max:30000,  req:false },
+  { id:'electricity', grad:'g-blue',  icon:'i-bolt',     min:1000, max:80000,  req:true  },
+];
+
+let LOC = 'en';
+let refSeq = 1042;
+let activeFund = null;
+let docsAdded = 0;
+let filter = 'all';
+let detailId = null;
+
+const REQS = [
+  { id:'r1', fund:'electricity', ref:'SHF-26-01039', amount:18400, approved:null, status:'review',      days:2,  docs:['lesco-bill-august.jpg'], reason:'Bill is two months overdue and the meter is due for disconnection this week.' },
+  { id:'r2', fund:'accidental',  ref:'SHF-26-01038', amount:45000, approved:40000, status:'accepted',   days:6,  docs:['hospital-report.jpg','pharmacy-invoice.pdf'], reason:'Hospital admission after a road accident.' },
+  { id:'r3', fund:'grocery',     ref:'SHF-26-00991', amount:12000, approved:12000, status:'transferred',days:42, docs:['ration-estimate.jpg'], reason:'Monthly ration for a family of six.' },
+  { id:'r4', fund:'monthly',     ref:'SHF-26-00920', amount:15000, approved:15000, status:'transferred',days:73, docs:[], reason:'' },
+];
+
+const STAGES = ['requested','review','accepted','transferred'];
+const BADGE = { requested:'b-requested', review:'b-review', accepted:'b-accepted', transferred:'b-transferred', rejected:'b-rejected' };
+const STEP_ICON = { requested:'i-send', review:'i-search', accepted:'i-checkCircle', transferred:'i-wallet' };
+
+/* ===================== helpers ===================== */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const D = () => DICT[LOC];
+const dig = (path) => path.split('.').reduce((o,k)=> (o ? o[k] : undefined), D());
+const money = (n, code=true) => (code ? D().common.currency + ' ' : '') + Number(n).toLocaleString('en-US');
+const fund = (id) => D().funds[id];
+const fundMeta = (id) => FUNDS.find(f => f.id === id);
+const ago = (days) => days === 0 ? (LOC==='ur'?'آج':'today') : days < 30 ? days + (LOC==='ur'?' دن پہلے':'d ago') : Math.round(days/30) + (LOC==='ur'?' ماہ پہلے':'mo ago');
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ===================== language ===================== */
+function langHTML(id) {
+  return '<div class="lang-toggle" data-tone="' + (id === 'lang-5' ? 'dark' : 'light') + '">' +
+    '<button lang="en" class="' + (LOC==='en'?'on':'') + '" onclick="setLang(\'en\')">EN</button>' +
+    '<button lang="ur" class="' + (LOC==='ur'?'on':'') + '" onclick="setLang(\'ur\')">اردو</button></div>';
+}
+
+function setLang(l) {
+  LOC = l;
+  document.documentElement.lang = l;
+  document.documentElement.dir = l === 'ur' ? 'rtl' : 'ltr';
+  render();
+}
+
+/* ===================== render ===================== */
+function render() {
+  $$('[data-t]').forEach(el => { const v = dig(el.dataset.t); if (typeof v === 'string') el.textContent = v; });
+  $$('[data-tp]').forEach(el => { const v = dig(el.dataset.tp); if (typeof v === 'string') el.placeholder = v; });
+  ['lang-1','lang-2','lang-3','lang-4','lang-5'].forEach(id => { const n = $('#'+id); if (n) n.innerHTML = langHTML(id); });
+
+  renderRegister();
+  renderHome();
+  renderRequests();
+  renderDetail();
+  renderProfile();
+  renderHelp();
+  renderSheet();
+}
+
+/* ---- register ---- */
+let regStep = 1;
+function renderRegister() {
+  $('#reg-step').textContent = D().register.step(regStep) + ' — ' + D().register.stepNames[regStep-1];
+  $('#dot2').className = regStep >= 2 ? 'on' : '';
+  $('#dot3').className = regStep >= 3 ? 'on' : '';
+  $('#rs1').hidden = regStep !== 1;
+  $('#rs2').hidden = regStep !== 2;
+  $('#rs3').hidden = regStep !== 3;
+  $('#reg-cta').textContent = regStep === 3 ? D().register.submit : D().common.continue;
+  $('#reg-ico').setAttribute('href', regStep === 3 ? '#i-checkCircle' : '#i-arrowRight');
+}
+function regNext() {
+  if (regStep < 3) { regStep++; renderRegister(); return; }
+  go('s-home');
+}
+function regBack() { if (regStep > 1) { regStep--; renderRegister(); } else go('s-login'); }
+function pickSeg(btn) { $$('.seg button', btn.parentElement).forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+function addCnic() { $('#cnic-list').hidden = false; $('#cnic-t').textContent = D().register.cnicChange; $('#cnic-ico').setAttribute('href','#i-checkCircle'); }
+function removeCnic() { $('#cnic-list').hidden = true; $('#cnic-t').textContent = D().register.cnicUpload; $('#cnic-ico').setAttribute('href','#i-idcard'); }
+
+/* ---- home ---- */
+function renderHome() {
+  const counts = STAGES.map(s => ({ s, n: REQS.filter(r => r.status === s).length }));
+  const colors = { requested:'var(--st-requested)', review:'var(--st-review)', accepted:'var(--st-accepted)', transferred:'var(--st-transfer)' };
+  $('#home-stats').innerHTML = counts.map(c =>
+    '<a class="stat" onclick="filter=\''+c.s+'\';go(\'s-requests\')" style="cursor:pointer">' +
+      '<div class="n num" style="color:'+colors[c.s]+'">'+c.n+'</div>' +
+      '<div class="l">'+esc(D().status[c.s])+'</div>' +
+      '<div class="bar" style="background:'+colors[c.s]+';opacity:'+(c.n?.9:.2)+'"></div></a>').join('');
+
+  const transferred = REQS.filter(r => r.status === 'transferred').length;
+  $('#home-across').textContent = D().dashboard.across(REQS.length, transferred);
+  $('#home-avail').textContent = D().dashboard.available(FUNDS.length);
+
+  $('#fund-grid').innerHTML = FUNDS.map((f,i) =>
+    '<button class="fund '+f.grad+' rise rise-'+Math.min(i+1,4)+'" onclick="openConfirm(\''+f.id+'\')">' +
+      '<div class="ico"><svg><use href="'+f.icon+'"/></svg></div>' +
+      '<div><div class="t">'+esc(fund(f.id).name)+'</div><div class="d">'+esc(fund(f.id).desc)+'</div></div></button>').join('');
+
+  $('#home-recent').innerHTML = REQS.slice(0,4).map(r => {
+    const m = fundMeta(r.fund);
+    return '<a class="req" onclick="openDetail(\''+r.id+'\')">' +
+      '<div class="ico '+m.grad+'"><svg><use href="'+m.icon+'"/></svg></div>' +
+      '<div class="mid"><div class="ttl">'+esc(fund(r.fund).name)+'</div>' +
+      '<div class="meta"><span class="badge '+BADGE[r.status]+'"><i></i>'+esc(D().status[r.status])+'</span><span>'+ago(r.days)+'</span></div></div>' +
+      '<div class="amt">'+money(r.amount,false)+'<small>'+esc(D().common.currency)+'</small></div></a>';
+  }).join('');
+}
+
+/* ---- requests ---- */
+function renderRequests() {
+  const keys = ['all', ...STAGES];
+  $('#req-chips').innerHTML = keys.map(k =>
+    '<a class="chip '+(filter===k?'active':'')+'" onclick="filter=\''+k+'\';renderRequests()">' +
+    esc(k === 'all' ? D().requests.all : D().status[k]) + '</a>').join('');
+
+  const list = REQS.filter(r => filter === 'all' || r.status === filter);
+  if (!list.length) {
+    $('#req-list').innerHTML =
+      '<div class="empty"><div class="e-ico"><svg><use href="#i-inbox"/></svg></div>' +
+      '<h3>'+esc(D().requests.emptyTitle)+'</h3><p>'+esc(D().requests.emptyFiltered(D().status[filter]))+'</p></div>';
+    return;
+  }
+
+  $('#req-list').innerHTML = list.map(r => {
+    const m = fundMeta(r.fund);
+    const pct = ((STAGES.indexOf(r.status) + 1) / 4) * 100;
+    return '<a class="card" style="display:block;margin-bottom:12px;cursor:pointer" onclick="openDetail(\''+r.id+'\')">' +
+      '<div style="display:flex;gap:12px;align-items:center">' +
+        '<div class="'+m.grad+'" style="width:42px;height:42px;flex:0 0 42px;border-radius:14px;display:grid;place-items:center;color:#fff"><svg style="width:20px;height:20px"><use href="'+m.icon+'"/></svg></div>' +
+        '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:650">'+esc(fund(r.fund).name)+'</div>' +
+        '<div class="ref" style="font-size:11.5px;color:var(--text-faint);margin-top:3px">'+r.ref+'</div></div>' +
+        '<div class="amt" style="text-align:end"><div style="font-size:14px;font-weight:750;letter-spacing:-.3px">'+money(r.amount,false)+'</div>' +
+        '<div style="font-size:10px;color:var(--text-faint);margin-top:2px">'+esc(D().common.currency)+'</div></div>' +
+      '</div>' +
+      '<div class="mt-12 pbar"><span style="width:'+pct+'%"></span></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">' +
+        '<span class="badge '+BADGE[r.status]+'"><i></i>'+esc(D().status[r.status])+'</span>' +
+        '<span style="font-size:11.5px;color:var(--text-faint)">'+ago(r.days)+'</span></div></a>';
+  }).join('');
+}
+
+/* ---- detail ---- */
+function openDetail(id) { detailId = id; renderDetail(); go('s-detail'); }
+function renderDetail() {
+  const r = REQS.find(x => x.id === detailId) || REQS[0];
+  if (!r) return;
+  const idx = STAGES.indexOf(r.status);
+
+  $('#det-fund').textContent = fund(r.fund).name;
+  $('#det-ref').textContent = r.ref;
+  $('#det-amt-lbl').textContent = r.approved ? D().detail.approvedAmount : D().detail.requestedAmount;
+  $('#det-amt').textContent = money(r.approved ?? r.amount);
+  $('#det-badge').outerHTML = '<span id="det-badge" class="badge '+BADGE[r.status]+'"><i></i>'+esc(D().status[r.status])+'</span>';
+  $('#det-blurb').textContent = D().status.blurb[r.status];
+
+  $('#det-track').innerHTML = STAGES.map((s,i) => {
+    const state = i < idx ? 'done' : i === idx ? 'current' : '';
+    return '<div class="step '+state+'"><div class="dot"><svg><use href="'+(i<=idx?STEP_ICON[s]:'#i-clock')+'"/></svg></div>' +
+      '<div class="lbl">'+esc(D().status[s])+'</div></div>';
+  }).join('');
+
+  const kv = (k,v,cls) => '<div class="kv"><span class="k">'+esc(k)+'</span><span class="v '+(cls||'')+'">'+esc(v)+'</span></div>';
+  $('#det-kv').innerHTML =
+    kv(D().detail.fund, fund(r.fund).name) +
+    kv(D().detail.reference, r.ref, 'ref') +
+    kv(D().detail.requested, money(r.amount), 'num') +
+    (r.approved != null ? kv(D().detail.approved, money(r.approved), 'num') : '') +
+    (r.reason ? '<div style="padding-top:12px;border-top:1px solid var(--border);margin-top:4px">' +
+      '<div style="font-size:12.5px;color:var(--text-dim);margin-bottom:5px">'+esc(D().detail.yourReason)+'</div>' +
+      '<p class="mb-0" style="font-size:13.5px;line-height:1.55;margin:0">'+esc(r.reason)+'</p></div>' : '');
+
+  $('#det-files').textContent = D().detail.files(r.docs.length);
+  $('#det-docs').innerHTML = r.docs.length
+    ? r.docs.map(n => '<button class="list-row"><span class="li"><svg><use href="'+(n.endsWith('.pdf')?'#i-file':'#i-image')+'"/></svg></span>' +
+        '<span class="lmid"><span class="lt" style="display:block" dir="ltr">'+esc(n)+'</span></span>' +
+        '<span class="chev"><svg><use href="#i-eye"/></svg></span></button>').join('')
+    : '<div class="card center"><p class="muted mb-0" style="font-size:13px">'+esc(D().detail.noDocuments)+'</p></div>';
+
+  $('#det-time').innerHTML = STAGES.map((s,i) => {
+    const on = i <= idx;
+    return '<div class="ev '+(on?'on':'off')+'"><div class="mark"><svg><use href="'+(on?'#i-check':'#i-clock')+'"/></svg></div>' +
+      '<div class="t">'+esc(D().status[s])+'</div><div class="d">'+esc(D().status.blurb[s])+'</div></div>';
+  }).join('');
+}
+
+/* ---- profile / help ---- */
+function renderProfile() {
+  $('#prof-count').textContent = REQS.length;
+  const kv = (k,v) => '<div class="kv"><span class="k">'+esc(k)+'</span><span class="v">'+esc(v)+'</span></div>';
+  $('#prof-kv').innerHTML =
+    kv(D().profile.gender, D().register.female) +
+    kv(D().profile.age, '41 ' + D().profile.years) +
+    kv(D().profile.country, 'Pakistan') +
+    kv(D().profile.city, 'Lahore') +
+    '<div class="kv"><span class="k">'+esc(D().profile.email)+'</span><span class="v" dir="ltr">fatima.bibi@gmail.com</span></div>' +
+    '<div class="kv"><span class="k">'+esc(D().profile.mobile)+'</span><span class="v" dir="ltr">+92 301 4477210</span></div>';
+}
+
+function renderHelp() {
+  const icons = ['#i-send','#i-search','#i-checkCircle','#i-wallet'];
+  $('#help-stages').innerHTML = D().help.stages.map((s,i) =>
+    '<div class="ev on"><div class="mark"><svg><use href="'+icons[i]+'"/></svg></div>' +
+    '<div class="t">'+esc(s.title)+'</div><div class="d">'+esc(s.body)+'</div></div>').join('');
+  $('#help-tips').innerHTML = D().help.tips.map(t => '<li>'+esc(t)+'</li>').join('');
+}
+
+/* ---- apply flow ---- */
+function openConfirm(id) {
+  activeFund = id;
+  const m = fundMeta(id), f = fund(id);
+  $('#cf-ico').className = 'big-ico ' + m.grad;
+  $('#cf-ico-use').setAttribute('href', m.icon);
+  $('#cf-title').textContent = D().apply.confirmTitle(f.name);
+  $('#cf-body').textContent = D().apply.confirmBody(f.desc, f.doc.toLowerCase());
+  $('#backdrop').classList.add('open');
+  $('#dlg-confirm').classList.add('open');
+}
+
+function openSheet() {
+  $('#dlg-confirm').classList.remove('open');
+  docsAdded = 0;
+  $('#sh-files').innerHTML = '';
+  $('#sh-amount').value = '';
+  $('#sh-reason').value = '';
+  $('#sh-err').hidden = true;
+  renderSheet();
+  $('#sheet').classList.add('open');
+}
+
+function renderSheet() {
+  if (!activeFund) return;
+  const m = fundMeta(activeFund), f = fund(activeFund);
+  $('#sh-ico').className = 'ico ' + m.grad;
+  $('#sh-ico-use').setAttribute('href', m.icon);
+  $('#sh-title').textContent = f.name;
+  $('#sh-sub').textContent = D().apply.range(money(m.min), money(m.max)) + ' · ' + D().apply.reviewedBy;
+  $('#sh-doclabel').innerHTML = esc(f.doc) + ' ' + (m.req
+    ? '<span class="req-star">*</span>'
+    : '<span style="color:var(--text-faint);font-weight:500">'+esc(D().common.optional)+'</span>');
+  const q = [m.min, Math.round((m.min+m.max)/4/500)*500, Math.round((m.min+m.max)/2/500)*500, m.max];
+  $('#sh-quick').innerHTML = [...new Set(q)].map(v =>
+    '<button onclick="document.getElementById(\'sh-amount\').value='+v+'">'+money(v,false)+'</button>').join('');
+}
+
+function addDoc() {
+  if (docsAdded >= 3) return;
+  docsAdded++;
+  const names = ['bill-august.jpg','medical-report.pdf','receipt.jpg'];
+  const n = names[docsAdded-1];
+  $('#sh-files').insertAdjacentHTML('beforeend',
+    '<div class="fileitem"><div class="fi"><svg><use href="'+(n.endsWith('.pdf')?'#i-file':'#i-image')+'"/></svg></div>' +
+    '<div class="fmid"><div class="fn" dir="ltr">'+n+'</div><div class="fs">842 KB</div></div>' +
+    '<button class="rm" onclick="event.stopPropagation();this.parentElement.remove();docsAdded--"><svg><use href="#i-x"/></svg></button></div>');
+}
+
+function submitApp() {
+  const m = fundMeta(activeFund);
+  const v = Number($('#sh-amount').value);
+  const err = $('#sh-err');
+
+  if (!v) { err.textContent = D().apply.errors.amountRequired; err.hidden = false; return; }
+  if (v < m.min) { err.textContent = D().apply.errors.min(money(m.min)); err.hidden = false; return; }
+  if (v > m.max) { err.textContent = D().apply.errors.max(money(m.max)); err.hidden = false; return; }
+  if (m.req && docsAdded === 0) { err.textContent = D().apply.errors.docRequired(fund(activeFund).doc); err.hidden = false; return; }
+  err.hidden = true;
+
+  const ref = 'SHF-26-0' + (++refSeq);
+  REQS.unshift({
+    id: 'n' + refSeq, fund: activeFund, ref, amount: v, approved: null,
+    status: 'requested', days: 0,
+    docs: Array.from({ length: docsAdded }, (_, i) => ['bill-august.jpg','medical-report.pdf','receipt.jpg'][i]),
+    reason: $('#sh-reason').value,
+  });
+
+  $('#sheet').classList.remove('open');
+  $('#ok-body').innerHTML = esc(D().apply.successBody(fund(activeFund).name)) + '<br>' +
+    esc(D().apply.reference) + ' <strong class="ref" style="color:var(--text)">' + ref + '</strong><br>' +
+    esc(D().apply.trackHint);
+  $('#dlg-success').classList.add('open');
+  renderHome();
+  renderRequests();
+}
+
+function closeAll() {
+  $('#backdrop').classList.remove('open');
+  ['#dlg-confirm','#sheet','#dlg-success'].forEach(s => $(s).classList.remove('open'));
+}
+
+/* ---- navigation ---- */
+function go(id) {
+  closeAll();
+  $$('.scr').forEach(s => s.classList.toggle('on', s.id === id));
+  const chrome = ['s-login','s-reg'].includes(id);
+  $('#nav').hidden = chrome;
+  $$('#nav a').forEach(a => a.classList.toggle('on', a.dataset.nav === id));
+  $$('.screen').forEach(s => (s.scrollTop = 0));
+}
+
+setLang('en');
+go('s-login');
+</script>

@@ -1,0 +1,3376 @@
+<title>Subaidar Hasnain Foundation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&display=swap" rel="stylesheet">
+
+<style>
+/* ==== the real app stylesheet, assets inlined ==== */
+/* ===========================================================================
+   Subaidar Hasnain Foundation — design system
+   Member PWA (phone shell) + Admin portal (desktop) share these tokens.
+   =========================================================================== */
+
+:root {
+  /* brand */
+  --brand-1: #14b892;
+  --brand-2: #0e9d63;
+  --brand-3: #0b7a4e;
+  --gold-1: #ffd977;
+  --gold-2: #e0a52b;
+
+  --grad-brand: linear-gradient(135deg, #14b892 0%, #0e9d63 55%, #0b7a4e 100%);
+  --grad-gold: linear-gradient(135deg, #ffd977 0%, #e0a52b 100%);
+  --grad-blue: linear-gradient(135deg, #5aa9ff 0%, #2f6fe0 100%);
+  --grad-rose: linear-gradient(135deg, #ff9a8b 0%, #e0525f 100%);
+  --grad-plum: linear-gradient(135deg, #b28bff 0%, #6d4ad6 100%);
+  --grad-amber: linear-gradient(135deg, #ffc86b 0%, #f08a24 100%);
+
+  /* surfaces */
+  --bg: #eef4f1;
+  --card: #ffffff;
+  --card-soft: #f6faf8;
+  --border: #e3ebe7;
+  --border-strong: #d3ded8;
+
+  /* text */
+  --text: #10201a;
+  --text-dim: #5c6f67;
+  --text-faint: #93a49c;
+
+  /* status */
+  --st-requested: #2f80ed;
+  --st-review: #f0a323;
+  --st-accepted: #12b886;
+  --st-transfer: #6d4ad6;
+  --danger: #e0525f;
+
+  --r-xl: 28px;
+  --r-lg: 22px;
+  --r-md: 16px;
+  --r-sm: 11px;
+
+  --shadow-sm: 0 1px 2px rgba(13, 42, 32, 0.04), 0 4px 12px rgba(13, 42, 32, 0.05);
+  --shadow-md: 0 2px 6px rgba(13, 42, 32, 0.06), 0 12px 28px rgba(13, 42, 32, 0.08);
+  --shadow-brand: 0 10px 24px rgba(14, 157, 99, 0.28);
+
+  --nav-h: 74px;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+/* ===========================================================================
+   MEMBER APP — phone shell
+   =========================================================================== */
+
+.app-body {
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* ambient desktop backdrop behind the phone */
+.stage-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(700px 500px at 18% 12%, rgba(18, 184, 134, 0.16), transparent 60%),
+    radial-gradient(640px 480px at 84% 78%, rgba(224, 165, 43, 0.14), transparent 60%),
+    linear-gradient(180deg, #f3f8f6, #e7efeb);
+}
+.stage-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 150px 150px;
+  opacity: 0.5;
+}
+
+.phone {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 430px;
+  height: 100%;
+  background: var(--bg) url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MzAgOTMyIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImcxIiBjeD0iMjAlIiBjeT0iMTAlIiByPSI2MCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMTJiODg2IiBzdG9wLW9wYWNpdHk9Ii4yMiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMxMmI4ODYiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZzIiIGN4PSI5NSUiIGN5PSIyOCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmM2I2M2YiIHN0b3Atb3BhY2l0eT0iLjIwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2YzYjYzZiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJnMyIgY3g9IjglIiBjeT0iODIlIiByPSI2MCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMmY4MGVkIiBzdG9wLW9wYWNpdHk9Ii4xNCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyZjgwZWQiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZzQiIGN4PSI4OCUiIGN5PSI5NiUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMwZTlkNjMiIHN0b3Atb3BhY2l0eT0iLjE2Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzBlOWQ2MyIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJiYXNlIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmN2ZiZjkiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjZWVmNGYxIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iNDMwIiBoZWlnaHQ9IjkzMiIgZmlsbD0idXJsKCNiYXNlKSIvPgogIDxyZWN0IHdpZHRoPSI0MzAiIGhlaWdodD0iOTMyIiBmaWxsPSJ1cmwoI2cxKSIvPgogIDxyZWN0IHdpZHRoPSI0MzAiIGhlaWdodD0iOTMyIiBmaWxsPSJ1cmwoI2cyKSIvPgogIDxyZWN0IHdpZHRoPSI0MzAiIGhlaWdodD0iOTMyIiBmaWxsPSJ1cmwoI2czKSIvPgogIDxyZWN0IHdpZHRoPSI0MzAiIGhlaWdodD0iOTMyIiBmaWxsPSJ1cmwoI2c0KSIvPgo8L3N2Zz4K') center / cover;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 520px) and (min-height: 760px) {
+  .phone {
+    height: 900px;
+    border-radius: 42px;
+    box-shadow:
+      0 40px 90px rgba(10, 40, 30, 0.28),
+      0 0 0 10px #12211c,
+      0 0 0 11px #2b3d36;
+  }
+}
+.phone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 132px 132px;
+  opacity: 0.55;
+}
+
+.screen {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--nav-h) + 24px);
+}
+.screen.no-nav {
+  padding-bottom: 28px;
+}
+.screen::-webkit-scrollbar {
+  width: 0;
+}
+
+.pad {
+  padding: 0 20px;
+}
+
+/* ---- gradient header ---- */
+.hero {
+  position: relative;
+  background: var(--grad-brand);
+  padding: 18px 20px 30px;
+  border-radius: 0 0 30px 30px;
+  color: #fff;
+  overflow: hidden;
+  box-shadow: var(--shadow-brand);
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MzAgMjYwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS1vcGFjaXR5PSIuMTYiIHN0cm9rZS13aWR0aD0iMS40Ij4KICAgIDxjaXJjbGUgY3g9IjM2MCIgY3k9IjIwIiByPSIxMjAiLz4KICAgIDxjaXJjbGUgY3g9IjM2MCIgY3k9IjIwIiByPSIxNzAiLz4KICAgIDxjaXJjbGUgY3g9IjQwIiBjeT0iMjMwIiByPSI5MCIvPgogICAgPGNpcmNsZSBjeD0iNDAiIGN5PSIyMzAiIHI9IjE0MCIvPgogIDwvZz4KICA8cGF0aCBkPSJNMCAxOTBjOTAgNDAgMTgwLTMwIDI4MCAwczExMCAyMCAxNTAgMTB2NjBIMHoiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iLjA3Ii8+Cjwvc3ZnPgo=') no-repeat center / cover;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 118px 118px;
+  opacity: 0.25;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+.hero > * {
+  position: relative;
+  z-index: 1;
+}
+.hero.tight {
+  padding-bottom: 22px;
+}
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  opacity: 0.9;
+  padding: 2px 2px 12px;
+}
+.status-bar .dots {
+  display: flex;
+  gap: 5px;
+  align-items: flex-end;
+}
+.status-bar .dots i {
+  width: 4px;
+  height: 8px;
+  border-radius: 1px;
+  background: currentColor;
+  display: block;
+  opacity: 0.55;
+}
+.status-bar .dots i:nth-child(2) {
+  height: 11px;
+  opacity: 0.75;
+}
+.status-bar .dots i:nth-child(3) {
+  height: 14px;
+  opacity: 0.9;
+}
+
+.appbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.appbar h1 {
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+.appbar .sub {
+  font-size: 12.5px;
+  opacity: 0.88;
+  margin-top: 2px;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.icon-btn svg {
+  width: 19px;
+  height: 19px;
+}
+.icon-btn.dark {
+  background: #fff;
+  border-color: var(--border);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.greet {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: var(--grad-gold);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #6b4a06;
+  font-size: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  flex: 0 0 48px;
+}
+.greet .hi {
+  font-size: 12.5px;
+  opacity: 0.85;
+}
+.greet .name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  margin-top: 1px;
+}
+
+/* ---- cards ---- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+}
+.card.flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 22px 0 12px;
+}
+.section-head h2 {
+  font-size: 15.5px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.1px;
+}
+.section-head a {
+  font-size: 12.5px;
+  color: var(--brand-2);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.overlap {
+  margin-top: -22px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- stat row ---- */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.stat {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 11px 6px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.stat .n {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+.stat .l {
+  font-size: 9.5px;
+  color: var(--text-dim);
+  margin-top: 5px;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+}
+.stat .bar {
+  height: 3px;
+  border-radius: 2px;
+  margin-top: 8px;
+  opacity: 0.9;
+}
+
+/* ---- fund grid ---- */
+.fund-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.fund {
+  position: relative;
+  border-radius: var(--r-lg);
+  padding: 15px 14px 16px;
+  color: #fff;
+  overflow: hidden;
+  cursor: pointer;
+  border: none;
+  text-align: left;
+  font-family: inherit;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.16s ease;
+  min-height: 136px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.fund:active {
+  transform: scale(0.975);
+}
+.fund::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 100px 100px;
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+.fund::before {
+  content: '';
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  right: -45px;
+  top: -50px;
+  background: rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+}
+.fund > * {
+  position: relative;
+  z-index: 1;
+}
+.fund .ico {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: grid;
+  place-items: center;
+}
+.fund .ico svg {
+  width: 21px;
+  height: 21px;
+}
+.fund .t {
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.1px;
+}
+.fund .d {
+  font-size: 10.5px;
+  opacity: 0.86;
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+.g-brand { background: var(--grad-brand); }
+.g-rose  { background: var(--grad-rose); }
+.g-blue  { background: var(--grad-blue); }
+.g-amber { background: var(--grad-amber); }
+.g-plum  { background: var(--grad-plum); }
+.g-gold  { background: var(--grad-gold); color: #6b4a06; }
+
+/* ---- request list ---- */
+.req {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 13px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 10px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.req:active {
+  transform: scale(0.99);
+}
+.req:hover {
+  border-color: var(--border-strong);
+}
+.req .ico {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+.req .ico svg {
+  width: 20px;
+  height: 20px;
+}
+.req .mid {
+  flex: 1;
+  min-width: 0;
+}
+.req .ttl {
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.1px;
+}
+.req .meta {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-top: 4px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.req .amt {
+  font-size: 13.5px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
+  text-align: right;
+  white-space: nowrap;
+}
+.req .amt small {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-faint);
+  margin-top: 3px;
+}
+
+/* ---- badges / chips ---- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.badge i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.b-requested   { background: rgba(47, 128, 237, 0.12); color: #2069cc; }
+.b-review      { background: rgba(240, 163, 35, 0.15); color: #b57506; }
+.b-accepted    { background: rgba(18, 184, 134, 0.14); color: #0b8c65; }
+.b-transferred { background: rgba(109, 74, 214, 0.13); color: #5a3cc0; }
+.b-rejected    { background: rgba(224, 82, 95, 0.12); color: #c43a47; }
+
+.chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 4px;
+}
+.chips::-webkit-scrollbar {
+  height: 0;
+}
+.chip {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.chip.active {
+  background: var(--grad-brand);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: var(--shadow-brand);
+}
+
+/* ---- progress tracker ---- */
+.track {
+  display: flex;
+  align-items: flex-start;
+  padding: 4px 0;
+}
+.track .step {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+.track .step .dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin: 0 auto 7px;
+  display: grid;
+  place-items: center;
+  background: #eef2f0;
+  color: var(--text-faint);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--border);
+  position: relative;
+  z-index: 2;
+}
+.track .step .dot svg {
+  width: 14px;
+  height: 14px;
+}
+.track .step .lbl {
+  font-size: 10.5px;
+  font-weight: 650;
+  color: var(--text-faint);
+}
+.track .step .when {
+  font-size: 9.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+  opacity: 0.85;
+}
+.track .step::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: -50%;
+  width: 100%;
+  height: 3px;
+  background: #e8eeeb;
+  z-index: 1;
+}
+.track .step:first-child::before {
+  display: none;
+}
+.track .step.done .dot {
+  background: var(--grad-brand);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(14, 157, 99, 0.3);
+}
+.track .step.done .lbl {
+  color: var(--text);
+}
+.track .step.done::before {
+  background: var(--grad-brand);
+}
+.track .step.current .dot {
+  background: var(--grad-gold);
+  color: #6b4a06;
+  box-shadow: 0 0 0 4px rgba(224, 165, 43, 0.18);
+}
+.track .step.current .lbl {
+  color: var(--text);
+}
+
+/* vertical timeline */
+.timeline {
+  position: relative;
+  padding-left: 34px;
+}
+.timeline .ev {
+  position: relative;
+  padding-bottom: 20px;
+}
+.timeline .ev:last-child {
+  padding-bottom: 0;
+}
+.timeline .ev::before {
+  content: '';
+  position: absolute;
+  left: -24px;
+  top: 22px;
+  bottom: -2px;
+  width: 2px;
+  background: #e8eeeb;
+}
+.timeline .ev:last-child::before {
+  display: none;
+}
+.timeline .ev .mark {
+  position: absolute;
+  left: -34px;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #eef2f0;
+  color: var(--text-faint);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--border);
+}
+.timeline .ev .mark svg {
+  width: 11px;
+  height: 11px;
+}
+.timeline .ev.on .mark {
+  background: var(--grad-brand);
+  color: #fff;
+  box-shadow: none;
+}
+.timeline .ev .t {
+  font-size: 13.5px;
+  font-weight: 650;
+}
+.timeline .ev .d {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  margin-top: 3px;
+  line-height: 1.45;
+}
+.timeline .ev.off .t {
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.pbar {
+  height: 7px;
+  border-radius: 99px;
+  background: #e9efec;
+  overflow: hidden;
+}
+.pbar span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--grad-brand);
+  transition: width 0.5s ease;
+}
+
+/* ---- forms ---- */
+.field {
+  margin-bottom: 14px;
+}
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  letter-spacing: 0.1px;
+}
+.field label .req-star {
+  color: var(--danger);
+}
+.input,
+select.input,
+textarea.input {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--border);
+  background: #fff;
+  font-size: 14.5px;
+  font-family: inherit;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+}
+.input::placeholder {
+  color: #adbab4;
+}
+.input:focus,
+select.input:focus,
+textarea.input:focus {
+  border-color: var(--brand-1);
+  box-shadow: 0 0 0 4px rgba(20, 184, 146, 0.13);
+}
+.input.err {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 4px rgba(224, 82, 95, 0.1);
+}
+textarea.input {
+  resize: none;
+  min-height: 86px;
+  line-height: 1.5;
+}
+select.input {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c6f67' stroke-width='2.2' stroke-linecap='round'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-size: 17px;
+  padding-right: 40px;
+}
+.err-msg {
+  font-size: 11.5px;
+  color: var(--danger);
+  margin-top: 5px;
+  font-weight: 600;
+}
+
+.row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.input-icon {
+  position: relative;
+}
+.input-icon > svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.input-icon .input {
+  padding-left: 42px;
+}
+.input-icon .eye {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.input-icon .eye svg {
+  position: static;
+  transform: none;
+  width: 18px;
+  height: 18px;
+}
+
+.amount-wrap {
+  position: relative;
+}
+.amount-wrap .cur {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.amount-wrap .input {
+  padding-left: 52px;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
+}
+
+.quick-amounts {
+  display: flex;
+  gap: 7px;
+  margin-top: 9px;
+  flex-wrap: wrap;
+}
+.quick-amounts button {
+  flex: 1;
+  min-width: 68px;
+  padding: 8px 6px;
+  border-radius: 11px;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.quick-amounts button:hover {
+  border-color: var(--brand-1);
+  color: var(--brand-2);
+}
+
+/* segmented control */
+.seg {
+  display: flex;
+  gap: 6px;
+  background: #eef3f1;
+  padding: 4px;
+  border-radius: 14px;
+}
+.seg button {
+  flex: 1;
+  padding: 9px 4px;
+  border: none;
+  border-radius: 11px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.seg button.active {
+  background: #fff;
+  color: var(--brand-3);
+  box-shadow: var(--shadow-sm);
+}
+
+/* upload */
+.upload {
+  display: block;
+  border: 1.8px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--card-soft);
+  padding: 18px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.upload:hover {
+  border-color: var(--brand-1);
+  background: rgba(20, 184, 146, 0.05);
+}
+.upload .u-ico {
+  width: 44px;
+  height: 44px;
+  border-radius: 15px;
+  margin: 0 auto 9px;
+  background: var(--grad-brand);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-brand);
+}
+.upload .u-ico svg {
+  width: 21px;
+  height: 21px;
+}
+.upload .u-t {
+  font-size: 13px;
+  font-weight: 650;
+}
+.upload .u-d {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 3px;
+}
+.upload input[type='file'] {
+  display: none;
+}
+.upload.small {
+  padding: 14px 10px;
+}
+.upload.small .u-ico {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  margin-bottom: 7px;
+}
+.upload.small .u-ico svg {
+  width: 17px;
+  height: 17px;
+}
+.upload.small .u-t {
+  font-size: 12px;
+}
+
+.filelist {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fileitem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 9px 11px;
+}
+.fileitem .fi {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 10px;
+  background: rgba(18, 184, 134, 0.12);
+  color: var(--brand-2);
+  display: grid;
+  place-items: center;
+}
+.fileitem .fi svg {
+  width: 15px;
+  height: 15px;
+}
+.fileitem .fmid {
+  flex: 1;
+  min-width: 0;
+}
+.fileitem .fn {
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fileitem .fs {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+.fileitem .rm {
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+}
+.fileitem .rm svg {
+  width: 16px;
+  height: 16px;
+}
+.fileitem .rm:hover {
+  color: var(--danger);
+}
+.badge svg {
+  width: 12px;
+  height: 12px;
+}
+.fileitem img.thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  object-fit: cover;
+  flex: 0 0 32px;
+}
+
+/* ---- buttons ---- */
+.btn {
+  width: 100%;
+  padding: 15px 18px;
+  border: none;
+  border-radius: var(--r-md);
+  background: var(--grad-brand);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.1px;
+  cursor: pointer;
+  box-shadow: var(--shadow-brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.14s ease, filter 0.14s;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+}
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 110px 110px;
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+.btn:active {
+  transform: scale(0.985);
+  filter: brightness(0.97);
+}
+.btn svg,
+.btn span {
+  position: relative;
+  z-index: 1;
+}
+.btn svg {
+  width: 18px;
+  height: 18px;
+}
+.btn.gold {
+  background: var(--grad-gold);
+  color: #6b4a06;
+  box-shadow: 0 10px 24px rgba(224, 165, 43, 0.32);
+}
+.btn.ghost {
+  background: #fff;
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  box-shadow: none;
+}
+.btn.ghost::after,
+.btn.danger-ghost::after,
+.btn.plain::after {
+  display: none;
+}
+.btn.danger-ghost {
+  background: #fff;
+  color: var(--danger);
+  border: 1.5px solid rgba(224, 82, 95, 0.3);
+  box-shadow: none;
+}
+.btn.danger {
+  background: linear-gradient(135deg, #ff8a94 0%, #d33f4d 100%);
+  box-shadow: 0 10px 24px rgba(224, 82, 95, 0.28);
+}
+.btn.sm {
+  padding: 11px 14px;
+  font-size: 13.5px;
+  border-radius: 13px;
+}
+.btn[disabled] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+.btn-row {
+  display: flex;
+  gap: 10px;
+}
+
+.link {
+  color: var(--brand-2);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+/* spinner */
+.spin {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 2.2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: spin 0.7s linear infinite;
+  position: relative;
+  z-index: 1;
+}
+.spin.dark {
+  border-color: rgba(16, 32, 26, 0.2);
+  border-top-color: var(--brand-2);
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- bottom nav ---- */
+.nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  height: var(--nav-h);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 8px 6px;
+}
+.nav a {
+  flex: 1;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-faint);
+  font-size: 10.5px;
+  font-weight: 650;
+  padding-top: 8px;
+  transition: color 0.15s;
+}
+.nav a svg {
+  width: 21px;
+  height: 21px;
+}
+.nav a.on {
+  color: var(--brand-2);
+}
+.nav a.on .nav-ico {
+  background: rgba(18, 184, 134, 0.12);
+}
+.nav .nav-ico {
+  width: 40px;
+  height: 26px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s;
+}
+.nav .fab-wrap {
+  flex: 0 0 66px;
+  display: flex;
+  justify-content: center;
+}
+.fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 20px;
+  background: var(--grad-brand);
+  color: #fff;
+  border: 4px solid #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-brand);
+  margin-top: -26px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.fab:active {
+  transform: scale(0.94);
+}
+.fab svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* ---- sheet / dialog ---- */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: rgba(10, 30, 24, 0.48);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  background: #fff;
+  border-radius: 30px 30px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.22, 0.9, 0.3, 1);
+  max-height: 93%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -14px 40px rgba(10, 40, 30, 0.2);
+}
+.sheet.open {
+  transform: translateY(0);
+}
+.sheet .grab {
+  width: 42px;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--border-strong);
+  margin: 11px auto 4px;
+  flex: 0 0 auto;
+}
+.sheet .sheet-body {
+  overflow-y: auto;
+  padding: 8px 20px 22px;
+}
+.sheet .sheet-body::-webkit-scrollbar {
+  width: 0;
+}
+
+.sheet-head {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  padding: 6px 0 16px;
+}
+.sheet-head .ico {
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
+  border-radius: 17px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+.sheet-head .ico svg {
+  width: 24px;
+  height: 24px;
+}
+.sheet-head h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 750;
+  letter-spacing: -0.2px;
+}
+.sheet-head p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.dialog {
+  position: absolute;
+  z-index: 50;
+  left: 22px;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-46%) scale(0.94);
+  background: #fff;
+  border-radius: var(--r-xl);
+  padding: 26px 22px 22px;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.26s cubic-bezier(0.22, 0.9, 0.3, 1);
+  box-shadow: 0 24px 60px rgba(10, 40, 30, 0.28);
+}
+.dialog.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+}
+.dialog .big-ico {
+  width: 72px;
+  height: 72px;
+  border-radius: 26px;
+  margin: 0 auto 16px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--grad-brand);
+  box-shadow: var(--shadow-brand);
+}
+.dialog .big-ico svg {
+  width: 34px;
+  height: 34px;
+}
+.dialog h3 {
+  margin: 0 0 7px;
+  font-size: 19px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
+}
+.dialog p {
+  margin: 0 0 20px;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* ---- misc ---- */
+.kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.kv:last-child {
+  border-bottom: none;
+}
+.kv .k {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  flex: 0 0 auto;
+}
+.kv .v {
+  font-size: 13.5px;
+  font-weight: 650;
+  text-align: right;
+  word-break: break-word;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 15px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  margin-bottom: 9px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s;
+  width: 100%;
+  font-family: inherit;
+  text-align: left;
+}
+.list-row:hover {
+  border-color: var(--border-strong);
+}
+.list-row .li {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: rgba(18, 184, 134, 0.1);
+  color: var(--brand-2);
+}
+.list-row .li svg {
+  width: 18px;
+  height: 18px;
+}
+.list-row .lmid {
+  flex: 1;
+  min-width: 0;
+}
+.list-row .lt {
+  font-size: 14px;
+  font-weight: 620;
+}
+.list-row .ld {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+  font-weight: 500;
+}
+.list-row .chev {
+  color: var(--text-faint);
+  display: grid;
+  place-items: center;
+}
+.list-row .chev svg {
+  width: 17px;
+  height: 17px;
+}
+
+.empty {
+  text-align: center;
+  padding: 40px 26px;
+}
+.empty .e-ico {
+  width: 78px;
+  height: 78px;
+  border-radius: 28px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, rgba(20, 184, 146, 0.14), rgba(224, 165, 43, 0.14));
+  display: grid;
+  place-items: center;
+  color: var(--brand-2);
+}
+.empty .e-ico svg {
+  width: 34px;
+  height: 34px;
+}
+.empty h3 {
+  margin: 0 0 6px;
+  font-size: 15.5px;
+  font-weight: 700;
+}
+.empty p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.toast {
+  position: fixed;
+  z-index: 90;
+  left: 50%;
+  transform: translate(-50%, 140%);
+  bottom: 30px;
+  width: min(390px, calc(100vw - 40px));
+  background: #10201a;
+  color: #fff;
+  border-radius: var(--r-md);
+  padding: 13px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.22, 0.9, 0.3, 1);
+  box-shadow: 0 12px 30px rgba(10, 40, 30, 0.3);
+}
+.toast.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+.toast svg {
+  width: 18px;
+  height: 18px;
+  color: var(--brand-1);
+  flex: 0 0 18px;
+}
+.toast.bad svg {
+  color: #ff9aa3;
+}
+
+.muted {
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.center { text-align: center; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-20 { margin-top: 20px; }
+.mt-24 { margin-top: 24px; }
+.mb-0 { margin-bottom: 0; }
+
+.steps {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.steps i {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.34);
+  flex: 1;
+  transition: background 0.3s;
+}
+.steps i.on {
+  background: #fff;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.4s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+.rise-2 { animation-delay: 0.06s; }
+.rise-3 { animation-delay: 0.12s; }
+.rise-4 { animation-delay: 0.18s; }
+
+/* ===========================================================================
+   AUTH SCREENS
+   =========================================================================== */
+.auth-hero {
+  position: relative;
+  background: var(--grad-brand);
+  color: #fff;
+  padding: 34px 24px 46px;
+  border-radius: 0 0 36px 36px;
+  overflow: hidden;
+  text-align: center;
+  box-shadow: var(--shadow-brand);
+}
+.auth-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MzAgMjYwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS1vcGFjaXR5PSIuMTYiIHN0cm9rZS13aWR0aD0iMS40Ij4KICAgIDxjaXJjbGUgY3g9IjM2MCIgY3k9IjIwIiByPSIxMjAiLz4KICAgIDxjaXJjbGUgY3g9IjM2MCIgY3k9IjIwIiByPSIxNzAiLz4KICAgIDxjaXJjbGUgY3g9IjQwIiBjeT0iMjMwIiByPSI5MCIvPgogICAgPGNpcmNsZSBjeD0iNDAiIGN5PSIyMzAiIHI9IjE0MCIvPgogIDwvZz4KICA8cGF0aCBkPSJNMCAxOTBjOTAgNDAgMTgwLTMwIDI4MCAwczExMCAyMCAxNTAgMTB2NjBIMHoiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iLjA3Ii8+Cjwvc3ZnPgo=') no-repeat center / cover;
+  opacity: 0.9;
+}
+.auth-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 120px 120px;
+  opacity: 0.28;
+  mix-blend-mode: overlay;
+}
+.auth-hero > * {
+  position: relative;
+  z-index: 1;
+}
+.auth-hero .mark {
+  width: 74px;
+  height: 74px;
+  margin: 0 auto 14px;
+  border-radius: 26px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(5, 45, 30, 0.3);
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  background: #fff;
+}
+.auth-hero .mark img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.auth-hero h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -0.4px;
+  line-height: 1.25;
+}
+.auth-hero p {
+  margin: 7px 0 0;
+  font-size: 12.5px;
+  opacity: 0.9;
+  letter-spacing: 0.3px;
+}
+
+/* ===========================================================================
+   ADMIN PORTAL (desktop)
+   =========================================================================== */
+.admin-body {
+  background: #f2f6f4;
+  display: block;
+}
+.admin-body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 600px at 12% -5%, rgba(18, 184, 134, 0.13), transparent 60%),
+    radial-gradient(800px 600px at 95% 10%, rgba(224, 165, 43, 0.1), transparent 60%);
+}
+.admin-body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 160px 160px;
+  opacity: 0.4;
+}
+
+.admin-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  min-height: 100vh;
+}
+
+.side {
+  background: linear-gradient(180deg, #0d1f19 0%, #0b3b2a 55%, #0a4a33 100%);
+  color: #fff;
+  padding: 22px 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.side::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGU5ZDYzIiBzdHJva2Utb3BhY2l0eT0iLjA4NSIgc3Ryb2tlLXdpZHRoPSIxLjEiPgogICAgPHBhdGggZD0iTTYwIDYgNzQgMzAgMTAyIDMwIDg4IDU0IDEwMiA3OCA3NCA3OCA2MCAxMDIgNDYgNzggMTggNzggMzIgNTQgMTggMzAgNDYgMzBaIi8+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjU0IiByPSIxNiIvPgogICAgPHBhdGggZD0iTTAgNTRoMThNMTAyIDU0aDE4TTYwIDB2Nk02MCAxMDJ2MTgiLz4KICAgIDxwYXRoIGQ9Ik0wIDBsMTggMzBNMTIwIDBsLTE4IDMwTTAgMTIwbDE4LTE4TTEyMCAxMjBsLTE4LTE4Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNmM2I2M2YiIGZpbGwtb3BhY2l0eT0iLjA3Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNTQiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIzIi8+PGNpcmNsZSBjeD0iMTIwIiBjeT0iMCIgcj0iMyIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjEyMCIgcj0iMyIvPjxjaXJjbGUgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMyIvPgogIDwvZz4KPC9zdmc+Cg==') repeat;
+  background-size: 130px 130px;
+  opacity: 0.18;
+  pointer-events: none;
+}
+.side > * {
+  position: relative;
+  z-index: 1;
+}
+.side .brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 4px 6px 22px;
+}
+.side .brand img {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+}
+.side .brand .bt {
+  font-size: 13.5px;
+  font-weight: 750;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+.side .brand .bs {
+  font-size: 10.5px;
+  opacity: 0.62;
+  margin-top: 2px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.side nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+.side .nav-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  opacity: 0.45;
+  padding: 16px 10px 7px;
+  font-weight: 700;
+}
+.side nav a {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 12px;
+  border-radius: 13px;
+  color: rgba(255, 255, 255, 0.74);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.side nav a svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+.side nav a:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.side nav a.on {
+  background: var(--grad-brand);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(14, 157, 99, 0.35);
+}
+.side nav a .count {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 99px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.side .side-foot {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 14px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.side .side-foot .av {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--grad-gold);
+  color: #6b4a06;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 13px;
+  flex: 0 0 36px;
+}
+.side .side-foot .who {
+  flex: 1;
+  min-width: 0;
+}
+.side .side-foot .wn {
+  font-size: 12.5px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.side .side-foot .we {
+  font-size: 10.5px;
+  opacity: 0.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.side .side-foot .out {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.side .side-foot .out:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.side .side-foot .out svg {
+  width: 16px;
+  height: 16px;
+}
+
+.main {
+  padding: 26px 30px 46px;
+  min-width: 0;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.topbar h1 {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 750;
+  letter-spacing: -0.5px;
+}
+.topbar .crumb {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  gap: 14px;
+}
+.kpi {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 17px 18px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.kpi .kico {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  margin-bottom: 13px;
+  box-shadow: var(--shadow-sm);
+}
+.kpi .kico svg {
+  width: 19px;
+  height: 19px;
+}
+.kpi .kn {
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.kpi .kl {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  font-weight: 600;
+}
+.kpi .kedge {
+  position: absolute;
+  right: -30px;
+  top: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  opacity: 0.08;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.panel-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.panel-head .ph-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+.panel-body {
+  padding: 20px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.search {
+  position: relative;
+  flex: 1;
+  min-width: 210px;
+}
+.search svg {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 17px;
+  height: 17px;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.search input {
+  width: 100%;
+  padding: 10px 14px 10px 39px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  font-family: inherit;
+  font-size: 13.5px;
+  outline: none;
+  background: #fff;
+  color: var(--text);
+}
+.search input:focus {
+  border-color: var(--brand-1);
+  box-shadow: 0 0 0 4px rgba(20, 184, 146, 0.12);
+}
+
+table.grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+table.grid th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-faint);
+  font-weight: 700;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card-soft);
+  white-space: nowrap;
+}
+table.grid td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+table.grid tbody tr {
+  transition: background 0.12s;
+}
+table.grid tbody tr:hover {
+  background: var(--card-soft);
+}
+table.grid tbody tr:last-child td {
+  border-bottom: none;
+}
+table.grid .who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+table.grid .who .av {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  font-weight: 750;
+  font-size: 12px;
+  background: linear-gradient(135deg, rgba(20, 184, 146, 0.16), rgba(224, 165, 43, 0.2));
+  color: var(--brand-3);
+}
+table.grid .who .wn {
+  font-weight: 650;
+}
+table.grid .who .we {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+table.grid .ref {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--brand-3);
+}
+table.grid .num {
+  font-weight: 750;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+table.grid .rowlink {
+  color: var(--brand-2);
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 12.5px;
+}
+table.grid .rowlink:hover {
+  text-decoration: underline;
+}
+
+.fundtag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 620;
+  white-space: nowrap;
+}
+.fundtag .fdot {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  flex: 0 0 24px;
+}
+.fundtag .fdot svg {
+  width: 13px;
+  height: 13px;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 1080px) {
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+  .admin-shell {
+    grid-template-columns: 76px 1fr;
+  }
+  .side .brand .bt,
+  .side .brand .bs,
+  .side nav a span,
+  .side .nav-label,
+  .side .side-foot .who {
+    display: none;
+  }
+  .side nav a {
+    justify-content: center;
+  }
+  .side .side-foot {
+    justify-content: center;
+  }
+  .main {
+    padding: 20px 18px 40px;
+  }
+}
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+.bar-row .bl {
+  flex: 0 0 118px;
+  font-size: 12.5px;
+  font-weight: 620;
+}
+.bar-row .btrack {
+  flex: 1;
+  height: 9px;
+  border-radius: 99px;
+  background: #eef3f1;
+  overflow: hidden;
+}
+.bar-row .btrack span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+}
+.bar-row .bv {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  min-width: 34px;
+  text-align: right;
+}
+
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.doc {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--card-soft);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.doc:hover {
+  border-color: var(--brand-1);
+  transform: translateY(-2px);
+}
+.doc .dprev {
+  height: 104px;
+  background: #eef3f1;
+  display: grid;
+  place-items: center;
+  color: var(--text-faint);
+  overflow: hidden;
+}
+.doc .dprev img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.doc .dprev svg {
+  width: 28px;
+  height: 28px;
+}
+.doc .dmeta {
+  padding: 9px 11px;
+}
+.doc .dn {
+  font-size: 12px;
+  font-weight: 620;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.doc .ds {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+
+.admin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.note {
+  background: var(--card-soft);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold-2);
+  border-radius: var(--r-sm);
+  padding: 11px 13px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 20px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.pager .pbtns {
+  display: flex;
+  gap: 8px;
+}
+.pager button {
+  padding: 7px 13px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 620;
+  cursor: pointer;
+  color: var(--text);
+}
+.pager button:hover:not(:disabled) {
+  border-color: var(--brand-1);
+  color: var(--brand-2);
+}
+.pager button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.admin-btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  background: var(--grad-brand);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 680;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-brand);
+  text-decoration: none;
+  transition: transform 0.14s;
+}
+.admin-btn:active {
+  transform: scale(0.98);
+}
+.admin-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.admin-btn.ghost {
+  background: #fff;
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  box-shadow: none;
+}
+.admin-btn.gold {
+  background: var(--grad-gold);
+  color: #6b4a06;
+  box-shadow: 0 8px 20px rgba(224, 165, 43, 0.3);
+}
+.admin-btn.plum {
+  background: var(--grad-plum);
+  box-shadow: 0 8px 20px rgba(109, 74, 214, 0.28);
+}
+.admin-btn.red {
+  background: #fff;
+  color: var(--danger);
+  border: 1.5px solid rgba(224, 82, 95, 0.3);
+  box-shadow: none;
+}
+.admin-btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* admin modal */
+.amodal-back {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(10, 30, 24, 0.5);
+  backdrop-filter: blur(3px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.amodal {
+  background: #fff;
+  border-radius: var(--r-xl);
+  width: min(440px, 100%);
+  padding: 24px;
+  box-shadow: 0 30px 70px rgba(10, 40, 30, 0.3);
+  animation: rise 0.25s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+.amodal h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
+}
+.amodal p.sub {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* ===========================================================================
+   BILINGUAL — English (LTR) / Urdu (RTL)
+   Only direction-sensitive rules live here; everything else is shared.
+   =========================================================================== */
+
+/* Urdu typography: Nastaliq needs far more line height than Latin faces. */
+:root[lang='ur'] body,
+[lang='ur'] {
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Inter', sans-serif;
+}
+:root[lang='ur'] {
+  line-height: 2.05;
+}
+:root[lang='ur'] .input,
+:root[lang='ur'] textarea.input,
+:root[lang='ur'] select.input {
+  line-height: 2.1;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+:root[lang='ur'] .badge {
+  letter-spacing: 0;
+  text-transform: none;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+:root[lang='ur'] .stat .l,
+:root[lang='ur'] .track .step .lbl,
+:root[lang='ur'] .nav a {
+  line-height: 1.6;
+}
+:root[lang='ur'] h1,
+:root[lang='ur'] h2,
+:root[lang='ur'] h3 {
+  letter-spacing: 0;
+  line-height: 1.75;
+}
+
+/* Amounts, references and dates stay Latin and stay LTR inside Urdu text. */
+.num,
+.ref,
+.amt,
+.amount-wrap .input,
+.quick-amounts button {
+  font-family: 'Inter', sans-serif;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* ---- direction flips ---- */
+[dir='rtl'] .input-icon > svg {
+  left: auto;
+  right: 14px;
+}
+[dir='rtl'] .input-icon .input {
+  padding-left: 14px;
+  padding-right: 42px;
+}
+[dir='rtl'] .input-icon .eye {
+  right: auto;
+  left: 10px;
+}
+[dir='rtl'] .amount-wrap .cur {
+  left: auto;
+  right: 14px;
+}
+[dir='rtl'] .amount-wrap .input {
+  padding-left: 14px;
+  padding-right: 52px;
+  text-align: right;
+}
+[dir='rtl'] select.input {
+  background-position: left 13px center;
+  padding-right: 14px;
+  padding-left: 40px;
+}
+[dir='rtl'] .req .amt,
+[dir='rtl'] .kv .v {
+  text-align: left;
+}
+[dir='rtl'] .timeline {
+  padding-left: 0;
+  padding-right: 34px;
+}
+[dir='rtl'] .timeline .ev::before {
+  left: auto;
+  right: -24px;
+}
+[dir='rtl'] .timeline .ev .mark {
+  left: auto;
+  right: -34px;
+}
+[dir='rtl'] .track .step::before {
+  left: auto;
+  right: -50%;
+}
+[dir='rtl'] .fund::before {
+  right: auto;
+  left: -45px;
+}
+[dir='rtl'] .kpi .kedge {
+  right: auto;
+  left: -30px;
+}
+[dir='rtl'] .note {
+  border-left: 1px solid var(--border);
+  border-right: 3px solid var(--gold-2);
+}
+[dir='rtl'] .side nav a .count {
+  margin-left: 0;
+  margin-right: auto;
+}
+[dir='rtl'] table.grid th,
+[dir='rtl'] table.grid td {
+  text-align: right;
+}
+/* chevrons point the way the reader travels */
+[dir='rtl'] .list-row .chev svg,
+[dir='rtl'] .btn svg.flip,
+[dir='rtl'] .admin-btn svg.flip {
+  transform: scaleX(-1);
+}
+
+/* ---- language switch ---- */
+.lang-toggle {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  flex: 0 0 auto;
+}
+.lang-toggle[data-pending] {
+  opacity: 0.6;
+}
+.lang-toggle button {
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  line-height: 1.5;
+  transition: background 0.15s, color 0.15s;
+}
+.lang-toggle button[lang='ur'] {
+  font-family: 'Noto Nastaliq Urdu', serif;
+  font-size: 11px;
+  padding-bottom: 7px;
+}
+.lang-toggle button.on {
+  background: #fff;
+  color: var(--brand-3);
+}
+.lang-toggle[data-tone='dark'] {
+  background: #fff;
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.lang-toggle[data-tone='dark'] button {
+  color: var(--text-dim);
+}
+.lang-toggle[data-tone='dark'] button.on {
+  background: var(--grad-brand);
+  color: #fff;
+}
+
+
+/* ==== review-page chrome (pv- prefix, never touches the app classes) ==== */
+:root {
+  --pv-ground: #f4f7f5;
+  --pv-panel: #ffffff;
+  --pv-ink: #16241e;
+  --pv-muted: #5f736b;
+  --pv-rule: #dbe4df;
+  --pv-accent: #b8801a;
+  --pv-shadow: 0 30px 60px rgba(12, 40, 30, .13);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pv-ground: #0d1613;
+    --pv-panel: #14201b;
+    --pv-ink: #e9f1ec;
+    --pv-muted: #8ba297;
+    --pv-rule: #24342d;
+    --pv-accent: #e7b95a;
+    --pv-shadow: 0 30px 70px rgba(0, 0, 0, .5);
+  }
+}
+:root[data-theme="dark"] {
+  --pv-ground: #0d1613;
+  --pv-panel: #14201b;
+  --pv-ink: #e9f1ec;
+  --pv-muted: #8ba297;
+  --pv-rule: #24342d;
+  --pv-accent: #e7b95a;
+  --pv-shadow: 0 30px 70px rgba(0, 0, 0, .5);
+}
+
+body {
+  background: var(--pv-ground);
+  color: var(--pv-ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  margin: 0;
+}
+
+.pv-wrap { max-width: 1180px; margin: 0 auto; padding: 0 28px 96px; }
+
+/* masthead */
+.pv-head { padding: 76px 0 44px; border-bottom: 1px solid var(--pv-rule); }
+.pv-head .pv-lockup { display: flex; align-items: center; gap: 18px; }
+.pv-head .pv-lockup img { width: 60px; height: 60px; border-radius: 20px; }
+.pv-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 2.2px; text-transform: uppercase;
+  color: var(--pv-accent);
+}
+.pv-head h1 {
+  font-family: 'Newsreader', Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(34px, 5.4vw, 56px);
+  line-height: 1.04;
+  letter-spacing: -1.4px;
+  margin: 22px 0 0;
+  text-wrap: balance;
+  max-width: 16ch;
+}
+.pv-head h1 em { font-style: italic; color: var(--pv-accent); }
+.pv-lede {
+  font-size: 16px; line-height: 1.65; color: var(--pv-muted);
+  max-width: 62ch; margin: 20px 0 0;
+}
+.pv-meta {
+  display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 30px;
+  font-size: 12.5px; color: var(--pv-muted);
+}
+.pv-meta b { color: var(--pv-ink); font-weight: 650; }
+
+/* section */
+.pv-sec { padding-top: 72px; }
+.pv-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; flex-wrap: wrap; margin-bottom: 30px; }
+.pv-sec h2 {
+  font-family: 'Newsreader', Georgia, serif;
+  font-weight: 400; font-size: 30px; letter-spacing: -.7px;
+  margin: 10px 0 0;
+}
+.pv-sec p.pv-note {
+  font-size: 14px; line-height: 1.65; color: var(--pv-muted);
+  max-width: 46ch; margin: 0;
+}
+
+/* phone rail */
+.pv-rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 34px 26px;
+}
+.pv-frame { min-width: 0; }
+.pv-cap { display: flex; align-items: baseline; gap: 9px; margin-bottom: 13px; }
+.pv-cap .pv-n {
+  font-size: 11px; font-weight: 700; color: var(--pv-accent);
+  font-variant-numeric: tabular-nums;
+}
+.pv-cap .pv-t { font-size: 13.5px; font-weight: 650; }
+.pv-cap .pv-d { font-size: 12px; color: var(--pv-muted); }
+
+/* phone viewport — the app CSS renders inside, unmodified */
+.pv-phone {
+  height: 780px;
+  border-radius: 40px;
+  overflow: hidden;
+  background: #eef4f1;
+  box-shadow: var(--pv-shadow), 0 0 0 9px #12211c, 0 0 0 10px #35493f;
+  position: relative;
+}
+.pv-phone .phone {
+  max-width: none; width: 100%; height: 100%;
+  border-radius: 0; box-shadow: none;
+}
+.pv-phone .screen { padding-bottom: 98px; }
+
+/* desktop viewport for the admin portal */
+.pv-desk {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f2f6f4;
+  box-shadow: var(--pv-shadow);
+  border: 1px solid var(--pv-rule);
+}
+.pv-bar {
+  height: 38px; background: #0d1a16; display: flex; align-items: center; gap: 8px; padding: 0 15px;
+}
+.pv-bar i { width: 10px; height: 10px; border-radius: 50%; background: #35493f; display: block; }
+.pv-bar span {
+  margin-left: 12px; font-size: 11.5px; color: #7d968b;
+  font-family: ui-monospace, Menlo, monospace;
+}
+.pv-scroll { height: 760px; overflow: auto; }
+.pv-scroll .admin-body { min-height: 100%; position: relative; overflow: hidden; }
+.pv-scroll .admin-shell { min-height: 760px; }
+.pv-scroll .side { height: auto; position: static; }
+/* the app paints these fixed to the viewport — contain them in the frame */
+.pv-scroll .admin-body::before, .pv-scroll .admin-body::after { position: absolute; }
+
+/* swatches */
+.pv-swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+.pv-sw { border-radius: 16px; overflow: hidden; border: 1px solid var(--pv-rule); background: var(--pv-panel); }
+.pv-sw .pv-chip { height: 78px; }
+.pv-sw .pv-lbl { padding: 11px 13px; }
+.pv-sw .pv-lbl b { display: block; font-size: 12.5px; font-weight: 650; }
+.pv-sw .pv-lbl span {
+  display: block; font-size: 11px; color: var(--pv-muted); margin-top: 3px;
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+/* spec list */
+.pv-specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2px; background: var(--pv-rule); border: 1px solid var(--pv-rule); border-radius: 16px; overflow: hidden; }
+.pv-spec { background: var(--pv-panel); padding: 18px 20px; }
+.pv-spec b { display: block; font-size: 13px; font-weight: 650; margin-bottom: 6px; }
+.pv-spec span { font-size: 12.5px; line-height: 1.6; color: var(--pv-muted); }
+
+.pv-foot {
+  margin-top: 80px; padding-top: 26px; border-top: 1px solid var(--pv-rule);
+  font-size: 12.5px; color: var(--pv-muted); display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .pv-wrap { padding: 0 18px 70px; }
+  .pv-phone { height: 700px; }
+  .pv-scroll { height: 560px; }
+}
+</style>
+
+<!-- icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="ig" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></g>
+  </defs>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-5.5h5V20"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 9h8M8 13h8M8 17h4"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20c0-3.6 3.4-6 7.5-6s7.5 2.4 7.5 6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M2.8 20c0-3.3 2.9-5.6 6.2-5.6s6.2 2.3 6.2 5.6"/><path d="M16.5 5.2a3.4 3.4 0 0 1 0 6.6M17.5 14.8c2.3.6 3.9 2.3 3.9 5.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.8v.6"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7.5 8 5 8-5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10.5" rx="3"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3.2"/></symbol>
+  <symbol id="i-arrowRight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-chevL" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-chevR" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 7"/></symbol>
+  <symbol id="i-checkCircle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.4l2.8 2.8L16 9.8"/></symbol>
+  <symbol id="i-xCircle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.3l3.2 2"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 9.8 21 3Z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18"/><circle cx="17" cy="14.5" r="1.3"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M7.5 8.5 12 4l4.5 4.5"/><path d="M4 15v3.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V15"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5H7A2 2 0 0 0 5 5.5v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9l-5.5-5.5Z"/><path d="M13.5 3.5V9H19"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m4.5 17 4.2-4 3.3 3 2.8-2.6 4.7 4.4"/></symbol>
+  <symbol id="i-idcard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="3"/><circle cx="8.5" cy="11" r="2.2"/><path d="M5 16.2c.6-1.5 2-2.2 3.5-2.2s2.9.7 3.5 2.2"/><path d="M14.5 10h4M14.5 13.5h4"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 15h3"/></symbol>
+  <symbol id="i-health" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-7.5-4.6-7.5-10A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 7.5 3.5c0 5.4-7.5 10-7.5 10Z"/><path d="M8.5 12h2l1-2 1.5 4 1-2h2"/></symbol>
+  <symbol id="i-basket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16l-1.4 9.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8L4 9Z"/><path d="M9 9 12 3l3 6"/><path d="M10 13v3M14 13v3"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5.5c0 4.4 3 8 7 9.5 4-1.5 7-5.1 7-9.5V6l-7-3Z"/><path d="M9.2 12.2 11.2 14.2 15 10.4"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13.5 6 5.5h12l2.5 8v5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-5Z"/><path d="M3.5 13.5h4l1 2.5h7l1-2.5h4"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="2.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2.2"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 16.5 9 11l3.5 3.5L20 7"/><path d="M15.5 7H20v4.5"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V20a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.56V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.56 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.03Z"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 4.5H6A2 2 0 0 0 4 6.5v11a2 2 0 0 0 2 2h3.5"/><path d="M15 8l4 4-4 4"/><path d="M19 12H9.5"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h3l1.6 4-2 1.4a12 12 0 0 0 5.5 5.5l1.4-2 4 1.6v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4 5.7 2 2 0 0 1 6 3.5Z"/></symbol>
+  <symbol id="i-battery" viewBox="0 0 22 11" fill="none"><rect x=".6" y=".6" width="17" height="9.8" rx="2.6" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="13" height="7" rx="1.6" fill="currentColor"/><path d="M19.4 4v3a1.9 1.9 0 0 0 0-3Z" fill="currentColor" opacity=".5"/></symbol>
+</svg>
+
+<div class="pv-wrap">
+
+  <!-- ================= masthead ================= -->
+  <header class="pv-head">
+    <div class="pv-lockup">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NiA5NiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImxnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMxNGI4OTIiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1NSUiIHN0b3AtY29sb3I9IiMwZTlkNjMiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMGI3YTRlIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJsZ29sZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZmZkOTc3Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2UwYTUyYiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9Ijg4IiBoZWlnaHQ9Ijg4IiByeD0iMjYiIGZpbGw9InVybCgjbGcpIi8+CiAgPHBhdGggZD0iTTQ4IDI0IDU4IDQwIDc2IDQwIDY0IDU0IDcwIDcyIDQ4IDYyIDI2IDcyIDMyIDU0IDIwIDQwIDM4IDQwWiIgZmlsbD0idXJsKCNsZ29sZCkiIGZpbGwtb3BhY2l0eT0iLjk1Ii8+CiAgPHBhdGggZD0iTTQ4IDQyYy02IDAtMTAgNC0xMCA5IDAgOSAxMCAxMyAxMCAxM3MxMC00IDEwLTEzYzAtNS00LTktMTAtOXoiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iLjkyIi8+Cjwvc3ZnPgo=" alt="">
+      <div>
+        <div class="pv-eyebrow">Design review · v1</div>
+        <div style="font-size:13.5px;color:var(--pv-muted);margin-top:5px">Member app &amp; admin portal</div>
+      </div>
+    </div>
+    <h1>Subaidar Hasnain <em>Foundation</em></h1>
+    <p class="pv-lede">
+      A welfare application built around one promise: a family in difficulty can ask for help in under a
+      minute, attach the bill or medical report that proves the need, and then watch exactly where their
+      request sits. Every screen below is rendered from the app's own stylesheet — what you see is the
+      built product, not a mockup of it.
+    </p>
+    <div class="pv-meta">
+      <span><b>4 funds</b> Monthly · Accidental · Grocery · Electricity</span>
+      <span><b>4 stages</b> Requested → Review → Accepted → Transferred</span>
+      <span><b>Stack</b> Next.js on Vercel · Supabase</span>
+    </div>
+  </header>
+
+  <!-- ================= palette ================= -->
+  <section class="pv-sec">
+    <div class="pv-sec-head">
+      <div>
+        <div class="pv-eyebrow">01 — Foundations</div>
+        <h2>Palette &amp; surface</h2>
+      </div>
+      <p class="pv-note">
+        Emerald carries the brand; gold marks anything awaiting a person's decision. Each fund gets its
+        own gradient so members recognise a card before they read it. Behind everything sits a light
+        geometric pattern at low opacity — texture without noise.
+      </p>
+    </div>
+
+    <div class="pv-swatches">
+      <div class="pv-sw"><div class="pv-chip g-brand"></div><div class="pv-lbl"><b>Brand emerald</b><span>#14b892 → #0b7a4e</span></div></div>
+      <div class="pv-sw"><div class="pv-chip g-gold"></div><div class="pv-lbl"><b>Decision gold</b><span>#ffd977 → #e0a52b</span></div></div>
+      <div class="pv-sw"><div class="pv-chip g-rose"></div><div class="pv-lbl"><b>Accidental fund</b><span>#ff9a8b → #e0525f</span></div></div>
+      <div class="pv-sw"><div class="pv-chip g-amber"></div><div class="pv-lbl"><b>Grocery fund</b><span>#ffc86b → #f08a24</span></div></div>
+      <div class="pv-sw"><div class="pv-chip g-blue"></div><div class="pv-lbl"><b>Electricity fund</b><span>#5aa9ff → #2f6fe0</span></div></div>
+      <div class="pv-sw"><div class="pv-chip g-plum"></div><div class="pv-lbl"><b>Transferred</b><span>#b28bff → #6d4ad6</span></div></div>
+    </div>
+  </section>
+
+  <!-- ================= entry ================= -->
+  <section class="pv-sec">
+    <div class="pv-sec-head">
+      <div>
+        <div class="pv-eyebrow">02 — Getting in</div>
+        <h2>Registration &amp; sign in</h2>
+      </div>
+      <p class="pv-note">
+        Registration is split into three short steps rather than one long form — name and gender, then
+        contact and location, then CNIC and password. Nobody abandons a form they can see the end of.
+      </p>
+    </div>
+
+    <div class="pv-rail">
+
+      <!-- ---- sign in ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">01</span><span class="pv-t">Sign in</span><span class="pv-d">returning member</span></div>
+        <div class="pv-phone"><div class="phone"><div class="screen no-nav">
+          <div class="auth-hero">
+            <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+            <div class="mark"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NiA5NiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImxnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMxNGI4OTIiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1NSUiIHN0b3AtY29sb3I9IiMwZTlkNjMiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMGI3YTRlIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJsZ29sZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZmZkOTc3Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2UwYTUyYiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9Ijg4IiBoZWlnaHQ9Ijg4IiByeD0iMjYiIGZpbGw9InVybCgjbGcpIi8+CiAgPHBhdGggZD0iTTQ4IDI0IDU4IDQwIDc2IDQwIDY0IDU0IDcwIDcyIDQ4IDYyIDI2IDcyIDMyIDU0IDIwIDQwIDM4IDQwWiIgZmlsbD0idXJsKCNsZ29sZCkiIGZpbGwtb3BhY2l0eT0iLjk1Ii8+CiAgPHBhdGggZD0iTTQ4IDQyYy02IDAtMTAgNC0xMCA5IDAgOSAxMCAxMyAxMCAxM3MxMC00IDEwLTEzYzAtNS00LTktMTAtOXoiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iLjkyIi8+Cjwvc3ZnPgo=" alt=""></div>
+            <h1>Subaidar Hasnain Foundation</h1>
+            <p>WELFARE • RELIEF • DIGNITY</p>
+          </div>
+          <div class="pad mt-24">
+            <h2 style="font-size:20px;font-weight:750;margin:0 0 5px;letter-spacing:-.4px">Sign in</h2>
+            <p class="muted" style="margin:0 0 20px">Welcome back. Sign in to apply for a fund or track an existing application.</p>
+            <div class="field">
+              <label>Email address</label>
+              <div class="input-icon"><svg><use href="#i-mail"/></svg>
+                <div class="input">fatima.bibi@gmail.com</div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Password</label>
+              <div class="input-icon"><svg><use href="#i-lock"/></svg>
+                <div class="input">••••••••••</div>
+                <button class="eye"><svg><use href="#i-eye"/></svg></button>
+              </div>
+            </div>
+            <button class="btn mt-8"><svg><use href="#i-arrowRight"/></svg><span>Sign in</span></button>
+            <p class="center muted mt-20" style="font-size:13.5px">New to the foundation? <a class="link">Create an account</a></p>
+            <div class="note mt-24"><strong style="color:var(--text)">Need help?</strong> Visit the foundation office with your CNIC, or call the helpline.</div>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- ---- register ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">02</span><span class="pv-t">Register — step 3</span><span class="pv-d">CNIC &amp; password</span></div>
+        <div class="pv-phone"><div class="phone"><div class="screen no-nav">
+          <div class="hero tight">
+            <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+            <div class="appbar">
+              <button class="icon-btn"><svg><use href="#i-chevL"/></svg></button>
+              <div style="flex:1"><h1>Create account</h1><div class="sub">Step 3 of 3 — ID &amp; password</div></div>
+            </div>
+            <div class="steps mt-16"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+          </div>
+          <div class="pad mt-24">
+            <div class="field">
+              <label>CNIC / ID card image <span class="req-star">*</span></label>
+              <div class="upload">
+                <div class="u-ico"><svg><use href="#i-checkCircle"/></svg></div>
+                <div class="u-t">Change CNIC image</div>
+                <div class="u-d">JPG, PNG or PDF — up to 10 MB</div>
+              </div>
+              <div class="filelist">
+                <div class="fileitem">
+                  <div class="fi"><svg><use href="#i-idcard"/></svg></div>
+                  <div class="fmid"><div class="fn">cnic-front.jpg</div><div class="fs">1.2 MB</div></div>
+                  <button class="rm"><svg><use href="#i-x"/></svg></button>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Password <span class="req-star">*</span></label>
+              <div class="input-icon"><svg><use href="#i-lock"/></svg><div class="input">••••••••••</div></div>
+            </div>
+            <div class="field">
+              <label>Confirm password <span class="req-star">*</span></label>
+              <div class="input-icon"><svg><use href="#i-lock"/></svg><div class="input">••••••••••</div></div>
+            </div>
+            <div class="note">Your CNIC is stored privately and is only visible to foundation administrators reviewing your applications.</div>
+            <button class="btn mt-20"><svg><use href="#i-checkCircle"/></svg><span>Complete registration</span></button>
+          </div>
+        </div></div></div>
+      </div>
+
+      <!-- ---- profile ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">03</span><span class="pv-t">Profile</span><span class="pv-d">registration on file</span></div>
+        <div class="pv-phone"><div class="phone"><div class="screen">
+          <div class="hero">
+            <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+            <div class="appbar">
+              <button class="icon-btn"><svg><use href="#i-chevL"/></svg></button>
+              <div style="flex:1"><h1>My profile</h1></div>
+              <button class="icon-btn"><svg><use href="#i-settings"/></svg></button>
+            </div>
+            <div class="center mt-20">
+              <div class="avatar" style="width:76px;height:76px;border-radius:26px;font-size:25px;margin:0 auto 12px">FB</div>
+              <div style="font-size:19px;font-weight:750;letter-spacing:-.3px">Fatima Bibi</div>
+              <div style="font-size:12.5px;opacity:.85;margin-top:3px">Lahore, Pakistan</div>
+            </div>
+          </div>
+          <div class="pad overlap">
+            <div class="card" style="display:flex;text-align:center">
+              <div style="flex:1"><div style="font-size:19px;font-weight:800;letter-spacing:-.5px">6</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:600">Applications</div></div>
+              <div style="width:1px;background:var(--border)"></div>
+              <div style="flex:1"><div style="font-size:19px;font-weight:800;letter-spacing:-.5px;color:var(--brand-2)">74,000</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:600">PKR received</div></div>
+              <div style="width:1px;background:var(--border)"></div>
+              <div style="flex:1"><div style="font-size:19px;font-weight:800;letter-spacing:-.5px">2024</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:600">Member since</div></div>
+            </div>
+          </div>
+          <div class="pad">
+            <div class="section-head"><h2>Registration details</h2></div>
+            <div class="card">
+              <div class="kv"><span class="k">Gender</span><span class="v">Female</span></div>
+              <div class="kv"><span class="k">Age</span><span class="v">41 years</span></div>
+              <div class="kv"><span class="k">Country</span><span class="v">Pakistan</span></div>
+              <div class="kv"><span class="k">City</span><span class="v">Lahore</span></div>
+              <div class="kv"><span class="k">Email</span><span class="v">fatima.bibi@gmail.com</span></div>
+              <div class="kv"><span class="k">Mobile</span><span class="v">+92 301 4477210</span></div>
+            </div>
+          </div>
+          <div class="pad">
+            <div class="section-head"><h2>Identity document</h2></div>
+            <button class="list-row"><span class="li"><svg><use href="#i-idcard"/></svg></span><span class="lmid"><span class="lt" style="display:block">CNIC on file</span><span class="ld" style="display:block">Verified against your registration</span></span><span class="chev"><svg><use href="#i-eye"/></svg></span></button>
+          </div>
+          <nav class="nav">
+            <a><span class="nav-ico"><svg><use href="#i-home"/></svg></span>Home</a>
+            <a><span class="nav-ico"><svg><use href="#i-list"/></svg></span>Requests</a>
+            <div class="fab-wrap"><button class="fab"><svg><use href="#i-plus"/></svg></button></div>
+            <a><span class="nav-ico"><svg><use href="#i-info"/></svg></span>Help</a>
+            <a class="on"><span class="nav-ico"><svg><use href="#i-user"/></svg></span>Profile</a>
+          </nav>
+        </div></div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= the ask ================= -->
+  <section class="pv-sec">
+    <div class="pv-sec-head">
+      <div>
+        <div class="pv-eyebrow">03 — The core flow</div>
+        <h2>Choosing a fund, and asking</h2>
+      </div>
+      <p class="pv-note">
+        Tapping a fund raises a confirmation before anything else happens — it names the fund and says
+        what will be needed. Only then does the sheet open for the amount and the bill or report.
+        Two deliberate steps, so nobody submits by accident.
+      </p>
+    </div>
+
+    <div class="pv-rail">
+
+      <!-- ---- dashboard ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">04</span><span class="pv-t">Dashboard</span><span class="pv-d">funds &amp; live progress</span></div>
+        <div class="pv-phone"><div class="phone"><div class="screen">
+          <div class="hero">
+            <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+            <div class="greet">
+              <div class="avatar">FB</div>
+              <div style="flex:1;min-width:0"><div class="hi">Assalam-u-Alaikum</div><div class="name">Fatima Bibi</div></div>
+              <button class="icon-btn"><svg><use href="#i-user"/></svg></button>
+            </div>
+            <div class="mt-20" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:15px 17px">
+              <div style="font-size:11.5px;opacity:.85;letter-spacing:.3px">TOTAL SUPPORT RECEIVED</div>
+              <div style="font-size:28px;font-weight:800;letter-spacing:-1px;margin-top:4px;line-height:1">PKR 74,000</div>
+              <div style="font-size:11.5px;opacity:.85;margin-top:7px">Across 6 applications · 3 transferred</div>
+            </div>
+          </div>
+          <div class="pad overlap">
+            <div class="stat-row">
+              <div class="stat"><div class="n" style="color:var(--st-requested)">1</div><div class="l">Requested</div><div class="bar" style="background:var(--st-requested)"></div></div>
+              <div class="stat"><div class="n" style="color:var(--st-review)">1</div><div class="l">Review</div><div class="bar" style="background:var(--st-review)"></div></div>
+              <div class="stat"><div class="n" style="color:var(--st-accepted)">1</div><div class="l">Accepted</div><div class="bar" style="background:var(--st-accepted)"></div></div>
+              <div class="stat"><div class="n" style="color:var(--st-transfer)">3</div><div class="l">Transferred</div><div class="bar" style="background:var(--st-transfer)"></div></div>
+            </div>
+          </div>
+          <div class="pad">
+            <div class="section-head"><h2>Apply for a fund</h2><span style="font-size:12px;color:var(--text-faint)">4 available</span></div>
+            <div class="fund-grid">
+              <button class="fund g-brand"><div class="ico"><svg><use href="#i-calendar"/></svg></div><div><div class="t">Monthly Fund</div><div class="d">Recurring monthly support for registered families</div></div></button>
+              <button class="fund g-rose"><div class="ico"><svg><use href="#i-health"/></svg></div><div><div class="t">Accidental Fund</div><div class="d">Emergency help after an accident or medical event</div></div></button>
+              <button class="fund g-amber"><div class="ico"><svg><use href="#i-basket"/></svg></div><div><div class="t">Grocery Fund</div><div class="d">Ration and household grocery assistance</div></div></button>
+              <button class="fund g-blue"><div class="ico"><svg><use href="#i-bolt"/></svg></div><div><div class="t">Electricity Bill Fund</div><div class="d">Help clearing an outstanding electricity bill</div></div></button>
+            </div>
+          </div>
+          <div class="pad">
+            <div class="section-head"><h2>Your applications</h2><a>View all</a></div>
+            <a class="req"><div class="ico g-blue"><svg><use href="#i-bolt"/></svg></div><div class="mid"><div class="ttl">Electricity Bill Fund</div><div class="meta"><span class="badge b-review"><i></i>Review</span><span>2d ago</span></div></div><div class="amt">18,400<small>PKR</small></div></a>
+            <a class="req"><div class="ico g-rose"><svg><use href="#i-health"/></svg></div><div class="mid"><div class="ttl">Accidental Fund</div><div class="meta"><span class="badge b-accepted"><i></i>Accepted</span><span>6d ago</span></div></div><div class="amt">45,000<small>PKR</small></div></a>
+          </div>
+          <nav class="nav">
+            <a class="on"><span class="nav-ico"><svg><use href="#i-home"/></svg></span>Home</a>
+            <a><span class="nav-ico"><svg><use href="#i-list"/></svg></span>Requests</a>
+            <div class="fab-wrap"><button class="fab"><svg><use href="#i-plus"/></svg></button></div>
+            <a><span class="nav-ico"><svg><use href="#i-info"/></svg></span>Help</a>
+            <a><span class="nav-ico"><svg><use href="#i-user"/></svg></span>Profile</a>
+          </nav>
+        </div></div></div>
+      </div>
+
+      <!-- ---- confirm ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">05</span><span class="pv-t">Confirmation</span><span class="pv-d">raised on tap</span></div>
+        <div class="pv-phone"><div class="phone">
+          <div class="screen">
+            <div class="hero">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="greet"><div class="avatar">FB</div><div style="flex:1"><div class="hi">Assalam-u-Alaikum</div><div class="name">Fatima Bibi</div></div></div>
+              <div class="mt-20" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:15px 17px">
+                <div style="font-size:11.5px;opacity:.85;letter-spacing:.3px">TOTAL SUPPORT RECEIVED</div>
+                <div style="font-size:28px;font-weight:800;letter-spacing:-1px;margin-top:4px;line-height:1">PKR 74,000</div>
+              </div>
+            </div>
+            <div class="pad overlap">
+              <div class="stat-row">
+                <div class="stat"><div class="n" style="color:var(--st-requested)">1</div><div class="l">Requested</div><div class="bar" style="background:var(--st-requested)"></div></div>
+                <div class="stat"><div class="n" style="color:var(--st-review)">1</div><div class="l">Review</div><div class="bar" style="background:var(--st-review)"></div></div>
+                <div class="stat"><div class="n" style="color:var(--st-accepted)">1</div><div class="l">Accepted</div><div class="bar" style="background:var(--st-accepted)"></div></div>
+                <div class="stat"><div class="n" style="color:var(--st-transfer)">3</div><div class="l">Transferred</div><div class="bar" style="background:var(--st-transfer)"></div></div>
+              </div>
+            </div>
+            <div class="pad">
+              <div class="section-head"><h2>Apply for a fund</h2></div>
+              <div class="fund-grid">
+                <button class="fund g-brand"><div class="ico"><svg><use href="#i-calendar"/></svg></div><div><div class="t">Monthly Fund</div><div class="d">Recurring monthly support</div></div></button>
+                <button class="fund g-rose"><div class="ico"><svg><use href="#i-health"/></svg></div><div><div class="t">Accidental Fund</div><div class="d">Emergency medical help</div></div></button>
+              </div>
+            </div>
+          </div>
+          <div class="backdrop open"></div>
+          <div class="dialog open">
+            <div class="big-ico g-blue"><svg><use href="#i-bolt"/></svg></div>
+            <h3>Apply for Electricity Bill Fund?</h3>
+            <p>Help clearing an outstanding electricity bill. You will be asked to upload <strong style="color:var(--text)">the latest electricity bill</strong> and the estimated amount you need.</p>
+            <div class="btn-row">
+              <button class="btn ghost"><span>Cancel</span></button>
+              <button class="btn"><svg><use href="#i-arrowRight"/></svg><span>Continue</span></button>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ---- apply sheet ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">06</span><span class="pv-t">Application sheet</span><span class="pv-d">amount + attachment</span></div>
+        <div class="pv-phone"><div class="phone">
+          <div class="screen">
+            <div class="hero">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="greet"><div class="avatar">FB</div><div style="flex:1"><div class="hi">Assalam-u-Alaikum</div><div class="name">Fatima Bibi</div></div></div>
+            </div>
+          </div>
+          <div class="backdrop open"></div>
+          <div class="sheet open">
+            <div class="grab"></div>
+            <div class="sheet-body">
+              <div class="sheet-head">
+                <div class="ico g-blue"><svg><use href="#i-bolt"/></svg></div>
+                <div style="flex:1"><h3>Electricity Bill Fund</h3><p>PKR 1,000 – PKR 80,000 · reviewed by the foundation committee</p></div>
+                <button class="icon-btn dark"><svg><use href="#i-x"/></svg></button>
+              </div>
+              <div class="field">
+                <label>Estimated amount required <span class="req-star">*</span></label>
+                <div class="amount-wrap"><span class="cur">PKR</span><div class="input" style="padding-left:52px;font-size:18px;font-weight:750">18,400</div></div>
+                <div class="quick-amounts"><button>1,000</button><button>20,500</button><button>40,500</button><button>80,000</button></div>
+              </div>
+              <div class="field">
+                <label>Latest electricity bill <span class="req-star">*</span></label>
+                <div class="upload small">
+                  <div class="u-ico"><svg><use href="#i-upload"/></svg></div>
+                  <div class="u-t">Upload report or bill</div>
+                  <div class="u-d">Images or PDF · up to 5 files · 10 MB each</div>
+                </div>
+                <div class="filelist">
+                  <div class="fileitem"><div class="fi"><svg><use href="#i-image"/></svg></div><div class="fmid"><div class="fn">lesco-bill-august.jpg</div><div class="fs">842 KB</div></div><button class="rm"><svg><use href="#i-x"/></svg></button></div>
+                  <div class="fileitem"><div class="fi"><svg><use href="#i-file"/></svg></div><div class="fmid"><div class="fn">disconnection-notice.pdf</div><div class="fs">96 KB</div></div><button class="rm"><svg><use href="#i-x"/></svg></button></div>
+                </div>
+              </div>
+              <div class="field">
+                <label>Reason for the request</label>
+                <div class="input" style="min-height:74px;line-height:1.5;color:var(--text-dim)">Bill is two months overdue and the meter is due for disconnection this week.</div>
+              </div>
+              <button class="btn"><svg><use href="#i-send"/></svg><span>Submit application</span></button>
+              <p class="muted center mt-12" style="font-size:11.5px">Submitting does not guarantee approval. The committee reviews every application.</p>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= tracking ================= -->
+  <section class="pv-sec">
+    <div class="pv-sec-head">
+      <div>
+        <div class="pv-eyebrow">04 — After submitting</div>
+        <h2>Where my money is</h2>
+      </div>
+      <p class="pv-note">
+        The four stages are the same object everywhere: a counter on the dashboard, a bar on each card,
+        a tracker on the detail screen, a status column in the admin table. A member never has to ask
+        the office what &ldquo;review&rdquo; means.
+      </p>
+    </div>
+
+    <div class="pv-rail">
+
+      <!-- ---- success ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">07</span><span class="pv-t">Submitted</span><span class="pv-d">reference issued</span></div>
+        <div class="pv-phone"><div class="phone">
+          <div class="screen">
+            <div class="hero">
+              <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+              <div class="greet"><div class="avatar">FB</div><div style="flex:1"><div class="hi">Assalam-u-Alaikum</div><div class="name">Fatima Bibi</div></div></div>
+            </div>
+            <div class="pad mt-24"><div class="fund-grid">
+              <button class="fund g-amber"><div class="ico"><svg><use href="#i-basket"/></svg></div><div><div class="t">Grocery Fund</div><div class="d">Ration assistance</div></div></button>
+              <button class="fund g-blue"><div class="ico"><svg><use href="#i-bolt"/></svg></div><div><div class="t">Electricity Bill</div><div class="d">Outstanding bill help</div></div></button>
+            </div></div>
+          </div>
+          <div class="backdrop open"></div>
+          <div class="dialog open">
+            <div class="big-ico"><svg><use href="#i-checkCircle"/></svg></div>
+            <h3>Application submitted</h3>
+            <p>Your electricity bill fund request has been received.<br>Reference <strong style="color:var(--text)">SHF-26-01042</strong><br>Track its progress under Requests.</p>
+            <div class="btn-row">
+              <button class="btn ghost"><span>Done</span></button>
+              <button class="btn"><svg><use href="#i-list"/></svg><span>Track</span></button>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ---- requests list ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">08</span><span class="pv-t">My applications</span><span class="pv-d">filtered by stage</span></div>
+        <div class="pv-phone"><div class="phone"><div class="screen">
+          <div class="hero tight">
+            <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+            <div class="appbar">
+              <button class="icon-btn"><svg><use href="#i-chevL"/></svg></button>
+              <div style="flex:1"><h1>My applications</h1><div class="sub">Track every request you have submitted</div></div>
+            </div>
+          </div>
+          <div class="pad mt-16">
+            <div class="chips">
+              <a class="chip active">All</a><a class="chip">Requested</a><a class="chip">Review</a><a class="chip">Accepted</a><a class="chip">Transferred</a>
+            </div>
+          </div>
+          <div class="pad mt-16">
+            <div class="card" style="margin-bottom:12px">
+              <div style="display:flex;gap:12px;align-items:center">
+                <div class="g-blue" style="width:42px;height:42px;flex:0 0 42px;border-radius:14px;display:grid;place-items:center;color:#fff"><svg style="width:20px;height:20px"><use href="#i-bolt"/></svg></div>
+                <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:650">Electricity Bill Fund</div><div style="font-size:11.5px;color:var(--text-faint);margin-top:3px;font-family:ui-monospace,Menlo,monospace">SHF-26-01042</div></div>
+                <div style="text-align:right"><div style="font-size:14px;font-weight:750;letter-spacing:-.3px">18,400</div><div style="font-size:10px;color:var(--text-faint);margin-top:2px">PKR</div></div>
+              </div>
+              <div class="mt-12 pbar"><span style="width:50%"></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span class="badge b-review"><i></i>Review</span><span style="font-size:11.5px;color:var(--text-faint)">2d ago</span></div>
+            </div>
+            <div class="card" style="margin-bottom:12px">
+              <div style="display:flex;gap:12px;align-items:center">
+                <div class="g-rose" style="width:42px;height:42px;flex:0 0 42px;border-radius:14px;display:grid;place-items:center;color:#fff"><svg style="width:20px;height:20px"><use href="#i-health"/></svg></div>
+                <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:650">Accidental Fund</div><div style="font-size:11.5px;color:var(--text-faint);margin-top:3px;font-family:ui-monospace,Menlo,monospace">SHF-26-01038</div></div>
+                <div style="text-align:right"><div style="font-size:14px;font-weight:750;letter-spacing:-.3px">45,000</div><div style="font-size:10px;color:var(--text-faint);margin-top:2px">PKR</div></div>
+              </div>
+              <div class="mt-12 pbar"><span style="width:75%"></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span class="badge b-accepted"><i></i>Accepted</span><span style="font-size:11.5px;color:var(--text-faint)">6d ago</span></div>
+            </div>
+            <div class="card" style="margin-bottom:12px">
+              <div style="display:flex;gap:12px;align-items:center">
+                <div class="g-amber" style="width:42px;height:42px;flex:0 0 42px;border-radius:14px;display:grid;place-items:center;color:#fff"><svg style="width:20px;height:20px"><use href="#i-basket"/></svg></div>
+                <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:650">Grocery Fund</div><div style="font-size:11.5px;color:var(--text-faint);margin-top:3px;font-family:ui-monospace,Menlo,monospace">SHF-26-00991</div></div>
+                <div style="text-align:right"><div style="font-size:14px;font-weight:750;letter-spacing:-.3px">12,000</div><div style="font-size:10px;color:var(--text-faint);margin-top:2px">PKR</div></div>
+              </div>
+              <div class="mt-12 pbar"><span style="width:100%"></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span class="badge b-transferred"><i></i>Transferred</span><span style="font-size:11.5px;color:var(--text-faint)">3 Aug 2026</span></div>
+            </div>
+          </div>
+          <nav class="nav">
+            <a><span class="nav-ico"><svg><use href="#i-home"/></svg></span>Home</a>
+            <a class="on"><span class="nav-ico"><svg><use href="#i-list"/></svg></span>Requests</a>
+            <div class="fab-wrap"><button class="fab"><svg><use href="#i-plus"/></svg></button></div>
+            <a><span class="nav-ico"><svg><use href="#i-info"/></svg></span>Help</a>
+            <a><span class="nav-ico"><svg><use href="#i-user"/></svg></span>Profile</a>
+          </nav>
+        </div></div></div>
+      </div>
+
+      <!-- ---- detail ---- -->
+      <div class="pv-frame">
+        <div class="pv-cap"><span class="pv-n">09</span><span class="pv-t">Application detail</span><span class="pv-d">tracker &amp; history</span></div>
+        <div class="pv-phone"><div class="phone"><div class="screen">
+          <div class="hero tight">
+            <div class="status-bar"><span>9:41</span><span class="dots"><i></i><i></i><i></i><svg width="22" height="11"><use href="#i-battery"/></svg></span></div>
+            <div class="appbar">
+              <button class="icon-btn"><svg><use href="#i-chevL"/></svg></button>
+              <div style="flex:1"><h1>Accidental Fund</h1><div class="sub" style="font-family:ui-monospace,Menlo,monospace">SHF-26-01038</div></div>
+            </div>
+            <div class="mt-20" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:15px 17px;display:flex;justify-content:space-between;align-items:flex-end">
+              <div>
+                <div style="font-size:11.5px;opacity:.85;letter-spacing:.3px">APPROVED AMOUNT</div>
+                <div style="font-size:26px;font-weight:800;letter-spacing:-.8px;margin-top:4px;line-height:1">PKR 40,000</div>
+                <div style="font-size:11.5px;opacity:.8;margin-top:6px">You requested PKR 45,000</div>
+              </div>
+              <span class="badge b-accepted"><i></i>Accepted</span>
+            </div>
+          </div>
+          <div class="pad overlap">
+            <div class="card">
+              <div class="track">
+                <div class="step done"><div class="dot"><svg><use href="#i-send"/></svg></div><div class="lbl">Requested</div><div class="when">8 Sep</div></div>
+                <div class="step done"><div class="dot"><svg><use href="#i-search"/></svg></div><div class="lbl">Review</div><div class="when">9 Sep</div></div>
+                <div class="step current"><div class="dot"><svg><use href="#i-checkCircle"/></svg></div><div class="lbl">Accepted</div><div class="when">12 Sep</div></div>
+                <div class="step"><div class="dot"><svg><use href="#i-clock"/></svg></div><div class="lbl">Transferred</div></div>
+              </div>
+              <p class="muted mb-0 mt-16" style="font-size:12.5px;text-align:center">Approved. The transfer is being arranged.</p>
+            </div>
+          </div>
+          <div class="pad">
+            <div class="section-head"><h2>Attached documents</h2><span style="font-size:12px;color:var(--text-faint)">2 files</span></div>
+            <button class="list-row"><span class="li"><svg><use href="#i-image"/></svg></span><span class="lmid"><span class="lt" style="display:block">hospital-report.jpg</span><span class="ld" style="display:block">report · 1.4 MB · 8 Sep 2026</span></span><span class="chev"><svg><use href="#i-eye"/></svg></span></button>
+            <button class="list-row"><span class="li"><svg><use href="#i-file"/></svg></span><span class="lmid"><span class="lt" style="display:block">pharmacy-invoice.pdf</span><span class="ld" style="display:block">report · 210 KB · 8 Sep 2026</span></span><span class="chev"><svg><use href="#i-eye"/></svg></span></button>
+          </div>
+          <div class="pad">
+            <div class="section-head"><h2>Progress history</h2></div>
+            <div class="card"><div class="timeline">
+              <div class="ev on"><div class="mark"><svg><use href="#i-check"/></svg></div><div class="t">Requested</div><div class="d">Application submitted by member<br><span style="color:var(--text-faint)">8 Sep 2026, 14:20</span></div></div>
+              <div class="ev on"><div class="mark"><svg><use href="#i-check"/></svg></div><div class="t">Review</div><div class="d">Documents received, committee reviewing<br><span style="color:var(--text-faint)">9 Sep 2026, 10:05</span></div></div>
+              <div class="ev on"><div class="mark"><svg><use href="#i-check"/></svg></div><div class="t">Accepted</div><div class="d">Approved at PKR 40,000 against the hospital invoice<br><span style="color:var(--text-faint)">12 Sep 2026, 16:42</span></div></div>
+              <div class="ev off"><div class="mark"><svg><use href="#i-clock"/></svg></div><div class="t">Transferred</div><div class="d">Funds have been transferred to you.</div></div>
+            </div></div>
+          </div>
+          <nav class="nav">
+            <a><span class="nav-ico"><svg><use href="#i-home"/></svg></span>Home</a>
+            <a class="on"><span class="nav-ico"><svg><use href="#i-list"/></svg></span>Requests</a>
+            <div class="fab-wrap"><button class="fab"><svg><use href="#i-plus"/></svg></button></div>
+            <a><span class="nav-ico"><svg><use href="#i-info"/></svg></span>Help</a>
+            <a><span class="nav-ico"><svg><use href="#i-user"/></svg></span>Profile</a>
+          </nav>
+        </div></div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= admin ================= -->
+  <section class="pv-sec">
+    <div class="pv-sec-head">
+      <div>
+        <div class="pv-eyebrow">05 — The other side</div>
+        <h2>Admin portal</h2>
+      </div>
+      <p class="pv-note">
+        Same design language, different job. The portal is built to be operated, not read: what needs a
+        decision is counted at the top, and every document a member attached opens in one click through
+        a short-lived signed link.
+      </p>
+    </div>
+
+    <div class="pv-desk" style="margin-bottom:34px">
+      <div class="pv-bar"><i></i><i></i><i></i><span>shf-foundation.vercel.app/admin</span></div>
+      <div class="pv-scroll"><div class="admin-body"><div class="admin-shell">
+        <aside class="side">
+          <div class="brand"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NiA5NiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImxnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMxNGI4OTIiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1NSUiIHN0b3AtY29sb3I9IiMwZTlkNjMiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMGI3YTRlIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJsZ29sZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZmZkOTc3Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2UwYTUyYiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9Ijg4IiBoZWlnaHQ9Ijg4IiByeD0iMjYiIGZpbGw9InVybCgjbGcpIi8+CiAgPHBhdGggZD0iTTQ4IDI0IDU4IDQwIDc2IDQwIDY0IDU0IDcwIDcyIDQ4IDYyIDI2IDcyIDMyIDU0IDIwIDQwIDM4IDQwWiIgZmlsbD0idXJsKCNsZ29sZCkiIGZpbGwtb3BhY2l0eT0iLjk1Ii8+CiAgPHBhdGggZD0iTTQ4IDQyYy02IDAtMTAgNC0xMCA5IDAgOSAxMCAxMyAxMCAxM3MxMC00IDEwLTEzYzAtNS00LTktMTAtOXoiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iLjkyIi8+Cjwvc3ZnPgo=" alt=""><div><div class="bt">Subaidar Hasnain</div><div class="bs">Admin portal</div></div></div>
+          <nav>
+            <div class="nav-label">Overview</div>
+            <a class="on"><svg><use href="#i-grid"/></svg><span>Dashboard</span></a>
+            <div class="nav-label">Manage</div>
+            <a><svg><use href="#i-inbox"/></svg><span>Applications</span><span class="count">14</span></a>
+            <a><svg><use href="#i-users"/></svg><span>Members</span></a>
+            <a><svg><use href="#i-wallet"/></svg><span>Funds</span></a>
+            <div class="nav-label">Member app</div>
+            <a><svg><use href="#i-phone"/></svg><span>Open member app</span></a>
+          </nav>
+          <div class="side-foot">
+            <div class="av">AH</div>
+            <div class="who"><div class="wn">Admin Hasnain</div><div class="we">admin@shfoundation.org</div></div>
+            <button class="out"><svg><use href="#i-logout"/></svg></button>
+          </div>
+        </aside>
+        <main class="main">
+          <div class="topbar">
+            <div><h1>Dashboard</h1><div class="crumb">312 registered members · PKR 4,180,000 disbursed to date</div></div>
+            <a class="admin-btn"><svg><use href="#i-inbox"/></svg>Review applications</a>
+          </div>
+          <div class="kpis">
+            <a class="kpi"><div class="kico g-blue"><svg><use href="#i-send"/></svg></div><div class="kn">9</div><div class="kl">Awaiting first look</div><div class="kedge g-blue"></div></a>
+            <a class="kpi"><div class="kico g-amber"><svg><use href="#i-search"/></svg></div><div class="kn">5</div><div class="kl">Under review</div><div class="kedge g-amber"></div></a>
+            <a class="kpi"><div class="kico g-brand"><svg><use href="#i-checkCircle"/></svg></div><div class="kn">7</div><div class="kl">Approved, awaiting transfer</div><div class="kedge g-brand"></div></a>
+            <a class="kpi"><div class="kico g-plum"><svg><use href="#i-wallet"/></svg></div><div class="kn">184</div><div class="kl">Transferred</div><div class="kedge g-plum"></div></a>
+          </div>
+          <div class="kpis mt-16">
+            <div class="kpi"><div class="kico g-gold" style="color:#6b4a06"><svg><use href="#i-trend"/></svg></div><div class="kn">5.4M</div><div class="kl">PKR requested, all time</div></div>
+            <div class="kpi"><div class="kico g-brand"><svg><use href="#i-wallet"/></svg></div><div class="kn">4.2M</div><div class="kl">PKR actually transferred</div></div>
+            <div class="kpi"><div class="kico g-rose"><svg><use href="#i-xCircle"/></svg></div><div class="kn">23</div><div class="kl">Not approved</div></div>
+            <a class="kpi"><div class="kico g-plum"><svg><use href="#i-users"/></svg></div><div class="kn">312</div><div class="kl">Registered members</div></a>
+          </div>
+          <div class="two-col mt-24">
+            <div class="panel">
+              <div class="panel-head">
+                <div><h2>Latest applications</h2><div class="ph-sub">Newest submissions across every fund</div></div>
+                <a class="admin-btn ghost">View all<svg><use href="#i-chevR"/></svg></a>
+              </div>
+              <div style="overflow-x:auto"><table class="grid">
+                <thead><tr><th>Member</th><th>Fund</th><th>Amount</th><th>Status</th><th>Submitted</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td><div class="who"><div class="av">FB</div><div><div class="wn">Fatima Bibi</div><div class="we">Lahore</div></div></div></td><td><span class="fundtag"><span class="fdot g-blue"><svg><use href="#i-bolt"/></svg></span>Electricity Bill Fund</span></td><td class="num">18,400</td><td><span class="badge b-review"><i></i>Review</span></td><td style="color:var(--text-faint);font-size:12.5px">2d ago</td><td><a class="rowlink">Open</a></td></tr>
+                  <tr><td><div class="who"><div class="av">MA</div><div><div class="wn">Muhammad Aslam</div><div class="we">Multan</div></div></div></td><td><span class="fundtag"><span class="fdot g-rose"><svg><use href="#i-health"/></svg></span>Accidental Fund</span></td><td class="num">120,000</td><td><span class="badge b-requested"><i></i>Requested</span></td><td style="color:var(--text-faint);font-size:12.5px">4h ago</td><td><a class="rowlink">Open</a></td></tr>
+                  <tr><td><div class="who"><div class="av">SK</div><div><div class="wn">Sana Khalid</div><div class="we">Karachi</div></div></div></td><td><span class="fundtag"><span class="fdot g-amber"><svg><use href="#i-basket"/></svg></span>Grocery Fund</span></td><td class="num">12,000</td><td><span class="badge b-transferred"><i></i>Transferred</span></td><td style="color:var(--text-faint);font-size:12.5px">6d ago</td><td><a class="rowlink">Open</a></td></tr>
+                  <tr><td><div class="who"><div class="av">RY</div><div><div class="wn">Rizwan Yousaf</div><div class="we">Faisalabad</div></div></div></td><td><span class="fundtag"><span class="fdot g-brand"><svg><use href="#i-calendar"/></svg></span>Monthly Fund</span></td><td class="num">15,000</td><td><span class="badge b-accepted"><i></i>Accepted</span></td><td style="color:var(--text-faint);font-size:12.5px">1w ago</td><td><a class="rowlink">Open</a></td></tr>
+                </tbody>
+              </table></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div><h2>Demand by fund</h2><div class="ph-sub">Applications received per fund type</div></div></div>
+              <div class="panel-body">
+                <div class="bar-row"><div class="bl">Monthly Fund</div><div class="btrack"><span style="width:100%;background:var(--grad-brand)"></span></div><div class="bv">96</div></div>
+                <div class="bar-row"><div class="bl">Accidental Fund</div><div class="btrack"><span style="width:64%;background:var(--grad-rose)"></span></div><div class="bv">61</div></div>
+                <div class="bar-row"><div class="bl">Grocery Fund</div><div class="btrack"><span style="width:48%;background:var(--grad-amber)"></span></div><div class="bv">46</div></div>
+                <div class="bar-row"><div class="bl">Electricity Bill</div><div class="btrack"><span style="width:37%;background:var(--grad-blue)"></span></div><div class="bv">35</div></div>
+                <div class="note mt-16">Totals are computed live from <code>fund_requests</code> by the <code>admin_stats()</code> function in Postgres, so they always match the database.</div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div></div></div>
+    </div>
+
+    <div class="pv-cap"><span class="pv-n">11</span><span class="pv-t">Reviewing one application</span><span class="pv-d">documents, decision, audit trail</span></div>
+    <div class="pv-desk">
+      <div class="pv-bar"><i></i><i></i><i></i><span>shf-foundation.vercel.app/admin/requests/SHF-26-01038</span></div>
+      <div class="pv-scroll"><div class="admin-body"><div class="admin-shell">
+        <aside class="side">
+          <div class="brand"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NiA5NiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImxnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMxNGI4OTIiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1NSUiIHN0b3AtY29sb3I9IiMwZTlkNjMiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMGI3YTRlIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJsZ29sZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZmZkOTc3Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2UwYTUyYiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9Ijg4IiBoZWlnaHQ9Ijg4IiByeD0iMjYiIGZpbGw9InVybCgjbGcpIi8+CiAgPHBhdGggZD0iTTQ4IDI0IDU4IDQwIDc2IDQwIDY0IDU0IDcwIDcyIDQ4IDYyIDI2IDcyIDMyIDU0IDIwIDQwIDM4IDQwWiIgZmlsbD0idXJsKCNsZ29sZCkiIGZpbGwtb3BhY2l0eT0iLjk1Ii8+CiAgPHBhdGggZD0iTTQ4IDQyYy02IDAtMTAgNC0xMCA5IDAgOSAxMCAxMyAxMCAxM3MxMC00IDEwLTEzYzAtNS00LTktMTAtOXoiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iLjkyIi8+Cjwvc3ZnPgo=" alt=""><div><div class="bt">Subaidar Hasnain</div><div class="bs">Admin portal</div></div></div>
+          <nav>
+            <div class="nav-label">Overview</div>
+            <a><svg><use href="#i-grid"/></svg><span>Dashboard</span></a>
+            <div class="nav-label">Manage</div>
+            <a class="on"><svg><use href="#i-inbox"/></svg><span>Applications</span><span class="count">14</span></a>
+            <a><svg><use href="#i-users"/></svg><span>Members</span></a>
+            <a><svg><use href="#i-wallet"/></svg><span>Funds</span></a>
+          </nav>
+          <div class="side-foot">
+            <div class="av">AH</div>
+            <div class="who"><div class="wn">Admin Hasnain</div><div class="we">admin@shfoundation.org</div></div>
+            <button class="out"><svg><use href="#i-logout"/></svg></button>
+          </div>
+        </aside>
+        <main class="main">
+          <div class="topbar">
+            <div style="display:flex;align-items:center;gap:14px">
+              <a class="admin-btn ghost"><svg><use href="#i-chevL"/></svg></a>
+              <div><h1>Accidental Fund</h1><div class="crumb"><span style="font-family:ui-monospace,Menlo,monospace">SHF-26-01038</span> · submitted 8 Sep 2026, 14:20</div></div>
+            </div>
+            <span class="badge b-accepted"><i></i>Accepted</span>
+          </div>
+          <div class="two-col">
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div class="panel">
+                <div class="panel-head"><div><h2>Progress</h2><div class="ph-sub">What the member sees on their tracker</div></div></div>
+                <div class="panel-body"><div class="track">
+                  <div class="step done"><div class="dot"><svg><use href="#i-send"/></svg></div><div class="lbl">Requested</div><div class="when">8 Sep</div></div>
+                  <div class="step done"><div class="dot"><svg><use href="#i-search"/></svg></div><div class="lbl">Review</div><div class="when">9 Sep</div></div>
+                  <div class="step current"><div class="dot"><svg><use href="#i-checkCircle"/></svg></div><div class="lbl">Accepted</div><div class="when">12 Sep</div></div>
+                  <div class="step"><div class="dot"><svg><use href="#i-clock"/></svg></div><div class="lbl">Transferred</div></div>
+                </div></div>
+              </div>
+              <div class="panel">
+                <div class="panel-head">
+                  <div><h2>Attached documents</h2><div class="ph-sub">Reports and bills uploaded with this application — click to open</div></div>
+                  <span style="font-size:12.5px;color:var(--text-faint)">2 files</span>
+                </div>
+                <div class="panel-body">
+                  <button class="list-row"><span class="li"><svg><use href="#i-image"/></svg></span><span class="lmid"><span class="lt" style="display:block">hospital-report.jpg</span><span class="ld" style="display:block">report · 1.4 MB · 8 Sep 2026</span></span><span class="chev"><svg><use href="#i-eye"/></svg></span></button>
+                  <button class="list-row"><span class="li"><svg><use href="#i-file"/></svg></span><span class="lmid"><span class="lt" style="display:block">pharmacy-invoice.pdf</span><span class="ld" style="display:block">report · 210 KB · 8 Sep 2026</span></span><span class="chev"><svg><use href="#i-eye"/></svg></span></button>
+                  <div style="font-size:12px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:.6px;margin:18px 0 10px">Identity</div>
+                  <button class="list-row"><span class="li"><svg><use href="#i-idcard"/></svg></span><span class="lmid"><span class="lt" style="display:block">CNIC on file</span><span class="ld" style="display:block">cnic · 8 Mar 2024</span></span><span class="chev"><svg><use href="#i-eye"/></svg></span></button>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div class="panel">
+                <div class="panel-head"><div><h2>Decision</h2><div class="ph-sub">Move this application along the pipeline</div></div></div>
+                <div class="panel-body"><div class="admin-actions">
+                  <button class="admin-btn plum" style="justify-content:center;width:100%"><svg><use href="#i-wallet"/></svg>Confirm transfer</button>
+                  <button class="admin-btn red" style="justify-content:center;width:100%"><svg><use href="#i-xCircle"/></svg>Reject application</button>
+                </div></div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><div><h2>Member</h2><div class="ph-sub">Registration details on file</div></div></div>
+                <div class="panel-body">
+                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                    <div style="width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-weight:800;background:linear-gradient(135deg,rgba(20,184,146,.18),rgba(224,165,43,.22));color:var(--brand-3)">FB</div>
+                    <div><div style="font-size:15px;font-weight:700">Fatima Bibi</div><div style="font-size:12px;color:var(--text-faint)">fatima.bibi@gmail.com</div></div>
+                  </div>
+                  <div class="kv"><span class="k">Mobile</span><span class="v">+92 301 4477210</span></div>
+                  <div class="kv"><span class="k">Gender</span><span class="v">Female</span></div>
+                  <div class="kv"><span class="k">Age</span><span class="v">41</span></div>
+                  <div class="kv"><span class="k">Location</span><span class="v">Lahore, Pakistan</span></div>
+                  <div class="kv"><span class="k">CNIC on file</span><span class="v" style="color:var(--brand-2)">Yes</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div></div></div>
+    </div>
+  </section>
+
+  <!-- ================= build notes ================= -->
+  <section class="pv-sec">
+    <div class="pv-sec-head">
+      <div>
+        <div class="pv-eyebrow">06 — How it is built</div>
+        <h2>Behind the screens</h2>
+      </div>
+      <p class="pv-note">
+        One Next.js app on Vercel serves the member PWA, the admin portal and the APIs. Supabase holds
+        the database, the auth and the private document storage.
+      </p>
+    </div>
+
+    <div class="pv-specs">
+      <div class="pv-spec"><b>Installable</b><span>The member app is a PWA — &ldquo;Add to Home Screen&rdquo; gives it an icon, a splash screen and no browser chrome.</span></div>
+      <div class="pv-spec"><b>Private by default</b><span>CNICs, reports and bills live in a private bucket. Members see only their own files; admins open any, through a link that expires in ten minutes.</span></div>
+      <div class="pv-spec"><b>Enforced in the database</b><span>Row-level security means a member cannot read another member's application even if the API were bypassed entirely.</span></div>
+      <div class="pv-spec"><b>Audited automatically</b><span>Every status change writes a timeline row from a Postgres trigger — the history cannot drift from the record.</span></div>
+      <div class="pv-spec"><b>Funds are data</b><span>The four funds are rows, not code. Adding a fifth is an insert, with its own gradient, icon and limits.</span></div>
+      <div class="pv-spec"><b>References</b><span>Each application gets a human reference (SHF-26-01042) the office and the member can both quote on the phone.</span></div>
+    </div>
+  </section>
+
+  <footer class="pv-foot">
+    <span>Subaidar Hasnain Foundation · design review v1</span>
+    <span>Rendered from the app's own stylesheet</span>
+  </footer>
+</div>
