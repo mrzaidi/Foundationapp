@@ -4,7 +4,7 @@
     "target": {
       "namespace": "android_app",
       "package_name": "com.shfoundation.app",
-      "sha256_cert_fingerprints": ["REPLACE_WITH_SHA256_FINGERPRINT_OF_YOUR_KEYSTORE"]
+      "sha256_cert_fingerprints": ["68:8F:55:7D:8D:26:9F:55:D9:33:D6:D8:85:BB:EB:BE:D2:E5:C5:9A:0E:A5:29:0A:C7:86:0D:A1:87:5C:19:DF"]
     }
   }
 ]
