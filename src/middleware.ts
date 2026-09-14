@@ -51,24 +51,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isPublic && pathname !== '/auth/callback') {
-    const url = request.nextUrl.clone();
-    url.pathname = '/';
-    url.search = '';
-    return NextResponse.redirect(url);
-  }
-
-  // Admin area: verify the role, not just that someone is signed in.
-  if (user && pathname.startsWith('/admin')) {
+  // Role decides which half of the app you are allowed in: admins live under
+  // /admin, everyone else under the member routes. Nobody sees the other side.
+  if (user) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
 
-    if (profile?.role !== 'admin') {
+    const home = profile?.role === 'admin' ? '/admin' : '/';
+    const inAdminArea = pathname.startsWith('/admin');
+    const wrongArea = !isPublic && inAdminArea !== (home === '/admin');
+
+    if ((isPublic && pathname !== '/auth/callback') || wrongArea) {
       const url = request.nextUrl.clone();
-      url.pathname = '/';
+      url.pathname = home;
       url.search = '';
       return NextResponse.redirect(url);
     }
