@@ -78,6 +78,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // everything except static assets, images and the manifest
-    '/((?!_next/static|_next/image|favicon.ico|img/|icons/|manifest.webmanifest|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|img/|icons/|\\.well-known/|manifest.webmanifest|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
