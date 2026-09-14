@@ -22,13 +22,16 @@ pages too.
 Project: `tkpgccgmpkmbynjwxgyw`
 
 In the Supabase dashboard → **SQL Editor**, paste **`supabase/SETUP.sql`** and hit
-Run. That one file is all four sources concatenated in order, and it is
+Run. That one file is every source concatenated in order, and it is
 idempotent — safe to re-run after any change:
 
-1. `supabase/migrations/0001_init.sql` — tables, triggers, row-level security
-2. `supabase/migrations/0002_storage.sql` — the private `documents` bucket + policies
-3. `supabase/seed.sql` — the four funds
-4. `supabase/migrations/0003_urdu.sql` — Urdu fund copy
+1. `0001_init.sql` — tables, triggers, row-level security
+2. `0002_storage.sql` — the private `documents` bucket + policies
+3. `seed.sql` — the funds
+4. `0003_urdu.sql` — Urdu fund copy
+5. `0004_fix_admin_bootstrap.sql` — lets the first admin be created
+6. `0005_stats_counts.sql` — dashboard account counts
+7. `0006_school_fees_and_budget.sql` — School Fees fund + monthly budgets
 
 Edit those sources, never `SETUP.sql`. Regenerate it with:
 
@@ -78,45 +81,30 @@ Opens on http://localhost:5195.
 
 ## 3. Deploy to Vercel
 
-The CLI must be logged in on this machine (a logged-in browser is not enough):
+One command, once a token is in place.
 
-```bash
-npx vercel login
-```
+1. Create a token at **vercel.com/account/tokens** (scope: your team).
+2. Add it to `.env.local`:
 
-Then, from the `shf-foundation` folder:
+   ```
+   VERCEL_TOKEN=...
+   ```
 
-```bash
-npx vercel link --yes --scope team_AvF6vaz9eiFEb9K60ycS3VI5 --project shf-foundation
-```
+3. Ship it:
 
-Add the three environment variables to the Vercel project (do the secret one
-yourself so the key never lands in a shell history you share):
+   ```bash
+   npm run deploy            # production
+   npm run deploy:preview    # preview build
+   ```
 
-```bash
-npx vercel env add NEXT_PUBLIC_SUPABASE_URL production
-npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
-npx vercel env add SUPABASE_SERVICE_ROLE_KEY production
-```
+The script links the project to `team_AvF6vaz9eiFEb9K60ycS3VI5`, syncs
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and
+`SUPABASE_SERVICE_ROLE_KEY` to all three Vercel environments, deploys, and
+prints the URL. Secrets are piped from `.env.local` — never typed on a command
+line, never left in shell history. Re-running is safe.
 
-Values:
-
-| Variable | Value |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://tkpgccgmpkmbynjwxgyw.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `sb_publishable_zTEHyIRoEiqZzM8xxmNf1g_Ba5Y7hrM` |
-| `SUPABASE_SERVICE_ROLE_KEY` | your secret key — paste it at the prompt |
-
-Repeat for `preview` and `development` if you want branch deploys to work.
-
-Then ship it:
-
-```bash
-npx vercel deploy --prod
-```
-
-Finally, add the deployed URL to Supabase → **Authentication → URL
-Configuration → Site URL / Redirect URLs**.
+Afterwards add the deployed URL to Supabase → **Authentication → URL
+Configuration → Site URL / Redirect URLs**, or sign-in redirects will fail.
 
 ---
 
@@ -154,6 +142,8 @@ preview/                       design review & clickable prototype (build script
 | `GET` | `/api/documents?path=` | Short-lived signed URL for a private document |
 | `GET` | `/api/admin/stats` | Dashboard aggregates |
 | `GET/PATCH` | `/api/admin/members` | List members; change role / block |
+| `GET` | `/api/admin/analytics` | Rows behind the dashboard charts |
+| `GET/PUT` | `/api/admin/budget` | Read / set the monthly budget |
 
 ### Security model
 
@@ -179,6 +169,14 @@ Authorisation lives in Postgres, not just in the API:
 `requested → review → accepted → transferred`, plus a terminal `rejected`.
 Every change is written to `request_events` by a trigger, so the member's
 progress history and the admin's audit trail are the same rows and cannot drift.
+
+### Monthly budget
+
+The foundation sets a budget per month; every transfer draws it down.
+Remaining is always **budget − everything transferred that month**, computed
+from the transfers themselves rather than stored, so it cannot drift out of
+step with what was actually paid. A transfer that would exceed the budget is
+warned about, not blocked.
 
 ### Funds are data
 

@@ -57,6 +57,10 @@ export default function AdminSidebar({ name, email, pending }: Props) {
           <Icon name="wallet" />
           <span>Funds</span>
         </Link>
+        <Link href="/admin/budget" className={on('/admin/budget') ? 'on' : ''}>
+          <Icon name="budget" />
+          <span>Budget</span>
+        </Link>
 
         <div className="nav-label">Member app</div>
         <Link href="/">

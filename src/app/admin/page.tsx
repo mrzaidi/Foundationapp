@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import AdminCharts from '@/components/charts/AdminCharts';
+import BudgetPanel from '@/components/BudgetPanel';
 import Icon from '@/components/Icon';
 import StatusBadge from '@/components/StatusBadge';
 import { createClient } from '@/lib/supabase/server';
@@ -113,6 +115,14 @@ export default async function AdminDashboard() {
           <div className="kn">{stats.members}</div>
           <div className="kl">Registered accounts</div>
         </Link>
+      </div>
+
+      <div className="mt-24">
+        <BudgetPanel compact />
+      </div>
+
+      <div className="mt-24">
+        <AdminCharts />
       </div>
 
       <div className="two-col mt-24">
