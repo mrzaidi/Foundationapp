@@ -1244,6 +1244,10 @@ select.input {
   background: #fff;
   border-radius: 30px 30px 0 0;
   transform: translateY(100%);
+  /* A closed sheet must not take clicks. On a phone it is parked off-screen so
+     this never mattered, but the desktop layout centres it and hides it with
+     opacity — and an opacity-0 element still swallows every click behind it. */
+  pointer-events: none;
   transition: transform 0.32s cubic-bezier(0.22, 0.9, 0.3, 1);
   max-height: 93%;
   display: flex;
@@ -1252,6 +1256,7 @@ select.input {
 }
 .sheet.open {
   transform: translateY(0);
+  pointer-events: auto;
 }
 .sheet .grab {
   width: 42px;

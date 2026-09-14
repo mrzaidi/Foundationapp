@@ -108,21 +108,8 @@ export default function ProfileView({
           <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 3 }}>
             {profile.city}, {profile.country}
           </div>
-          {profile.role === 'admin' && (
-            <Link
-              href="/admin"
-              className="badge"
-              style={{
-                marginTop: 10,
-                background: 'rgba(255,255,255,.22)',
-                color: '#fff',
-                textDecoration: 'none',
-              }}
-            >
-              <Icon name="shield" />
-              {d.profile.adminBadge}
-            </Link>
-          )}
+          {/* No link through to the admin portal: the two are separate products,
+              and a member-facing screen should never advertise staff tooling. */}
         </div>
       </div>
 

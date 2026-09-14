@@ -62,11 +62,6 @@ export default function AdminSidebar({ name, email, pending }: Props) {
           <span>Budget</span>
         </Link>
 
-        <div className="nav-label">Member app</div>
-        <Link href="/">
-          <Icon name="phone" />
-          <span>Open member app</span>
-        </Link>
       </nav>
 
       <div className="side-foot">
