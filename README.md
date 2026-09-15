@@ -33,6 +33,7 @@ idempotent — safe to re-run after any change:
 6. `0005_stats_counts.sql` — dashboard account counts
 7. `0006_school_fees_and_budget.sql` — School Fees fund + monthly budgets
 8. `0007_bank_details.sql` — payout account on the profile + the apply guard
+9. `0008_transfer_receipts.sql` — lets an admin file a receipt into a member's case
 
 Edit those sources, never `SETUP.sql`. Regenerate it with:
 
@@ -170,6 +171,19 @@ Authorisation lives in Postgres, not just in the API:
 `requested → review → accepted → transferred`, plus a terminal `rejected`.
 Every change is written to `request_events` by a trigger, so the member's
 progress history and the admin's audit trail are the same rows and cannot drift.
+
+### Transfer receipts
+
+Marking an application transferred takes an optional receipt. It is filed into
+the **member's** case file — stored under their storage folder, recorded against
+their user id — so it appears on their own application screen as proof of
+payment, with no new read policy. 0008 opens only the write side: an admin may
+write into any member's folder and record an attachment against any request.
+
+The upload runs *before* the status changes. If it fails the application stays
+where it was, which beats a request marked transferred with its evidence missing
+and nothing on screen to say so. Only staff can file one — a member
+manufacturing their own proof of transfer would be worse than no receipt at all.
 
 ### Bank details
 

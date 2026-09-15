@@ -238,6 +238,9 @@ const en = {
     documents: 'Attached documents',
     files: (n: number) => `${n} file${n === 1 ? '' : 's'}`,
     noDocuments: 'No documents were attached to this application.',
+    receipt: 'Transfer receipt',
+    receiptBody:
+      'The foundation has sent the money and attached proof of the transfer. Keep this for your records.',
     history: 'Progress history',
     submittedByMember: 'Application submitted by member',
   },

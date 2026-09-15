@@ -38,6 +38,13 @@ export default async function AdminRequestDetail({
     .eq('id', r.user_id)
     .single();
 
+  // Two different things in one table: what the member sent in, and what the
+  // foundation filed back. Mixing them would have staff hunting for the receipt
+  // among the bills.
+  const attachments = r.request_attachments ?? [];
+  const receipts = attachments.filter((a) => a.kind === 'receipt');
+  const supplied = attachments.filter((a) => a.kind !== 'receipt');
+
   const events = [...(r.request_events ?? [])].sort(
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
@@ -151,12 +158,12 @@ export default async function AdminRequestDetail({
                 </div>
               </div>
               <span style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>
-                {r.request_attachments?.length ?? 0} file
-                {(r.request_attachments?.length ?? 0) === 1 ? '' : 's'}
+                {supplied.length} file
+                {supplied.length === 1 ? '' : 's'}
               </span>
             </div>
             <div className="panel-body">
-              <DocumentGallery attachments={r.request_attachments ?? []} />
+              <DocumentGallery attachments={supplied} />
 
               {member?.nic_path && (
                 <>
@@ -189,6 +196,33 @@ export default async function AdminRequestDetail({
               )}
             </div>
           </div>
+
+          {/* ---------------- transfer receipt ---------------- */}
+          {(receipts.length > 0 || r.status === 'transferred') && (
+            <div className="panel">
+              <div className="panel-head">
+                <div>
+                  <h2>Transfer receipt</h2>
+                  <div className="ph-sub">
+                    Proof of payment, filed by the foundation — the member sees this too
+                  </div>
+                </div>
+                <span style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>
+                  {receipts.length} file{receipts.length === 1 ? '' : 's'}
+                </span>
+              </div>
+              <div className="panel-body">
+                {receipts.length > 0 ? (
+                  <DocumentGallery attachments={receipts} />
+                ) : (
+                  <div className="note">
+                    Marked transferred without a receipt. Nothing is broken — but the member has no
+                    proof of payment on their screen.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* ---------------- audit trail ---------------- */}
           <div className="panel">

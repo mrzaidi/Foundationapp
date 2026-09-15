@@ -59,6 +59,11 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
+  /* The app is a fixed shell with its own scroller (.screen). Without this the
+     document itself scrolls on a phone — 100vh is the *large* viewport, so the
+     shell is taller than what you can see whenever the browser chrome is up,
+     and the whole thing drags. */
+  overscroll-behavior-y: none;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -78,6 +83,7 @@ a {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  min-height: 100dvh; /* excludes the browser chrome that 100vh ignores */
 }
 
 /* ambient desktop backdrop behind the phone */
@@ -105,7 +111,13 @@ a {
   width: 100%;
   max-width: 430px;
   height: 100vh;
+  height: 100dvh;
   max-height: 932px;
+  /* A real status bar makes the simulated one a second clock — PhoneShell sets
+     data-safe-area on <html> when the device reports an inset, and the rule
+     further down swaps one for the other. */
+  padding-top: env(safe-area-inset-top, 0px);
+  box-sizing: border-box;
   background: var(--bg) url('/img/bg-mesh.svg') center / cover;
   overflow: hidden;
   display: flex;
@@ -139,10 +151,12 @@ a {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(var(--nav-h) + 24px);
+  overscroll-behavior: contain;
+  /* Clear the tab bar *and* whatever the phone puts below it. */
+  padding-bottom: calc(var(--nav-h) + 24px + env(safe-area-inset-bottom, 0px));
 }
 .screen.no-nav {
-  padding-bottom: 28px;
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
 }
 .screen::-webkit-scrollbar {
   width: 0;
@@ -188,6 +202,14 @@ a {
   padding-bottom: 22px;
 }
 
+/*
+ * Simulated iOS status bar. It sells the app feel in a desktop mock and on a
+ * plain browser tab; on a device that reports a top inset there is a real one
+ * a few pixels above it, and two clocks is worse than none.
+ */
+[data-safe-area='top'] .status-bar {
+  display: none;
+}
 .status-bar {
   display: flex;
   justify-content: space-between;
@@ -1153,13 +1175,16 @@ select.input {
   left: 0;
   right: 0;
   z-index: 20;
-  height: var(--nav-h);
+  /* The gesture pill / navigation buttons live below the viewport edge, so
+     the bar grows by that inset rather than hiding underneath it. */
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
   background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(14px);
   border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
-  padding: 0 8px 6px;
+  padding: 0 8px calc(6px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
 }
 .nav a {
   flex: 1;
@@ -1267,6 +1292,7 @@ select.input {
   flex: 0 0 auto;
 }
 .sheet .sheet-body {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   overflow-y: auto;
   padding: 8px 20px 22px;
 }
@@ -2191,6 +2217,38 @@ table.grid .rowlink:hover {
   border-left-color: var(--danger);
 }
 
+/*
+ * Transfer receipt — the one attachment the member did not upload. It answers
+ * "has the money actually arrived?", so it gets a green mark rather than
+ * sitting silently above a thumbnail grid.
+ */
+.receipt-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: rgba(18, 184, 134, 0.08);
+  border: 1px solid rgba(18, 184, 134, 0.28);
+  border-radius: var(--r-sm);
+  padding: 11px 13px;
+  margin-bottom: 10px;
+}
+.receipt-note .rn-ico {
+  flex: 0 0 auto;
+  color: var(--brand-2);
+  display: grid;
+  place-items: center;
+}
+.receipt-note .rn-ico svg {
+  width: 18px;
+  height: 18px;
+}
+.receipt-note p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
 /* ===========================================================================
    BANK DETAILS
    A missing payout account blocks an application, so the empty state is a
@@ -2254,6 +2312,87 @@ table.grid .rowlink:hover {
   font-size: 12px;
   line-height: 1.55;
   color: var(--text-dim);
+}
+
+/* ---- date range filter ---- */
+.datefilter {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.datefilter .df-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.datefilter .df-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 8px;
+}
+.datefilter .df-label svg {
+  width: 15px;
+  height: 15px;
+}
+.datefilter .df-input {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.datefilter .df-input input {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  min-height: 36px;
+}
+.datefilter .df-input input:focus-visible {
+  outline: 2px solid var(--brand-1);
+  outline-offset: 1px;
+}
+.datefilter .df-presets {
+  margin: 0;
+}
+.datefilter .chip {
+  border: 1px solid var(--border);
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pagesize {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  font-weight: 600;
+  margin-inline-start: auto;
+}
+.pagesize select {
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 5px 8px;
+  cursor: pointer;
 }
 
 .pager {
@@ -2370,6 +2509,83 @@ table.grid .rowlink:hover {
   font-size: 13px;
   color: var(--text-dim);
   line-height: 1.5;
+}
+.amodal p.sub code {
+  background: var(--card-soft);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 11.5px;
+}
+
+/* The fund editor carries both languages of every field, so it needs the room
+   — and a scroller, because on a laptop it is taller than the viewport. */
+.amodal.wide {
+  width: min(640px, 100%);
+  max-height: min(86vh, 860px);
+  overflow-y: auto;
+}
+
+/* Colour and icon pickers. A fund's look is a choice from a fixed set, so it
+   is shown rather than typed — the old advice was to memorise class names. */
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.swatches .swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  border: 2px solid transparent;
+  box-shadow: 0 0 0 1px var(--border);
+  cursor: pointer;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.swatches .swatch:hover {
+  transform: translateY(-1px);
+}
+.swatches .swatch.on {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px var(--brand-2);
+}
+.swatches .swatch.icon {
+  background: var(--card-soft);
+  color: var(--text-dim);
+}
+.swatches .swatch.icon.on {
+  background: var(--grad-brand);
+  color: #fff;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 7px 0;
+}
+.check input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--brand-2);
+  cursor: pointer;
+}
+
+/* Edit sits at the foot of the fund card, above the decorative edge. */
+.kpi .fund-edit {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  justify-content: center;
+  margin-top: 14px;
 }
 
 /* ===========================================================================

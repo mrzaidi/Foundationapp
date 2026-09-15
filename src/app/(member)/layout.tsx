@@ -6,7 +6,11 @@ import { rowHasBankColumns } from '@/lib/bank-schema';
 import { createClient } from '@/lib/supabase/server';
 import type { FundType, Profile } from '@/lib/types';
 
-export const dynamic = 'force-dynamic';
+// Deliberately NOT force-dynamic. Reading cookies already makes this dynamic,
+// and forcing it made Next re-run both queries on every navigation *before*
+// loading.tsx could paint — the tab bar responded, then nothing happened for a
+// beat, then the loader appeared. The layout is the same on every member
+// screen, so it should be rendered once and kept.
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();

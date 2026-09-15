@@ -1,3 +1,4 @@
+import FundEditor from '@/components/FundEditor';
 import Icon from '@/components/Icon';
 import { createClient } from '@/lib/supabase/server';
 import { money } from '@/lib/format';
@@ -87,6 +88,7 @@ export default async function AdminFundsPage() {
                   {f.is_active ? 'Active' : 'Hidden'}
                 </span>
               </div>
+              <FundEditor fund={f} />
               <div className="kedge" />
             </div>
           );
@@ -102,15 +104,15 @@ export default async function AdminFundsPage() {
         </div>
         <div className="panel-body">
           <p className="muted" style={{ marginTop: 0 }}>
-            Adding a fifth fund, renaming one, changing its limits or hiding it from the dashboard is
-            an edit to the <code>fund_types</code> table in Supabase — no deploy needed. Each row
-            carries its own gradient class, icon name, Urdu copy and whether a document is required.
+            <strong>Edit</strong> on any card changes its name, description, amount range, colour,
+            icon, whether a document is required and whether members can see it at all — in both
+            English and Urdu. Changes are live on the member dashboard immediately; nothing is
+            deployed and nothing is cached.
           </p>
           <div className="note">
-            Gradients available: <code>g-brand</code>, <code>g-rose</code>, <code>g-amber</code>,{' '}
-            <code>g-blue</code>, <code>g-plum</code>, <code>g-gold</code>. Icons:{' '}
-            <code>calendar</code>, <code>health</code>, <code>basket</code>, <code>bolt</code>,{' '}
-            <code>heart</code>, <code>wallet</code>, <code>building</code>.
+            A fund&apos;s id cannot be changed here — every application ever filed points at it.
+            <em> Adding</em> a whole new fund is still an insert into <code>fund_types</code>: give
+            it an id, a name, a gradient class and an icon name, and it appears on the dashboard.
           </div>
         </div>
       </div>

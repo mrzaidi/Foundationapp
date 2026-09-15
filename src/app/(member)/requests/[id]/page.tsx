@@ -37,7 +37,14 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
   const current = stageIndex(r.status);
-  const docCount = r.request_attachments?.length ?? 0;
+
+  // What the member sent in, and what the foundation sent back. The receipt is
+  // the answer to "has the money actually gone?", so it does not belong
+  // buried in a list of their own bills.
+  const attachments = r.request_attachments ?? [];
+  const receipts = attachments.filter((a) => a.kind === 'receipt');
+  const supplied = attachments.filter((a) => a.kind !== 'receipt');
+  const docCount = supplied.length;
 
   return (
     <div className="screen">
@@ -177,8 +184,27 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
           <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>{d.detail.files(docCount)}</span>
         </div>
 
-        <DocumentGallery attachments={r.request_attachments ?? []} />
+        <DocumentGallery attachments={supplied} />
       </div>
+
+      {/* ---------- transfer receipt ---------- */}
+      {receipts.length > 0 && (
+        <div className="pad">
+          <div className="section-head">
+            <h2>{d.detail.receipt}</h2>
+            <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>
+              {d.detail.files(receipts.length)}
+            </span>
+          </div>
+          <div className="receipt-note">
+            <span className="rn-ico">
+              <Icon name="checkCircle" />
+            </span>
+            <p>{d.detail.receiptBody}</p>
+          </div>
+          <DocumentGallery attachments={receipts} />
+        </div>
+      )}
 
       {/* ---------- timeline ---------- */}
       <div className="pad">
