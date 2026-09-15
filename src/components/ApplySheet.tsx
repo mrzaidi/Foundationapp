@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import BankFields, { EMPTY_BANK, useBankValidation, type BankForm } from './BankFields';
 import Icon from './Icon';
 import Lightbox, { type LightboxItem } from './Lightbox';
 import { useI18n } from './LocaleProvider';
@@ -9,21 +10,32 @@ import { useToast } from './Toast';
 import { createClient } from '@/lib/supabase/client';
 import { bytes, money } from '@/lib/format';
 import { fundText } from '@/lib/funds';
-import type { FundType } from '@/lib/types';
+import { normalizeAccount } from '@/lib/banks';
+import type { FundType, Profile } from '@/lib/types';
 
-type Phase = 'confirm' | 'form' | 'done';
+type Phase = 'bank' | 'confirm' | 'form' | 'done';
 
 const MAX_FILES = 8;
 
 interface Props {
   fund: FundType | null;
-  userId: string;
+  profile: Profile;
+  /** Without a payout account there is nothing to approve into — collect it first. */
+  hasBank: boolean;
+  onBankSaved: () => void;
   onClose: () => void;
   /** Coming from the fund picker the member has already chosen — skip the confirm step. */
   startAt?: Phase;
 }
 
-export default function ApplySheet({ fund, userId, onClose, startAt = 'confirm' }: Props) {
+export default function ApplySheet({
+  fund,
+  profile,
+  hasBank,
+  onBankSaved,
+  onClose,
+  startAt = 'confirm',
+}: Props) {
   const router = useRouter();
   const toast = useToast();
   const { d, locale } = useI18n();
@@ -38,17 +50,31 @@ export default function ApplySheet({ fund, userId, onClose, startAt = 'confirm' 
   const [reference, setReference] = useState('');
   const [preview, setPreview] = useState<number | null>(null);
 
+  const validateBank = useBankValidation();
+  const [bank, setBank] = useState<BankForm>(EMPTY_BANK);
+  const [bankErrors, setBankErrors] = useState<Partial<Record<keyof BankForm, string>>>({});
+  const [savingBank, setSavingBank] = useState(false);
+
   useEffect(() => {
     if (fund) {
-      setPhase(startAt);
+      // No account on file yet: collect it before anything else. Everything
+      // after this step is unchanged, so the member lands back on the normal
+      // flow once they have saved.
+      setPhase(hasBank ? startAt : 'bank');
       setAmount('');
       setPurpose('');
       setFiles([]);
       setError('');
       setReference('');
       setPreview(null);
+      setBank({
+        bank_name: profile.bank_name ?? '',
+        bank_account_number: profile.bank_account_number ?? '',
+        bank_account_title: profile.bank_account_title || profile.full_name,
+      });
+      setBankErrors({});
     }
-  }, [fund, startAt]);
+  }, [fund, startAt, hasBank, profile]);
 
   /* Object URLs are revoked when the selection changes, so a long session
      picking and unpicking files cannot leak them. */
@@ -96,6 +122,37 @@ export default function ApplySheet({ fund, userId, onClose, startAt = 'confirm' 
     setError('');
   }
 
+  async function saveBank() {
+    const problems = validateBank(bank);
+    setBankErrors(problems);
+    if (Object.keys(problems).length) return;
+
+    setSavingBank(true);
+    setError('');
+    try {
+      const res = await fetch('/api/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bank_name: bank.bank_name,
+          bank_account_number: normalizeAccount(bank.bank_account_number),
+          bank_account_title: bank.bank_account_title.trim(),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? d.bank.errors.saveFailed);
+
+      toast(d.bank.saved);
+      onBankSaved();
+      router.refresh();
+      setPhase(startAt);
+    } catch (e) {
+      setBankErrors({ bank_account_number: (e as Error).message });
+    } finally {
+      setSavingBank(false);
+    }
+  }
+
   async function submit() {
     const value = Number(amount);
 
@@ -130,7 +187,7 @@ export default function ApplySheet({ fund, userId, onClose, startAt = 'confirm' 
 
         for (const file of files) {
           const safe = file.name.replace(/[^\w.\-]+/g, '_');
-          const path = `${userId}/requests/${requestId}/${Date.now()}-${safe}`;
+          const path = `${profile.id}/requests/${requestId}/${Date.now()}-${safe}`;
           const { error: upErr } = await supabase.storage
             .from('documents')
             .upload(path, file, { contentType: file.type, upsert: false });
@@ -178,6 +235,49 @@ export default function ApplySheet({ fund, userId, onClose, startAt = 'confirm' 
   return (
     <>
       <div className={`backdrop ${fund ? 'open' : ''}`} onClick={busy ? undefined : onClose} />
+
+      {/* ---------- 0. bank details, only until they exist ---------- */}
+      <div className={`sheet ${phase === 'bank' ? 'open' : ''}`} role="dialog" aria-modal="true">
+        <div className="grab" />
+        <div className="sheet-body">
+          <div className="sheet-head">
+            <div className="ico g-gold">
+              <Icon name="bank" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h3>{d.bank.gateTitle}</h3>
+              <p>{d.bank.gateBody}</p>
+            </div>
+            <button
+              className="icon-btn dark"
+              onClick={savingBank ? undefined : onClose}
+              aria-label={d.common.close}
+              type="button"
+            >
+              <Icon name="x" />
+            </button>
+          </div>
+
+          <BankFields
+            idPrefix="apply_bank"
+            value={bank}
+            onChange={(next) => {
+              setBank(next);
+              setBankErrors({});
+            }}
+            errors={bankErrors}
+          />
+
+          <button className="btn mt-16" onClick={saveBank} disabled={savingBank} type="button">
+            {savingBank ? <span className="spin" /> : <Icon name="check" />}
+            <span>{savingBank ? d.common.saving : d.bank.saveAndContinue}</span>
+          </button>
+
+          <p className="muted center mt-12" style={{ fontSize: 11.5 }}>
+            {d.bank.privacy}
+          </p>
+        </div>
+      </div>
 
       {/* ---------- 1. confirmation ---------- */}
       <div className={`dialog ${phase === 'confirm' ? 'open' : ''}`} role="dialog" aria-modal="true">

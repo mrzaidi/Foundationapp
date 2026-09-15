@@ -6,6 +6,7 @@ import RequestActions from '@/components/RequestActions';
 import StatusBadge from '@/components/StatusBadge';
 import Tracker from '@/components/Tracker';
 import { createClient } from '@/lib/supabase/server';
+import { formatAccount, hasBankDetails } from '@/lib/banks';
 import { STATUS_LABEL, dateTimeLabel, initials, money } from '@/lib/format';
 import type { FundRequest } from '@/lib/types';
 
@@ -230,6 +231,46 @@ export default async function AdminRequestDetail({
             </div>
             <div className="panel-body">
               <RequestActions request={r} />
+            </div>
+          </div>
+
+          {/* Where the money actually goes — first thing staff need once a
+              request is accepted, so it sits above the registration details. */}
+          <div className="panel">
+            <div className="panel-head">
+              <div>
+                <h2>Payout account</h2>
+                <div className="ph-sub">Where an approved transfer is sent</div>
+              </div>
+              <Icon name="bank" />
+            </div>
+            <div className="panel-body">
+              {member && hasBankDetails(member) ? (
+                <>
+                  <div className="kv">
+                    <span className="k">Bank</span>
+                    <span className="v">{member.bank_name}</span>
+                  </div>
+                  <div className="kv">
+                    <span className="k">IBAN / account</span>
+                    <span
+                      className="v"
+                      style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 12.5 }}
+                    >
+                      {formatAccount(member.bank_account_number)}
+                    </span>
+                  </div>
+                  <div className="kv">
+                    <span className="k">Account holder</span>
+                    <span className="v">{member.bank_account_title}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="note danger">
+                  No bank details on file. This application predates the requirement — ask the
+                  member to add an account from their profile before arranging a transfer.
+                </div>
+              )}
             </div>
           </div>
 

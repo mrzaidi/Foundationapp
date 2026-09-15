@@ -19,6 +19,7 @@ const FILES = [
   'migrations/0004_fix_admin_bootstrap.sql',
   'migrations/0005_stats_counts.sql',
   'migrations/0006_school_fees_and_budget.sql',
+  'migrations/0007_bank_details.sql',
 ];
 
 const header = `-- =====================================================================

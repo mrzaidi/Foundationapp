@@ -17,6 +17,10 @@ export interface Profile {
   email: string;
   mobile: string;
   nic_path: string | null;
+  /* where approved funds are transferred — see supabase/migrations/0007 */
+  bank_name: string | null;
+  bank_account_title: string | null;
+  bank_account_number: string | null;
   role: UserRole;
   is_blocked: boolean;
   created_at: string;

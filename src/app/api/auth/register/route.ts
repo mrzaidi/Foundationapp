@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { normalizeAccount, validateBank } from '@/lib/banks';
 import { corsHeaders, preflight } from '@/lib/cors';
 
 export const runtime = 'nodejs';
@@ -18,6 +19,9 @@ interface Body {
   email?: string;
   mobile?: string;
   password?: string;
+  bank_name?: string;
+  bank_account_title?: string;
+  bank_account_number?: string;
 }
 
 const GENDERS = ['male', 'female', 'other'];
@@ -40,6 +44,9 @@ export async function POST(request: Request) {
   const email = (body.email ?? '').trim().toLowerCase();
   const mobile = (body.mobile ?? '').trim();
   const password = body.password ?? '';
+  const bank_name = (body.bank_name ?? '').trim();
+  const bank_account_title = (body.bank_account_title ?? '').trim();
+  const bank_account_number = normalizeAccount(body.bank_account_number ?? '');
 
   /* ---- validation (mirrors the DB constraints) ---- */
   const errors: Record<string, string> = {};
@@ -51,6 +58,11 @@ export async function POST(request: Request) {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errors.email = 'Enter a valid email address.';
   if (mobile.replace(/\D/g, '').length < 10) errors.mobile = 'Enter a valid mobile number.';
   if (password.length < 8) errors.password = 'Password must be at least 8 characters.';
+
+  // The foundation pays into an account, so one is collected up front rather
+  // than chased down after a committee has already approved the money.
+  const bankProblem = validateBank({ bank_name, bank_account_title, bank_account_number });
+  if (bankProblem) errors[bankProblem.field] = bankProblem.message;
 
   if (Object.keys(errors).length) {
     return NextResponse.json({ error: 'Please check the form.', errors }, { status: 422, headers: cors });
@@ -94,6 +106,9 @@ export async function POST(request: Request) {
     city,
     email,
     mobile,
+    bank_name,
+    bank_account_title,
+    bank_account_number,
     role: 'member',
   });
 

@@ -1,27 +1,5 @@
-import { Line, TableSkeleton } from '@/components/Skeleton';
+import CenterLoader from '@/components/CenterLoader';
 
 export default function Loading() {
-  return (
-    <>
-      <div className="topbar">
-        <div className="sk-lines">
-          <Line w="170px" h={22} />
-          <Line w="200px" h={11} />
-        </div>
-      </div>
-      <div className="panel">
-        <div className="panel-head">
-          <div className="toolbar" style={{ flex: 1 }}>
-            <span className="sk" style={{ height: 39, borderRadius: 12, flex: 1, minWidth: 210 }} />
-            <div className="chips">
-              {[50, 86, 72, 84, 96, 80].map((w, i) => (
-                <span className="sk" key={i} style={{ width: w, height: 33, borderRadius: 999 }} />
-              ))}
-            </div>
-          </div>
-        </div>
-        <TableSkeleton rows={7} cols={8} />
-      </div>
-    </>
-  );
+  return <CenterLoader label="Loading applications…" />;
 }

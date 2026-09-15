@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useApply } from './ApplyProvider';
 import Icon from './Icon';
 import { useI18n } from './LocaleProvider';
 
@@ -12,7 +13,7 @@ import { useI18n } from './LocaleProvider';
  */
 export default function BottomNav() {
   const path = usePathname();
-  const router = useRouter();
+  const { openPicker } = useApply();
   const { d } = useI18n();
   const on = (p: string) => (p === '/' ? path === '/' : path.startsWith(p));
 
@@ -45,7 +46,7 @@ export default function BottomNav() {
           className="fab"
           aria-label={d.nav.apply}
           data-label={d.common.apply}
-          onClick={() => router.push('/?apply=1')}
+          onClick={openPicker}
         >
           <Icon name="plus" strokeWidth={2.4} />
         </button>

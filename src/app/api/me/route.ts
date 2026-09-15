@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { normalizeAccount, validateBank } from '@/lib/banks';
 import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
@@ -34,7 +35,18 @@ export async function PATCH(request: Request) {
   }
 
   // role / is_blocked are deliberately absent — the DB trigger also guards them.
-  const EDITABLE = ['full_name', 'gender', 'age', 'country', 'city', 'mobile', 'nic_path'];
+  const EDITABLE = [
+    'full_name',
+    'gender',
+    'age',
+    'country',
+    'city',
+    'mobile',
+    'nic_path',
+    'bank_name',
+    'bank_account_title',
+    'bank_account_number',
+  ];
   const patch: Record<string, unknown> = {};
   for (const key of EDITABLE) if (key in body) patch[key] = body[key];
 
@@ -46,6 +58,32 @@ export async function PATCH(request: Request) {
     if (!Number.isFinite(n) || n < 12 || n > 120)
       return NextResponse.json({ error: 'Enter a valid age.' }, { status: 422 });
     patch.age = n;
+  }
+
+  // Bank details go in as a set or not at all: a half-updated payout account is
+  // worse than none, because it still passes the "has bank details" check.
+  const BANK = ['bank_name', 'bank_account_title', 'bank_account_number'] as const;
+  if (BANK.some((k) => k in patch)) {
+    if (!BANK.every((k) => k in patch))
+      return NextResponse.json(
+        { error: 'Send the bank, account number and account holder name together.' },
+        { status: 422 }
+      );
+
+    const problem = validateBank({
+      bank_name: String(patch.bank_name ?? ''),
+      bank_account_title: String(patch.bank_account_title ?? ''),
+      bank_account_number: String(patch.bank_account_number ?? ''),
+    });
+    if (problem)
+      return NextResponse.json(
+        { error: problem.message, errors: { [problem.field]: problem.message } },
+        { status: 422 }
+      );
+
+    patch.bank_name = String(patch.bank_name).trim();
+    patch.bank_account_title = String(patch.bank_account_title).trim();
+    patch.bank_account_number = normalizeAccount(String(patch.bank_account_number));
   }
 
   const { data, error } = await supabase

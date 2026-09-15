@@ -5,12 +5,7 @@ import type { FundRequest, FundType, Profile } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ apply?: string }>;
-}) {
-  const { apply } = await searchParams;
+export default async function DashboardPage() {
   const supabase = await createClient();
 
   const {
@@ -37,7 +32,6 @@ export default async function DashboardPage({
       profile={profile as Profile}
       funds={(funds ?? []) as FundType[]}
       requests={(requests ?? []) as FundRequest[]}
-      autoOpen={apply === '1'}
     />
   );
 }

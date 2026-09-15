@@ -32,6 +32,7 @@ idempotent — safe to re-run after any change:
 5. `0004_fix_admin_bootstrap.sql` — lets the first admin be created
 6. `0005_stats_counts.sql` — dashboard account counts
 7. `0006_school_fees_and_budget.sql` — School Fees fund + monthly budgets
+8. `0007_bank_details.sql` — payout account on the profile + the apply guard
 
 Edit those sources, never `SETUP.sql`. Regenerate it with:
 
@@ -170,6 +171,26 @@ Authorisation lives in Postgres, not just in the API:
 Every change is written to `request_events` by a trigger, so the member's
 progress history and the admin's audit trail are the same rows and cannot drift.
 
+### Bank details
+
+The foundation transfers money, so every member has a payout account: bank
+(chosen from `src/lib/banks.ts` — every SBP-licensed bank, the microfinance
+banks, and the mobile wallets many families actually use), IBAN or account
+number, and account holder name.
+
+It is collected at registration, and existing members are asked for it the
+first time they apply — the apply sheet opens on a bank step instead of the
+form, saves through `PATCH /api/me`, and carries on where it left off.
+
+The rule is enforced in three places, narrowest last: the form validates the
+IBAN with the ISO 13616 mod-97 checksum, `POST /api/requests` answers 422 with
+a sentence the app can show, and a `before insert` trigger on
+`fund_requests` refuses the row outright — so it holds for the native app and
+anything else that reaches the database.
+
+Admins see the account on both the application and the member record, which is
+what they need in hand to make the transfer.
+
 ### Monthly budget
 
 The foundation sets a budget per month; every transfer draws it down.
@@ -200,6 +221,22 @@ required. No deploy needed.
   you want to translate it later.
 
 ---
+
+## Loading state
+
+Every route's `loading.tsx` on both portals renders one centred Lottie mark.
+The animation is generated from the app's own brand colours rather than
+downloaded:
+
+```bash
+node scripts/build-lottie.mjs
+```
+
+It writes `src/lib/loading-animation.json`, which is imported and bundled — a
+loader that waits on the network shows nothing for exactly as long as it
+matters. The engine itself is a lazy chunk, with a CSS ring standing in until
+it arrives, and lottie-react declines to autoplay under
+`prefers-reduced-motion`.
 
 ## Design previews
 

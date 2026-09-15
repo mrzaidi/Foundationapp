@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import BankFields, { useBankValidation, type BankForm } from './BankFields';
 import Icon from './Icon';
 import LanguageToggle from './LanguageToggle';
 import { useI18n } from './LocaleProvider';
 import { StatusBar } from './PhoneShell';
 import { useToast } from './Toast';
 import { createClient } from '@/lib/supabase/client';
+import { formatAccount, hasBankDetails, normalizeAccount } from '@/lib/banks';
 import { dateLabel, initials, money } from '@/lib/format';
 import type { Profile } from '@/lib/types';
 
@@ -26,6 +28,16 @@ export default function ProfileView({
   const { d } = useI18n();
 
   const [editing, setEditing] = useState(false);
+  const [bankEditing, setBankEditing] = useState(false);
+  const [bankBusy, setBankBusy] = useState(false);
+  const [bankErrors, setBankErrors] = useState<Partial<Record<keyof BankForm, string>>>({});
+  const [bank, setBank] = useState<BankForm>({
+    bank_name: profile.bank_name ?? '',
+    bank_account_number: profile.bank_account_number ?? '',
+    bank_account_title: profile.bank_account_title || profile.full_name,
+  });
+  const validateBank = useBankValidation();
+  const bankOnFile = hasBankDetails(profile);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
     full_name: profile.full_name,
@@ -52,6 +64,34 @@ export default function ProfileView({
       toast((e as Error).message, 'bad');
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function saveBank() {
+    const problems = validateBank(bank);
+    setBankErrors(problems);
+    if (Object.keys(problems).length) return;
+
+    setBankBusy(true);
+    try {
+      const res = await fetch('/api/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bank_name: bank.bank_name,
+          bank_account_number: normalizeAccount(bank.bank_account_number),
+          bank_account_title: bank.bank_account_title.trim(),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? d.bank.errors.saveFailed);
+      toast(d.bank.saved);
+      setBankEditing(false);
+      router.refresh();
+    } catch (e) {
+      toast((e as Error).message, 'bad');
+    } finally {
+      setBankBusy(false);
     }
   }
 
@@ -252,6 +292,90 @@ export default function ProfileView({
               <span className="k">{d.profile.registered}</span>
               <span className="v num">{dateLabel(profile.created_at)}</span>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* ---------- bank details ---------- */}
+      <div className="pad">
+        <div className="section-head">
+          <h2>{d.profile.bankHeading}</h2>
+          {bankOnFile && !bankEditing ? (
+            <button type="button" className="section-link" onClick={() => setBankEditing(true)}>
+              {d.bank.edit}
+            </button>
+          ) : (
+            <span className="section-meta">{d.profile.bankSub}</span>
+          )}
+        </div>
+
+        {bankEditing || !bankOnFile ? (
+          <div className={`card ${bankOnFile ? '' : 'card-attn'}`}>
+            {!bankOnFile && !bankEditing && (
+              <div className="bank-empty">
+                <div className="be-ico">
+                  <Icon name="bank" />
+                </div>
+                <div>
+                  <div className="be-title">{d.bank.missing}</div>
+                  <p className="be-body">{d.bank.missingBody}</p>
+                </div>
+              </div>
+            )}
+
+            <BankFields
+              idPrefix="profile_bank"
+              value={bank}
+              onChange={(next) => {
+                setBank(next);
+                setBankErrors({});
+              }}
+              errors={bankErrors}
+            />
+
+            <div className="btn-row mt-16">
+              {bankEditing && (
+                <button
+                  className="btn ghost"
+                  type="button"
+                  onClick={() => {
+                    setBankEditing(false);
+                    setBankErrors({});
+                    setBank({
+                      bank_name: profile.bank_name ?? '',
+                      bank_account_number: profile.bank_account_number ?? '',
+                      bank_account_title: profile.bank_account_title || profile.full_name,
+                    });
+                  }}
+                >
+                  <span>{d.common.cancel}</span>
+                </button>
+              )}
+              <button className="btn" onClick={saveBank} disabled={bankBusy} type="button">
+                {bankBusy ? <span className="spin" /> : <Icon name="check" />}
+                <span>{bankBusy ? d.common.saving : d.common.save}</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="card">
+            <div className="kv">
+              <span className="k">{d.bank.bank}</span>
+              <span className="v">{profile.bank_name}</span>
+            </div>
+            <div className="kv">
+              <span className="k">{d.bank.account}</span>
+              <span className="v num" dir="ltr">
+                {formatAccount(profile.bank_account_number)}
+              </span>
+            </div>
+            <div className="kv">
+              <span className="k">{d.bank.holder}</span>
+              <span className="v">{profile.bank_account_title}</span>
+            </div>
+            <p className="muted mt-12 mb-0" style={{ fontSize: 11.5 }}>
+              {d.bank.privacy}
+            </p>
           </div>
         )}
       </div>

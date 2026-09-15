@@ -5,6 +5,7 @@ import Icon from '@/components/Icon';
 import MemberActions from '@/components/MemberActions';
 import StatusBadge from '@/components/StatusBadge';
 import { createClient } from '@/lib/supabase/server';
+import { formatAccount, hasBankDetails } from '@/lib/banks';
 import { dateLabel, dateTimeLabel, initials, money } from '@/lib/format';
 import type { FundRequest, Profile } from '@/lib/types';
 
@@ -204,6 +205,43 @@ export default async function AdminMemberDetail({ params }: { params: Promise<{ 
                 <span className="k">Registered</span>
                 <span className="v">{dateTimeLabel(m.created_at)}</span>
               </div>
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-head">
+              <div>
+                <h2>Payout account</h2>
+                <div className="ph-sub">Where transfers to this member are sent</div>
+              </div>
+              <Icon name="bank" />
+            </div>
+            <div className="panel-body">
+              {hasBankDetails(m) ? (
+                <>
+                  <div className="kv">
+                    <span className="k">Bank</span>
+                    <span className="v">{m.bank_name}</span>
+                  </div>
+                  <div className="kv">
+                    <span className="k">IBAN / account</span>
+                    <span
+                      className="v"
+                      style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 12.5 }}
+                    >
+                      {formatAccount(m.bank_account_number)}
+                    </span>
+                  </div>
+                  <div className="kv">
+                    <span className="k">Account holder</span>
+                    <span className="v">{m.bank_account_title}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="note">
+                  No bank details on file. The member is asked for them the first time they apply.
+                </div>
+              )}
             </div>
           </div>
 

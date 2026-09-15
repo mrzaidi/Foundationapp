@@ -20,6 +20,7 @@ const en = {
     currency: 'PKR',
     signOut: 'Sign out',
     somethingWrong: 'Something went wrong.',
+    loading: 'Loading…',
   },
 
   nav: {
@@ -66,8 +67,8 @@ const en = {
 
   register: {
     title: 'Create account',
-    step: (n: number) => `Step ${n} of 3`,
-    stepNames: ['Personal details', 'Contact & location', 'ID & password'],
+    step: (n: number) => `Step ${n} of 4`,
+    stepNames: ['Personal details', 'Contact & location', 'Bank details', 'ID & password'],
     fullName: 'Full name',
     fullNameHint: 'As printed on your CNIC',
     gender: 'Gender',
@@ -169,6 +170,47 @@ const en = {
     lede: 'Choose the fund that matches what you need help with.',
   },
 
+  bank: {
+    section: 'Bank details',
+    lede: 'Where the foundation sends money if your application is approved.',
+    bank: 'Bank',
+    bankPlaceholder: 'Select your bank',
+    groups: {
+      commercial: 'Banks',
+      microfinance: 'Microfinance banks',
+      wallet: 'Mobile wallets',
+    },
+    account: 'IBAN / account number',
+    accountPlaceholder: 'PK00AAAA0000000000000000',
+    accountHint: 'Your 24-character IBAN, or the account number if you do not have one.',
+    holder: 'Account holder name',
+    holderPlaceholder: 'As printed on the account',
+    onFile: 'Bank details on file',
+    missing: 'No bank details yet',
+    missingBody:
+      'Add the account the foundation should transfer approved funds to. This is required before you can apply.',
+    add: 'Add bank details',
+    edit: 'Edit bank details',
+    saved: 'Bank details saved',
+    privacy:
+      'Your account details are visible only to foundation administrators arranging your transfer.',
+    gateTitle: 'Add your bank details first',
+    gateBody:
+      'Approved funds are transferred straight to your account. Add it once and every application after this uses it.',
+    saveAndContinue: 'Save and continue',
+    errors: {
+      bank: 'Select your bank.',
+      unknownBank: 'Choose a bank from the list.',
+      holder: 'Enter the account holder name.',
+      empty: 'Enter your IBAN or account number.',
+      tooShort: 'That account number is too short.',
+      badChars: 'Use letters and numbers only.',
+      badIban: 'That IBAN is not valid — check it in your bank app or cheque book.',
+      saveFailed: 'Could not save your bank details.',
+      required: 'Add your bank details before applying for a fund.',
+    },
+  },
+
   requests: {
     title: 'My applications',
     subtitle: 'Track every request you have submitted',
@@ -217,6 +259,8 @@ const en = {
     email: 'Email',
     mobile: 'Mobile',
     registered: 'Registered',
+    bankHeading: 'Bank details',
+    bankSub: 'Used for every transfer the foundation makes to you',
     identity: 'Identity document',
     cnicOnFile: 'CNIC on file',
     cnicVerified: 'Verified against your registration',

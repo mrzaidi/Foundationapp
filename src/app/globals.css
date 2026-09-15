@@ -2187,6 +2187,74 @@ table.grid .rowlink:hover {
   line-height: 1.55;
   color: var(--text-dim);
 }
+.note.danger {
+  border-left-color: var(--danger);
+}
+
+/* ===========================================================================
+   BANK DETAILS
+   A missing payout account blocks an application, so the empty state is a
+   prompt to fix it rather than a quiet dash.
+   =========================================================================== */
+
+.field-hint {
+  margin: 6px 2px 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
+.section-head .section-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--brand-2);
+}
+.section-head .section-meta {
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.card-attn {
+  border-color: rgba(224, 165, 43, 0.5);
+  box-shadow: 0 0 0 3px rgba(224, 165, 43, 0.1);
+}
+
+.bank-empty {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.bank-empty .be-ico {
+  flex: 0 0 38px;
+  height: 38px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: var(--grad-gold);
+  color: #fff;
+}
+.bank-empty .be-ico svg {
+  width: 19px;
+  height: 19px;
+}
+.bank-empty .be-title {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.bank-empty .be-body {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
 
 .pager {
   display: flex;
@@ -2412,6 +2480,9 @@ table.grid .rowlink:hover {
   border-left: 1px solid var(--border);
   border-right: 3px solid var(--gold-2);
 }
+[dir='rtl'] .note.danger {
+  border-right-color: var(--danger);
+}
 [dir='rtl'] .side nav a .count {
   margin-left: 0;
   margin-right: auto;
@@ -2476,10 +2547,19 @@ table.grid .rowlink:hover {
 }
 
 /* ===========================================================================
-   LOADING STATES
-   Shared by the web portals and the native app.
+   LOADING STATE
+   One centred Lottie mark, used by every route's loading.tsx on both portals.
+   Shape-matched skeletons were a nicer idea than they were in practice: five
+   variants to keep in step with five screens, all of them briefly lying about
+   what was coming. One honest centred loader is easier to trust.
    =========================================================================== */
 
+/*
+ * Shimmer placeholder. The screen-level skeletons are gone, but three
+ * components still hold their own space while data lands — a chart, the budget
+ * panel and a document thumbnail — and a shimmering box is right there where a
+ * centred loader would be wrong.
+ */
 .sk {
   display: inline-block;
   border-radius: 6px;
@@ -2495,121 +2575,60 @@ table.grid .rowlink:hover {
   .sk { animation: none; }
 }
 
-.sk-avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  flex: 0 0 auto;
-}
-.sk-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.sk-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.sk-lines {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
+.center-loader {
   flex: 1;
-  min-width: 0;
-}
-
-/* skeletons sitting on the gradient hero need a lighter tone */
-.hero .sk,
-.auth-hero .sk {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.22) 25%,
-    rgba(255, 255, 255, 0.34) 37%,
-    rgba(255, 255, 255, 0.22) 63%
-  );
-  background-size: 400% 100%;
-}
-.sk-hero-card {
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 20px;
-  padding: 15px 17px;
-}
-
-.sk-table th,
-.sk-table td {
-  vertical-align: middle;
-}
-
-/* full-screen branded loader */
-.screen-loader {
-  position: absolute;
-  inset: 0;
+  min-height: 260px;
   display: grid;
-  place-content: center;
+  place-items: center;
+  padding: 40px 24px;
+}
+/* On a phone the loader replaces .screen, which is a scroll container. */
+.screen.center-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.center-loader .cl-inner {
+  display: grid;
   justify-items: center;
-  gap: 18px;
-  background: var(--grad-brand);
-  z-index: 60;
+  gap: 6px;
+  text-align: center;
 }
-.screen-loader img {
-  width: 80px;
-  height: 80px;
-  border-radius: 26px;
-  animation: slPulse 1.5s ease-in-out infinite;
-}
-.screen-loader p {
-  margin: 0;
-  color: #fff;
-  font-size: 12.5px;
-  font-weight: 600;
-  opacity: 0.85;
-}
-.sl-bar {
+.center-loader .cl-art {
   width: 132px;
-  height: 4px;
-  border-radius: 99px;
-  background: rgba(255, 255, 255, 0.26);
-  overflow: hidden;
-  display: block;
+  height: 132px;
+  display: grid;
+  place-items: center;
 }
-.sl-bar span {
+.center-loader .cl-anim {
   display: block;
+  width: 100%;
   height: 100%;
-  width: 40%;
-  border-radius: 99px;
-  background: #fff;
-  animation: slSlide 1.25s ease-in-out infinite;
 }
-@keyframes slPulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(0.93); opacity: 0.8; }
-}
-@keyframes slSlide {
-  0% { transform: translateX(-110%); }
-  100% { transform: translateX(360%); }
+
+/* Stand-in while the Lottie engine chunk downloads — same footprint, same
+   brand ring, so nothing shifts when the real animation takes over. */
+.center-loader .cl-fallback {
+  display: block;
+  width: 62%;
+  height: 62%;
+  margin: 19%;
+  border-radius: 50%;
+  border: 7px solid rgba(18, 184, 134, 0.16);
+  border-top-color: var(--brand-1);
+  animation: spin 0.9s linear infinite;
 }
 @media (prefers-reduced-motion: reduce) {
-  .screen-loader img,
-  .sl-bar span { animation: none; }
+  .center-loader .cl-fallback {
+    animation: none;
+  }
+}
+.center-loader .cl-text {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+  color: var(--text-dim);
 }
 
-/* inline "working" bar for route transitions */
-.route-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  z-index: 300;
-  background: transparent;
-  overflow: hidden;
-}
-.route-progress span {
-  display: block;
-  height: 100%;
-  width: 30%;
-  background: var(--grad-brand);
-  animation: slSlide 1.1s ease-in-out infinite;
-}

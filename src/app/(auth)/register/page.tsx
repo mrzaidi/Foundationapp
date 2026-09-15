@@ -3,12 +3,14 @@
 import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import BankFields, { EMPTY_BANK, useBankValidation, type BankForm } from '@/components/BankFields';
 import Icon from '@/components/Icon';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useI18n } from '@/components/LocaleProvider';
 import { StatusBar } from '@/components/PhoneShell';
 import { useToast } from '@/components/Toast';
 import { createClient } from '@/lib/supabase/client';
+import { normalizeAccount } from '@/lib/banks';
 import { bytes } from '@/lib/format';
 
 const COUNTRIES = [
@@ -57,6 +59,7 @@ export default function RegisterPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState(0);
+  const [bank, setBank] = useState<BankForm>(EMPTY_BANK);
   const [f, setF] = useState<Form>(EMPTY);
   const [nic, setNic] = useState<File | null>(null);
   const [nicPreview, setNicPreview] = useState('');
@@ -70,32 +73,47 @@ export default function RegisterPage() {
 
   const digits = useMemo(() => f.mobile.replace(/\D/g, '').length, [f.mobile]);
   const E = d.register.errors;
+  const validateBank = useBankValidation();
 
-  function validateStep(s: number) {
+  /** Collects the problems for one or more steps — submit checks several. */
+  function problemsFor(steps: number[]) {
     const e: Record<string, string> = {};
-    if (s === 0) {
+    const s = { has: (n: number) => steps.includes(n) };
+    if (s.has(0)) {
       if (f.full_name.trim().length < 3) e.full_name = E.fullName;
       if (!f.gender) e.gender = E.gender;
       const age = Number(f.age);
       if (!f.age || !Number.isFinite(age) || age < 12 || age > 120) e.age = E.age;
     }
-    if (s === 1) {
+    if (s.has(1)) {
       if (!f.country) e.country = E.country;
       if (f.city.trim().length < 2) e.city = E.city;
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.trim())) e.email = E.email;
       if (digits < 10) e.mobile = E.mobile;
     }
-    if (s === 2) {
+    if (s.has(2)) {
+      Object.assign(e, validateBank(bank));
+    }
+    if (s.has(3)) {
       if (!nic) e.nic = E.cnic;
       if (f.password.length < 8) e.password = E.password;
       if (f.password !== f.confirm) e.confirm = E.confirm;
     }
+    return e;
+  }
+
+  function validateStep(...steps: number[]) {
+    const e = problemsFor(steps);
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
   function next() {
-    if (validateStep(step)) setStep((s) => Math.min(2, s + 1));
+    if (!validateStep(step)) return;
+    // Almost always the same person — offer it rather than make them retype it.
+    if (step === 1 && !bank.bank_account_title)
+      setBank((b) => ({ ...b, bank_account_title: f.full_name.trim() }));
+    setStep((s) => Math.min(3, s + 1));
   }
 
   function onPickNic(e: React.ChangeEvent<HTMLInputElement>) {
@@ -111,7 +129,7 @@ export default function RegisterPage() {
   }
 
   async function submit() {
-    if (!validateStep(2)) return;
+    if (!validateStep(2, 3)) return;
     setBusy(true);
 
     try {
@@ -128,6 +146,9 @@ export default function RegisterPage() {
           email: f.email.trim().toLowerCase(),
           mobile: f.mobile.trim(),
           password: f.password,
+          bank_name: bank.bank_name,
+          bank_account_number: normalizeAccount(bank.bank_account_number),
+          bank_account_title: bank.bank_account_title.trim(),
         }),
       });
       const json = await res.json();
@@ -199,6 +220,7 @@ export default function RegisterPage() {
           <i className="on" />
           <i className={step >= 1 ? 'on' : ''} />
           <i className={step >= 2 ? 'on' : ''} />
+          <i className={step >= 3 ? 'on' : ''} />
         </div>
       </div>
 
@@ -349,6 +371,32 @@ export default function RegisterPage() {
         {/* ---------------- step 3 ---------------- */}
         {step === 2 && (
           <div className="rise">
+            <p className="muted" style={{ marginTop: 0, fontSize: 12.5, lineHeight: 1.6 }}>
+              {d.bank.lede}
+            </p>
+
+            <BankFields
+              idPrefix="reg_bank"
+              value={bank}
+              onChange={(next) => {
+                setBank(next);
+                setErrors((x) => ({
+                  ...x,
+                  bank_name: '',
+                  bank_account_number: '',
+                  bank_account_title: '',
+                }));
+              }}
+              errors={errors}
+            />
+
+            <div className="note mt-16">{d.bank.privacy}</div>
+          </div>
+        )}
+
+        {/* ---------------- step 4 ---------------- */}
+        {step === 3 && (
+          <div className="rise">
             <div className="field">
               <label>
                 {d.register.cnic} <span className="req-star">*</span>
@@ -448,17 +496,17 @@ export default function RegisterPage() {
 
         <button
           className="btn mt-20"
-          onClick={step === 2 ? submit : next}
+          onClick={step === 3 ? submit : next}
           disabled={busy}
           type="button"
         >
           {busy ? (
             <span className="spin" />
           ) : (
-            <Icon name={step === 2 ? 'checkCircle' : 'arrowRight'} className="flip" />
+            <Icon name={step === 3 ? 'checkCircle' : 'arrowRight'} className={step === 3 ? undefined : 'flip'} />
           )}
           <span>
-            {busy ? d.register.submitting : step === 2 ? d.register.submit : d.common.continue}
+            {busy ? d.register.submitting : step === 3 ? d.register.submit : d.common.continue}
           </span>
         </button>
 

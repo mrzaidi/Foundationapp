@@ -201,6 +201,13 @@ const P: Record<string, React.ReactNode> = {
       <circle cx="17" cy="14.5" r="1.3" />
     </>
   ),
+  bank: (
+    <>
+      <path d="M3 9.5 12 4l9 5.5" />
+      <path d="M4.5 9.5v8M9.5 9.5v8M14.5 9.5v8M19.5 9.5v8" />
+      <path d="M3 20.5h18" />
+    </>
+  ),
   send: <path d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 9.8 21 3Z" />,
   trend: (
     <>
