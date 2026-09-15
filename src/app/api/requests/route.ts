@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { bankColumnsReady } from '@/lib/bank-schema';
 import { hasBankDetails } from '@/lib/banks';
 import { createClient } from '@/lib/supabase/server';
 
@@ -64,18 +65,21 @@ export async function POST(request: Request) {
   if (!fundId) return NextResponse.json({ error: 'Select a fund.' }, { status: 422 });
 
   // There is a trigger enforcing this too, but a 422 with a sentence the app
-  // can show beats surfacing a Postgres exception to a member.
-  const { data: me } = await supabase
-    .from('profiles')
-    .select('bank_name, bank_account_title, bank_account_number')
-    .eq('id', user.id)
-    .single();
+  // can show beats surfacing a Postgres exception to a member. Both wait on
+  // migration 0007 — until it runs, applying works exactly as it did before.
+  if (await bankColumnsReady(supabase)) {
+    const { data: me } = await supabase
+      .from('profiles')
+      .select('bank_name, bank_account_title, bank_account_number')
+      .eq('id', user.id)
+      .single();
 
-  if (!me || !hasBankDetails(me))
-    return NextResponse.json(
-      { error: 'Add your bank details before applying for a fund.', code: 'bank_required' },
-      { status: 422 }
-    );
+    if (!me || !hasBankDetails(me))
+      return NextResponse.json(
+        { error: 'Add your bank details before applying for a fund.', code: 'bank_required' },
+        { status: 422 }
+      );
+  }
 
   if (!Number.isFinite(amount) || amount <= 0)
     return NextResponse.json({ error: 'Enter a valid amount.' }, { status: 422 });

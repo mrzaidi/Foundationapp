@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { bankColumnsReady } from '@/lib/bank-schema';
 import { normalizeAccount, validateBank } from '@/lib/banks';
 import { createClient } from '@/lib/supabase/server';
 
@@ -64,6 +65,13 @@ export async function PATCH(request: Request) {
   // worse than none, because it still passes the "has bank details" check.
   const BANK = ['bank_name', 'bank_account_title', 'bank_account_number'] as const;
   if (BANK.some((k) => k in patch)) {
+    if (!(await bankColumnsReady(supabase)))
+      return NextResponse.json(
+        { error: 'Bank details are not available yet. Run migration 0007 on the database.' },
+        { status: 503 }
+      );
+
+
     if (!BANK.every((k) => k in patch))
       return NextResponse.json(
         { error: 'Send the bank, account number and account holder name together.' },

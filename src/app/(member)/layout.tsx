@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import ApplyProvider from '@/components/ApplyProvider';
 import BottomNav from '@/components/BottomNav';
 import PhoneShell from '@/components/PhoneShell';
+import { rowHasBankColumns } from '@/lib/bank-schema';
 import { createClient } from '@/lib/supabase/server';
 import type { FundType, Profile } from '@/lib/types';
 
@@ -26,7 +27,11 @@ export default async function MemberLayout({ children }: { children: React.React
 
   return (
     <PhoneShell>
-      <ApplyProvider profile={profile as Profile} funds={(funds ?? []) as FundType[]}>
+      <ApplyProvider
+        profile={profile as Profile}
+        funds={(funds ?? []) as FundType[]}
+        bankEnabled={rowHasBankColumns(profile)}
+      >
         {children}
         <BottomNav />
       </ApplyProvider>

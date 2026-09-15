@@ -23,8 +23,6 @@ interface ApplyApi {
   openPicker: () => void;
   /** Go straight to one fund, confirming first — a dashboard fund card. */
   startFund: (fund: FundType) => void;
-  /** True once the member has somewhere for money to land. */
-  hasBank: boolean;
 }
 
 const Ctx = createContext<ApplyApi | null>(null);
@@ -38,10 +36,13 @@ export function useApply(): ApplyApi {
 export default function ApplyProvider({
   profile,
   funds,
+  bankEnabled,
   children,
 }: {
   profile: Profile;
   funds: FundType[];
+  /** False until migration 0007 has run — then there is nowhere to save one. */
+  bankEnabled: boolean;
   children: React.ReactNode;
 }) {
   const [picking, setPicking] = useState(false);
@@ -50,6 +51,8 @@ export default function ApplyProvider({
   const [skipConfirm, setSkipConfirm] = useState(false);
   // Bank details can be added inside the flow, so this outlives the server prop.
   const [bankOnFile, setBankOnFile] = useState(() => hasBankDetails(profile));
+  // Asking for details the database cannot store would dead-end the member.
+  const gateOnBank = bankEnabled && !bankOnFile;
 
   const openPicker = useCallback(() => setPicking(true), []);
 
@@ -58,10 +61,7 @@ export default function ApplyProvider({
     setActive(fund);
   }, []);
 
-  const api = useMemo<ApplyApi>(
-    () => ({ openPicker, startFund, hasBank: bankOnFile }),
-    [openPicker, startFund, bankOnFile]
-  );
+  const api = useMemo<ApplyApi>(() => ({ openPicker, startFund }), [openPicker, startFund]);
 
   return (
     <Ctx.Provider value={api}>
@@ -81,7 +81,7 @@ export default function ApplyProvider({
       <ApplySheet
         fund={active}
         profile={profile}
-        hasBank={bankOnFile}
+        hasBank={!gateOnBank}
         onBankSaved={() => setBankOnFile(true)}
         startAt={skipConfirm ? 'form' : 'confirm'}
         onClose={() => setActive(null)}

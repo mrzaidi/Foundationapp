@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import ProfileView from '@/components/ProfileView';
+import { rowHasBankColumns } from '@/lib/bank-schema';
 import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/lib/types';
 
@@ -38,6 +39,7 @@ export default async function ProfilePage() {
       profile={profile as Profile}
       totalRequests={total ?? 0}
       totalReceived={received}
+      bankEnabled={rowHasBankColumns(profile)}
     />
   );
 }

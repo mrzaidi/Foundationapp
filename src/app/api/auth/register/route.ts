@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { bankColumnsReady } from '@/lib/bank-schema';
 import { normalizeAccount, validateBank } from '@/lib/banks';
 import { corsHeaders, preflight } from '@/lib/cors';
 
@@ -48,6 +49,13 @@ export async function POST(request: Request) {
   const bank_account_title = (body.bank_account_title ?? '').trim();
   const bank_account_number = normalizeAccount(body.bank_account_number ?? '');
 
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500, headers: cors });
+  }
+
   /* ---- validation (mirrors the DB constraints) ---- */
   const errors: Record<string, string> = {};
   if (full_name.length < 3) errors.full_name = 'Enter your full name.';
@@ -60,19 +68,16 @@ export async function POST(request: Request) {
   if (password.length < 8) errors.password = 'Password must be at least 8 characters.';
 
   // The foundation pays into an account, so one is collected up front rather
-  // than chased down after a committee has already approved the money.
-  const bankProblem = validateBank({ bank_name, bank_account_title, bank_account_number });
-  if (bankProblem) errors[bankProblem.field] = bankProblem.message;
+  // than chased down after a committee has already approved the money — but
+  // only once the database has somewhere to put it. See lib/bank-schema.
+  const bankReady = await bankColumnsReady(admin);
+  if (bankReady) {
+    const bankProblem = validateBank({ bank_name, bank_account_title, bank_account_number });
+    if (bankProblem) errors[bankProblem.field] = bankProblem.message;
+  }
 
   if (Object.keys(errors).length) {
     return NextResponse.json({ error: 'Please check the form.', errors }, { status: 422, headers: cors });
-  }
-
-  let admin;
-  try {
-    admin = createAdminClient();
-  } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500, headers: cors });
   }
 
   /* ---- create the auth user ---- */
@@ -106,9 +111,7 @@ export async function POST(request: Request) {
     city,
     email,
     mobile,
-    bank_name,
-    bank_account_title,
-    bank_account_number,
+    ...(bankReady ? { bank_name, bank_account_title, bank_account_number } : {}),
     role: 'member',
   });
 

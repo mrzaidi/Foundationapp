@@ -18,10 +18,13 @@ export default function ProfileView({
   profile,
   totalRequests,
   totalReceived,
+  bankEnabled,
 }: {
   profile: Profile;
   totalRequests: number;
   totalReceived: number;
+  /** False until migration 0007 has run — the card would not be savable. */
+  bankEnabled: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -297,6 +300,7 @@ export default function ProfileView({
       </div>
 
       {/* ---------- bank details ---------- */}
+      {bankEnabled && (
       <div className="pad">
         <div className="section-head">
           <h2>{d.profile.bankHeading}</h2>
@@ -379,6 +383,7 @@ export default function ProfileView({
           </div>
         )}
       </div>
+      )}
 
         </div>
 
