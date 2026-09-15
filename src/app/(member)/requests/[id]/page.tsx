@@ -187,6 +187,22 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         <DocumentGallery attachments={supplied} />
       </div>
 
+      {/* ---------- filed for them, not by them ---------- */}
+      {r.is_automatic && (
+        <div className="pad">
+          <div className="receipt-note">
+            <span className="rn-ico">
+              <Icon name="refresh" />
+            </span>
+            <p>
+              <strong>{d.detail.automatic}</strong>
+              <br />
+              {d.detail.automaticBody}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ---------- transfer receipt ---------- */}
       {receipts.length > 0 && (
         <div className="pad">

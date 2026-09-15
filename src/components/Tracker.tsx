@@ -25,6 +25,10 @@ export default function Tracker({
 }) {
   const { d } = useI18n();
 
+  // Two equal steps, not one wide one. The connector is drawn on each step as
+  // `left: -50%; width: 100%`, which lands exactly between two dot centres only
+  // while the steps are the same width — a `flex: 3` second step sent the bar
+  // shooting out past the left edge of the component.
   if (status === 'rejected') {
     return (
       <div className="track">
@@ -34,8 +38,8 @@ export default function Tracker({
           </div>
           <div className="lbl">{d.status.requested}</div>
         </div>
-        <div className="step done" style={{ flex: 3 }}>
-          <div className="dot" style={{ background: 'var(--danger)', color: '#fff' }}>
+        <div className="step done rejected">
+          <div className="dot">
             <Icon name="x" />
           </div>
           <div className="lbl">{d.status.rejected}</div>

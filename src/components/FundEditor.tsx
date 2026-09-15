@@ -34,6 +34,7 @@ type Draft = {
   icon: string;
   sort_order: string;
   is_active: boolean;
+  is_recurring: boolean;
 };
 
 function draftOf(f: FundType): Draft {
@@ -52,6 +53,7 @@ function draftOf(f: FundType): Draft {
     icon: f.icon,
     sort_order: String(f.sort_order),
     is_active: f.is_active,
+    is_recurring: Boolean(f.is_recurring),
   };
 }
 
@@ -63,7 +65,14 @@ function draftOf(f: FundType): Draft {
  * member sees is here, including the Urdu copy, because a fund renamed in one
  * language and not the other reads as a bug to half the members.
  */
-export default function FundEditor({ fund }: { fund: FundType }) {
+export default function FundEditor({
+  fund,
+  recurringReady,
+}: {
+  fund: FundType;
+  /** False until migration 0009 has run — the column would reject the write. */
+  recurringReady: boolean;
+}) {
   const router = useRouter();
   const toast = useToast();
 
@@ -114,6 +123,7 @@ export default function FundEditor({ fund }: { fund: FundType }) {
           icon: d.icon,
           sort_order: Number(d.sort_order),
           is_active: d.is_active,
+          ...(recurringReady ? { is_recurring: d.is_recurring } : {}),
         }),
       });
       const json = await res.json();
@@ -307,6 +317,16 @@ export default function FundEditor({ fund }: { fund: FundType }) {
                   />
                   <span>Visible to members</span>
                 </label>
+                {recurringReady && (
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      checked={d.is_recurring}
+                      onChange={(e) => set('is_recurring', e.target.checked)}
+                    />
+                    <span>Recurs monthly once approved</span>
+                  </label>
+                )}
               </div>
             </div>
 

@@ -2,13 +2,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import DocumentGallery from '@/components/DocumentGallery';
 import Icon from '@/components/Icon';
+import RecurringControl from '@/components/RecurringControl';
 import RequestActions from '@/components/RequestActions';
 import StatusBadge from '@/components/StatusBadge';
 import Tracker from '@/components/Tracker';
 import { createClient } from '@/lib/supabase/server';
 import { formatAccount, hasBankDetails } from '@/lib/banks';
 import { STATUS_LABEL, dateTimeLabel, initials, money } from '@/lib/format';
-import type { FundRequest } from '@/lib/types';
+import type { FundRequest, RecurringGrant } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,6 +46,15 @@ export default async function AdminRequestDetail({
   const receipts = attachments.filter((a) => a.kind === 'receipt');
   const supplied = attachments.filter((a) => a.kind !== 'receipt');
 
+  // Is this member on a standing arrangement for this fund?
+  const { data: grantRow } = await supabase
+    .from('recurring_grants')
+    .select('*, fund_types(id, name)')
+    .eq('user_id', r.user_id)
+    .eq('fund_type_id', r.fund_type_id)
+    .maybeSingle();
+  const grant = grantRow as RecurringGrant | null;
+
   const events = [...(r.request_events ?? [])].sort(
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
@@ -61,6 +71,7 @@ export default async function AdminRequestDetail({
             <div className="crumb">
               <span style={{ fontFamily: 'ui-monospace, Menlo, monospace' }}>{r.reference}</span> ·
               submitted {dateTimeLabel(r.created_at)}
+              {r.is_automatic && ' · filed automatically by the monthly arrangement'}
             </div>
           </div>
         </div>
@@ -267,6 +278,21 @@ export default async function AdminRequestDetail({
               <RequestActions request={r} />
             </div>
           </div>
+
+          {grant && (
+            <div className="panel">
+              <div className="panel-head">
+                <div>
+                  <h2>Monthly arrangement</h2>
+                  <div className="ph-sub">Filed automatically on the 1st of each month</div>
+                </div>
+                <Icon name="refresh" />
+              </div>
+              <div className="panel-body">
+                <RecurringControl grant={grant} />
+              </div>
+            </div>
+          )}
 
           {/* Where the money actually goes — first thing staff need once a
               request is accepted, so it sits above the registration details. */}

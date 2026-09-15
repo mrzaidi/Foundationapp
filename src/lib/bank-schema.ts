@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { columnReady, rowHasColumn } from './schema';
 
 /**
  * Is the database ready for bank details yet?
@@ -15,19 +16,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  * without a redeploy.
  */
 
-/** `true` is permanent — columns are not dropped. `false` is retried. */
-let ready = false;
-let checkedAt = 0;
-const RETRY_MS = 30_000;
-
-export async function bankColumnsReady(db: SupabaseClient): Promise<boolean> {
-  if (ready) return true;
-  if (Date.now() - checkedAt < RETRY_MS) return false;
-
-  checkedAt = Date.now();
-  const { error } = await db.from('profiles').select('bank_name').limit(1);
-  ready = !error;
-  return ready;
+export function bankColumnsReady(db: SupabaseClient): Promise<boolean> {
+  return columnReady(db, 'profiles', 'bank_name');
 }
 
 /**
@@ -38,5 +28,5 @@ export async function bankColumnsReady(db: SupabaseClient): Promise<boolean> {
  * from "member has not filled it in" without a second round-trip.
  */
 export function rowHasBankColumns(row: object | null | undefined): boolean {
-  return Boolean(row && 'bank_name' in row);
+  return rowHasColumn(row, 'bank_name');
 }

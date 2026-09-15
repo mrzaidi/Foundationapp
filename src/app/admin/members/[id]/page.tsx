@@ -3,11 +3,12 @@ import { notFound } from 'next/navigation';
 import DocumentGallery from '@/components/DocumentGallery';
 import Icon from '@/components/Icon';
 import MemberActions from '@/components/MemberActions';
+import RecurringControl from '@/components/RecurringControl';
 import StatusBadge from '@/components/StatusBadge';
 import { createClient } from '@/lib/supabase/server';
 import { formatAccount, hasBankDetails } from '@/lib/banks';
 import { dateLabel, dateTimeLabel, initials, money } from '@/lib/format';
-import type { FundRequest, Profile } from '@/lib/types';
+import type { FundRequest, Profile, RecurringGrant } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,13 @@ export default async function AdminMemberDetail({ params }: { params: Promise<{ 
     .eq('user_id', id)
     .order('created_at', { ascending: false });
 
+  const { data: grantRows } = await supabase
+    .from('recurring_grants')
+    .select('*, fund_types(id, name)')
+    .eq('user_id', id)
+    .order('created_at', { ascending: false });
+
+  const grants = (grantRows ?? []) as unknown as RecurringGrant[];
   const requests = (reqData ?? []) as FundRequest[];
   const received = requests
     .filter((r) => r.status === 'transferred')
@@ -207,6 +215,23 @@ export default async function AdminMemberDetail({ params }: { params: Promise<{ 
               </div>
             </div>
           </div>
+
+          {grants.map((g) => (
+            <div className="panel" key={g.id}>
+              <div className="panel-head">
+                <div>
+                  <h2>Monthly arrangement</h2>
+                  <div className="ph-sub">
+                    {g.fund_types?.name ?? g.fund_type_id} — filed on the 1st of each month
+                  </div>
+                </div>
+                <Icon name="refresh" />
+              </div>
+              <div className="panel-body">
+                <RecurringControl grant={g} />
+              </div>
+            </div>
+          ))}
 
           <div className="panel">
             <div className="panel-head">

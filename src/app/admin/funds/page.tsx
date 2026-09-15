@@ -1,5 +1,6 @@
 import FundEditor from '@/components/FundEditor';
 import Icon from '@/components/Icon';
+import { rowHasColumn } from '@/lib/schema';
 import { createClient } from '@/lib/supabase/server';
 import { money } from '@/lib/format';
 import type { FundType } from '@/lib/types';
@@ -15,6 +16,9 @@ export default async function AdminFundsPage() {
   ]);
 
   const funds = (fundsData ?? []) as FundType[];
+  // False until 0009 has run; the editor hides the toggle rather than
+  // offering a switch that silently does not save.
+  const recurringReady = rowHasColumn(fundsData?.[0], 'is_recurring');
   const rows = reqRows ?? [];
 
   const stats = new Map<string, { count: number; open: number; paid: number }>();
@@ -82,13 +86,21 @@ export default async function AdminFundsPage() {
                 <span className="k">Document</span>
                 <span className="v">{f.document_required ? 'Required' : 'Optional'}</span>
               </div>
+              {recurringReady && (
+                <div className="kv">
+                  <span className="k">Recurs monthly</span>
+                  <span className="v">
+                    {f.is_recurring ? 'Yes — approval enrols the member' : 'No'}
+                  </span>
+                </div>
+              )}
               <div className="kv">
                 <span className="k">Visible to members</span>
                 <span className={`badge ${f.is_active ? 'b-accepted' : 'b-rejected'}`}>
                   {f.is_active ? 'Active' : 'Hidden'}
                 </span>
               </div>
-              <FundEditor fund={f} />
+              <FundEditor fund={f} recurringReady={recurringReady} />
               <div className="kedge" />
             </div>
           );

@@ -7,7 +7,13 @@ import { money } from '@/lib/format';
 
 interface BudgetStatus {
   month: string;
+  /** What an admin set aside — a reserve, or a one-off gift. */
   budget: number;
+  /** What donors actually gave this month. */
+  donated: number;
+  donors: number;
+  /** budget + donated: the money the committee can actually spend. */
+  fund: number;
   spent: number;
   transfers: number;
   committed: number;
@@ -18,6 +24,8 @@ interface BudgetStatus {
 interface HistoryRow {
   month: string;
   budget: number;
+  donated: number;
+  fund: number;
   spent: number;
 }
 
@@ -105,9 +113,12 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
     );
   }
 
-  const used = status.budget > 0 ? Math.min(1, status.spent / status.budget) : 0;
+  // Everything is measured against the month's fund — the budget an admin
+  // set plus what donors actually gave.
+  const fund = Number(status.fund ?? status.budget);
+  const used = fund > 0 ? Math.min(1, status.spent / fund) : 0;
   const over = status.remaining < 0;
-  const tight = !over && status.budget > 0 && status.remaining < status.budget * 0.15;
+  const tight = !over && fund > 0 && status.remaining < fund * 0.15;
 
   return (
     <div className="panel budget-panel">
@@ -183,8 +194,20 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
 
         <div className="budget-figures">
           <div className="bf">
-            <span className="bf-label">Budget</span>
+            <span className="bf-label">Set budget</span>
             <span className="bf-value num">{money(status.budget)}</span>
+          </div>
+          <div className="bf">
+            <span className="bf-label">
+              Donations{status.donors > 0 ? ` · ${status.donors}` : ''}
+            </span>
+            <span className="bf-value num" style={{ color: 'var(--brand-2)' }}>
+              +{money(Number(status.donated ?? 0))}
+            </span>
+          </div>
+          <div className="bf">
+            <span className="bf-label">Month&rsquo;s fund</span>
+            <span className="bf-value num">{money(fund)}</span>
           </div>
           <div className="bf">
             <span className="bf-label">Transferred</span>
@@ -212,7 +235,11 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
           />
         </div>
         <div className="budget-bar-meta">
-          <span>{status.budget > 0 ? `${Math.round(used * 100)}% of the month used` : 'Set a budget to track spending'}</span>
+          <span>
+            {fund > 0
+              ? `${Math.round(used * 100)}% of the month used`
+              : 'Set a budget or record a donation to track spending'}
+          </span>
           {status.committed > 0 && (
             <span>{money(status.committed)} approved and awaiting transfer</span>
           )}
@@ -241,17 +268,22 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
                 <tr>
                   <th>Month</th>
                   <th>Budget</th>
+                  <th>Donations</th>
+                  <th>Fund</th>
                   <th>Transferred</th>
                   <th>Remaining</th>
                 </tr>
               </thead>
               <tbody>
                 {history.map((h) => {
-                  const rem = Number(h.budget) - Number(h.spent);
+                  const hFund = Number(h.fund ?? h.budget);
+                  const rem = hFund - Number(h.spent);
                   return (
                     <tr key={h.month}>
                       <td>{monthLabel(h.month)}</td>
                       <td className="num">{money(Number(h.budget), false)}</td>
+                      <td className="num">{money(Number(h.donated ?? 0), false)}</td>
+                      <td className="num">{money(hFund, false)}</td>
                       <td className="num">{money(Number(h.spent), false)}</td>
                       <td className="num" style={{ color: rem < 0 ? 'var(--danger)' : undefined }}>
                         {money(rem, false)}

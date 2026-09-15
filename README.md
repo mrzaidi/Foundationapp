@@ -34,6 +34,7 @@ idempotent — safe to re-run after any change:
 7. `0006_school_fees_and_budget.sql` — School Fees fund + monthly budgets
 8. `0007_bank_details.sql` — payout account on the profile + the apply guard
 9. `0008_transfer_receipts.sql` — lets an admin file a receipt into a member's case
+10. `0009_recurring_monthly.sql` — standing monthly arrangements + the nightly job
 
 Edit those sources, never `SETUP.sql`. Regenerate it with:
 
@@ -171,6 +172,25 @@ Authorisation lives in Postgres, not just in the API:
 `requested → review → accepted → transferred`, plus a terminal `rejected`.
 Every change is written to `request_events` by a trigger, so the member's
 progress history and the admin's audit trail are the same rows and cannot drift.
+
+### Standing monthly support
+
+Approving an application for a fund marked `is_recurring` (the Monthly Fund)
+enrols the member. On the 1st of each month the next application is filed for
+them, arriving at `requested` — the committee still decides every month, and
+every decision stays on the record.
+
+The work is one idempotent Postgres function, `generate_recurring_requests()`:
+an arrangement that already has an application this month is skipped, so a
+missed night is caught up rather than lost and a double run cannot double-apply.
+Months are Pakistan months. It is driven by pg_cron where the project has it,
+and otherwise by a Vercel cron hitting `/api/cron/monthly` (set `CRON_SECRET`;
+without it that route refuses rather than running open). Both may run; it does
+not matter.
+
+Staff can stop, resume or re-price an arrangement from the application or the
+member record. A blocked member, or one whose payout account has been cleared,
+is skipped rather than failed — one bad row must not stop the month.
 
 ### Transfer receipts
 

@@ -51,7 +51,9 @@
   font-weight: 800;
   letter-spacing: -1px;
   margin-top: 4px;
-  line-height: 1;
+  /* A line-height of exactly 1 clips Inter's own descenders and overlaps a
+     currency prefix; 1.15 costs four pixels and crops nothing. */
+  line-height: 1.15;
 }
 .ht-sub {
   font-size: 11.5px;
@@ -221,10 +223,11 @@
   .app-body .nav a.portal-brand:hover {
     background: none;
   }
+  /* No border-radius: the mark is already a rounded square, and a second
+     one just shaves its corners. */
   .app-body .nav .portal-brand img {
     width: 36px;
     height: 36px;
-    border-radius: 12px;
     flex: 0 0 36px;
   }
   .app-body .nav .portal-brand b {

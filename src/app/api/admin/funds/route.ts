@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { columnReady } from '@/lib/schema';
 import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
@@ -103,6 +104,10 @@ export async function PATCH(request: Request) {
 
   if ('document_required' in body) patch.document_required = Boolean(body.document_required);
   if ('is_active' in body) patch.is_active = Boolean(body.is_active);
+  // Dropped rather than sent until 0009 has run: an unknown column would fail
+  // the whole edit, so a fund's name could not be changed either.
+  if ('is_recurring' in body && (await columnReady(supabase, 'fund_types', 'is_recurring')))
+    patch.is_recurring = Boolean(body.is_recurring);
 
   if ('sort_order' in body) {
     const n = Number(body.sort_order);

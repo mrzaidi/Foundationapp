@@ -668,6 +668,15 @@ a {
 .track .step.current .lbl {
   color: var(--text);
 }
+/* A rejection is an ending, not a stage — the line into it reads red. */
+.track .step.rejected .dot {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(208, 59, 59, 0.3);
+}
+.track .step.rejected::before {
+  background: var(--danger);
+}
 
 /* vertical timeline */
 .timeline {
@@ -1615,15 +1624,18 @@ select.input {
   position: relative;
   z-index: 1;
 }
+/*
+ * The mark already draws its own rounded square — a 4px-inset rect with a
+ * 26/96 radius. Wrapping it in a second rounded box with overflow:hidden cut
+ * the corners off it, and at 26px on a 74px box the outer radius was tighter
+ * than the art's own, so the crop was plainly visible. The logo is the shape;
+ * the shadow follows its alpha instead of a box.
+ */
 .auth-hero .mark {
   width: 74px;
   height: 74px;
   margin: 0 auto 14px;
-  border-radius: 26px;
-  overflow: hidden;
-  box-shadow: 0 12px 30px rgba(5, 45, 30, 0.3);
-  border: 3px solid rgba(255, 255, 255, 0.35);
-  background: #fff;
+  filter: drop-shadow(0 12px 22px rgba(5, 45, 30, 0.38));
 }
 .auth-hero .mark img {
   width: 100%;
@@ -1713,13 +1725,16 @@ select.input {
 .side .brand img {
   width: 40px;
   height: 40px;
-  border-radius: 13px;
+  flex: 0 0 40px;
+}
+.side .brand > div {
+  min-width: 0;
 }
 .side .brand .bt {
   font-size: 13.5px;
   font-weight: 750;
   letter-spacing: -0.2px;
-  line-height: 1.2;
+  line-height: 1.3;
 }
 .side .brand .bs {
   font-size: 10.5px;
@@ -2375,6 +2390,38 @@ table.grid .rowlink:hover {
   cursor: pointer;
 }
 
+/* ---- donors ---- */
+.donor-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.donor-add {
+  border-bottom: 1px solid var(--border);
+  background: var(--card-soft);
+}
+.row-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.donor-amount {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.donor-amount .input {
+  width: 120px;
+  padding: 7px 10px;
+  font-size: 13px;
+  margin: 0;
+}
+/* An inactive donor stays in the list, quietly. */
+.grid tr.row-off {
+  opacity: 0.55;
+}
+
 .pagesize {
   display: inline-flex;
   align-items: center;
@@ -2617,13 +2664,81 @@ table.grid .rowlink:hover {
 :root[lang='ur'] .stat .l,
 :root[lang='ur'] .track .step .lbl,
 :root[lang='ur'] .nav a {
-  line-height: 1.6;
+  line-height: 1.9;
 }
 :root[lang='ur'] h1,
 :root[lang='ur'] h2,
 :root[lang='ur'] h3 {
   letter-spacing: 0;
-  line-height: 1.75;
+  line-height: 2.2;
+}
+
+/*
+ * Nastaliq hangs off a deep baseline and reaches high above it, so a
+ * line-height tuned for Inter cuts the tops and tails off it. Several
+ * components pair a tight line-height with overflow:hidden — a fund card, a
+ * hero, a sheet header — and that turns a collision into a visible crop: the
+ * foundation's own name came out shaved.
+ *
+ * Every component that sets its own line-height needs an Urdu value; the
+ * generic :root[lang='ur'] rule above cannot reach past a class selector.
+ */
+:root[lang='ur'] .auth-hero h1,
+:root[lang='ur'] .auth-hero p,
+:root[lang='ur'] .appbar h1,
+:root[lang='ur'] .appbar .sub,
+:root[lang='ur'] .greet .hi,
+:root[lang='ur'] .greet .name,
+:root[lang='ur'] .ht-label,
+:root[lang='ur'] .ht-sub,
+:root[lang='ur'] .fund .t,
+:root[lang='ur'] .fund .d,
+:root[lang='ur'] .req .ttl,
+:root[lang='ur'] .req .meta,
+:root[lang='ur'] .pi-name,
+:root[lang='ur'] .pi-desc,
+:root[lang='ur'] .lt,
+:root[lang='ur'] .ld,
+:root[lang='ur'] .ic-title,
+:root[lang='ur'] .ic-body,
+:root[lang='ur'] .timeline .ev .t,
+:root[lang='ur'] .timeline .ev .d,
+:root[lang='ur'] .sheet-head h3,
+:root[lang='ur'] .sheet-head p,
+:root[lang='ur'] .dialog h3,
+:root[lang='ur'] .dialog p,
+:root[lang='ur'] .kv .k,
+:root[lang='ur'] .kv .v,
+:root[lang='ur'] .note,
+:root[lang='ur'] .empty h3,
+:root[lang='ur'] .empty p,
+:root[lang='ur'] .field label,
+:root[lang='ur'] .field-hint,
+:root[lang='ur'] .err-msg,
+:root[lang='ur'] .receipt-note p,
+:root[lang='ur'] .bank-empty .be-title,
+:root[lang='ur'] .bank-empty .be-body,
+:root[lang='ur'] .u-t,
+:root[lang='ur'] .u-d,
+:root[lang='ur'] .cl-text,
+:root[lang='ur'] .portal-brand .pb-text b,
+:root[lang='ur'] .portal-brand .pb-text > span,
+:root[lang='ur'] .portal-footnote,
+:root[lang='ur'] .section-meta {
+  /* Measured, not guessed: Noto Nastaliq Urdu's ascent plus descent runs past
+     two ems, so anything below this shaves the tall letters. */
+  line-height: 2.2;
+}
+
+/* The foundation's own name, set large: give it the full ascent-plus-descent
+   rather than the 2.2 that suits body copy. */
+:root[lang='ur'] .auth-hero h1 {
+  line-height: 2.45;
+}
+
+/* A card sized for two Latin lines needs room for two Nastaliq ones. */
+:root[lang='ur'] .fund {
+  min-height: 164px;
 }
 
 /* Amounts, references and dates stay Latin and stay LTR inside Urdu text. */

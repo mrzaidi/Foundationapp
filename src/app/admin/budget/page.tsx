@@ -1,4 +1,5 @@
 import BudgetPanel from '@/components/BudgetPanel';
+import DonorPanel from '@/components/DonorPanel';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,8 @@ export default function AdminBudgetPage() {
 
       <BudgetPanel />
 
+      <DonorPanel />
+
       <div className="panel mt-24">
         <div className="panel-head">
           <div>
@@ -25,7 +28,8 @@ export default function AdminBudgetPage() {
         </div>
         <div className="panel-body">
           <p className="muted" style={{ marginTop: 0 }}>
-            Remaining is always <strong>budget − everything transferred in that month</strong>,
+            Remaining is always <strong>the month&rsquo;s fund − everything transferred in that
+            month</strong>, where the fund is the budget you set plus what donors gave,
             computed from the transfers themselves. There is no running total to fall out of step:
             correct a transfer and the balance corrects with it.
           </p>

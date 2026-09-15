@@ -238,6 +238,9 @@ const en = {
     documents: 'Attached documents',
     files: (n: number) => `${n} file${n === 1 ? '' : 's'}`,
     noDocuments: 'No documents were attached to this application.',
+    automatic: 'Filed automatically',
+    automaticBody:
+      'The foundation approved you for monthly support, so this application was filed for you on the 1st. The committee still reviews it.',
     receipt: 'Transfer receipt',
     receiptBody:
       'The foundation has sent the money and attached proof of the transfer. Keep this for your records.',

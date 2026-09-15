@@ -38,6 +38,8 @@ export interface FundType {
   description_ur: string | null;
   document_label_ur: string | null;
   document_required: boolean;
+  /* approving one of these enrols the member for a monthly application */
+  is_recurring: boolean;
   min_amount: number;
   max_amount: number | null;
   is_active: boolean;
@@ -74,6 +76,8 @@ export interface FundRequest {
   amount_approved: number | null;
   purpose: string | null;
   status: RequestStatus;
+  /* filed by the monthly generator rather than by the member */
+  is_automatic: boolean;
   admin_note: string | null;
   reviewed_by: string | null;
   transfer_ref: string | null;
@@ -85,6 +89,21 @@ export interface FundRequest {
   profiles?: Pick<Profile, 'id' | 'full_name' | 'email' | 'mobile' | 'city' | 'country'> | null;
   request_attachments?: Attachment[];
   request_events?: RequestEvent[];
+}
+
+export interface RecurringGrant {
+  id: string;
+  user_id: string;
+  fund_type_id: string;
+  amount: number;
+  source_request_id: string | null;
+  is_active: boolean;
+  last_generated_on: string | null;
+  created_at: string;
+  updated_at: string;
+  /* joined */
+  fund_types?: Pick<FundType, 'id' | 'name'> | null;
+  profiles?: Pick<Profile, 'id' | 'full_name' | 'email'> | null;
 }
 
 export interface AdminStats {

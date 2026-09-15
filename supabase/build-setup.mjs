@@ -21,6 +21,8 @@ const FILES = [
   'migrations/0006_school_fees_and_budget.sql',
   'migrations/0007_bank_details.sql',
   'migrations/0008_transfer_receipts.sql',
+  'migrations/0009_recurring_monthly.sql',
+  'migrations/0010_donors.sql',
 ];
 
 const header = `-- =====================================================================
