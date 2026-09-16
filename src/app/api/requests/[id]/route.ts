@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import { brevoReady, sendInBackground } from '@/lib/brevo';
+import { decisionEmail, transferEmail } from '@/lib/emails';
+import { buildReceipt } from '@/lib/invoice-pdf';
 import { columnReady } from '@/lib/schema';
 import { createClient } from '@/lib/supabase/server';
 import type { RequestStatus } from '@/lib/types';
@@ -154,6 +157,77 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       { error: error.message, ...(shortFund ? { code: 'insufficient_fund' } : {}) },
       { status: shortFund ? 422 : 400 }
     );
+  }
+
+  /*
+   * Tell the member. Three moments only — approved, rejected, transferred —
+   * because those are the ones they would otherwise have to keep opening the
+   * portal to learn.
+   *
+   * Sent after the update has committed, and never awaited: money that has
+   * moved has moved, and an email provider having a bad afternoon must not
+   * turn a recorded transfer into a failed request.
+   */
+  if (body.status && brevoReady()) {
+    const row = data as unknown as {
+      reference: string;
+      status: string;
+      amount_requested: number;
+      amount_approved: number | null;
+      transferred_at: string | null;
+      transfer_ref: string | null;
+      payment_method?: string | null;
+      fund_types: { name: string } | null;
+      profiles: { full_name: string; email: string; mobile: string } | null;
+    };
+
+    const member = row.profiles;
+    const fund = row.fund_types?.name ?? 'a fund';
+    const amount = Number(row.amount_approved ?? row.amount_requested);
+
+    if (member?.email) {
+      if (row.status === 'transferred') {
+        // The receipt travels with the message, so nobody has to ask for it.
+        let receipt: { content: string; name: string } | undefined;
+        try {
+          const pdf = await buildReceipt({
+            reference: row.reference,
+            receiverName: member.full_name,
+            receiverNumber: member.mobile,
+            fundType: fund,
+            amount,
+            paymentMethod: row.payment_method,
+            paidAt: row.transferred_at ?? new Date().toISOString(),
+            transferRef: row.transfer_ref,
+          });
+          receipt = {
+            content: Buffer.from(pdf).toString('base64'),
+            name: `receipt-${row.reference}.pdf`,
+          };
+        } catch (e) {
+          // A receipt that will not render is not a reason to withhold the news.
+          console.warn(`[email] receipt for ${row.reference} failed: ${(e as Error).message}`);
+        }
+
+        sendInBackground(
+          transferEmail(
+            member.email,
+            member.full_name,
+            { reference: row.reference, fund, amount, method: row.payment_method },
+            receipt
+          )
+        );
+      } else {
+        const mail = decisionEmail(member.email, member.full_name, {
+          reference: row.reference,
+          fund,
+          status: row.status,
+          amount: row.amount_approved,
+          note: typeof patch.admin_note === 'string' ? patch.admin_note : null,
+        });
+        if (mail) sendInBackground(mail);
+      }
+    }
   }
 
   return NextResponse.json({ request: data });

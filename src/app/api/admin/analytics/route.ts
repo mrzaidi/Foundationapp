@@ -13,7 +13,8 @@ export const dynamic = 'force-dynamic';
  * and does not cost a round trip. Only the columns the charts read are sent.
  */
 export async function GET(request: Request) {
-  const gate = await requireCapability('view_requests');
+  // Counts and totals for the shared dashboard, never an individual record.
+  const gate = await requireCapability('view_dashboard');
   if ('refusal' in gate) return gate.refusal;
 
   const supabase = await createClient();

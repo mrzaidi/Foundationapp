@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireCapability } from '@/lib/admin-guard';
+import { brevoReady, sendInBackground } from '@/lib/brevo';
+import { welcomeEmail } from '@/lib/emails';
 import { columnReady } from '@/lib/schema';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -199,7 +201,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: profileError.message }, { status: 400 });
   }
 
-  console.info(`[admin] ${user!.id} created ${role} ${created.user.id}`);
+  console.info();
+
+  // Confirms the address works and says where to sign in. Deliberately without
+  // the password — see lib/emails.
+  if (brevoReady()) sendInBackground(welcomeEmail(email, full_name));
 
   return NextResponse.json(
     {

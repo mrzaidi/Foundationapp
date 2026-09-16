@@ -35,7 +35,8 @@ export async function GET(request: Request) {
    */
   const gate = await requireCapability('view_dashboard');
   if ('refusal' in gate) return gate.refusal;
-  const moneyAllowed = can(gate.level, 'view_budget');
+  // The dashboard shows the monthly fund to every administrator, so the
+  // amounts travel with it. Named givers still do not.
   const namesAllowed = can(gate.level, 'view_donors');
 
   const url = new URL(request.url);
@@ -131,9 +132,7 @@ export async function GET(request: Request) {
    * stripped for a level without the budget rather than the whole request being
    * refused, which would have taken that chart down with them.
    */
-  const months_out = [...byMonth.values()].map((m) =>
-    moneyAllowed ? m : { ...m, total: 0, donors: 0 }
-  );
+  const months_out = [...byMonth.values()];
 
   return NextResponse.json({
     months: months_out,

@@ -21,7 +21,8 @@ async function requireAdmin() {
 
 /** GET /api/admin/budget?month=YYYY-MM-01 — position for a month plus history. */
 export async function GET(request: Request) {
-  const gate = await requireCapability('view_budget');
+  // Aggregates for the shared dashboard; the Budget module itself stays gated.
+  const gate = await requireCapability('view_dashboard');
   if ('refusal' in gate) return gate.refusal;
 
   const { supabase, error: authError, status } = await requireAdmin();
