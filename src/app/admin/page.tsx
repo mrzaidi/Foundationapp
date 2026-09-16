@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import AdminCharts from '@/components/charts/AdminCharts';
+import MonthlyTrends from '@/components/charts/MonthlyTrends';
 import BudgetPanel from '@/components/BudgetPanel';
 import Icon from '@/components/Icon';
 import StatusBadge from '@/components/StatusBadge';
@@ -26,42 +27,16 @@ const FUND_GRAD: Record<string, string> = {
 export default async function AdminDashboard() {
   const supabase = await createClient();
 
-  /*
-   * This month, on Pakistan time — the foundation's month runs on Karachi's
-   * calendar, not the server's, and a donation recorded at 2am on the 1st
-   * belongs to the new month either way.
-   */
-  const pkNow = new Date(Date.now() + 5 * 60 * 60 * 1000);
-  const monthStart = `${pkNow.getUTCFullYear()}-${String(pkNow.getUTCMonth() + 1).padStart(2, '0')}-01`;
-  const nextMonth = new Date(Date.UTC(pkNow.getUTCFullYear(), pkNow.getUTCMonth() + 1, 1))
-    .toISOString()
-    .slice(0, 10);
-
-  const [
-    { data: statsData },
-    { data: recentData, error: recentError },
-    { data: budgetData },
-    { count: joinedThisMonth },
-  ] = await Promise.all([
+  // The monthly fund and the monthly arrivals are fetched by MonthlyTrends,
+  // which needs the whole series rather than just this month's figure.
+  const [{ data: statsData }, { data: recentData, error: recentError }] = await Promise.all([
     supabase.rpc('admin_stats'),
     supabase
       .from('fund_requests')
       .select('*, fund_types(*), profiles!fund_requests_user_id_fkey(id, full_name, email, mobile, city, country)')
       .order('created_at', { ascending: false })
       .limit(8),
-    supabase.rpc('budget_status', { p_month: monthStart }),
-    supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', `${monthStart}T00:00:00.000+05:00`)
-      .lt('created_at', `${nextMonth}T00:00:00.000+05:00`),
   ]);
-
-  const budget = (budgetData ?? {}) as { donated?: number; remaining?: number };
-  const monthLabel = new Date(`${monthStart}T00:00:00Z`).toLocaleDateString('en-GB', {
-    month: 'long',
-    timeZone: 'UTC',
-  });
 
   const stats = (statsData ?? {
     members: 0,
@@ -145,28 +120,8 @@ export default async function AdminDashboard() {
         </Link>
       </div>
 
-      {/* ---------- this month ----------
-          The two rows above are all-time. These are the two figures the
-          committee is actually asked in a monthly meeting: what came in, and
-          who arrived. */}
-      <div className="kpis mt-16">
-        <Link className="kpi" href="/admin/budget">
-          <div className="kico g-brand">
-            <Icon name="budget" />
-          </div>
-          <div className="kn">{shortMoney(Number(budget.donated ?? 0))}</div>
-          <div className="kl">{monthLabel}&apos;s fund, from donations</div>
-          <div className="kedge g-brand" />
-        </Link>
-        <Link className="kpi" href="/admin/members">
-          <div className="kico g-blue">
-            <Icon name="plus" />
-          </div>
-          <div className="kn">{joinedThisMonth ?? 0}</div>
-          <div className="kl">New members in {monthLabel}</div>
-          <div className="kedge g-blue" />
-        </Link>
-      </div>
+      {/* The two monthly figures, as trends rather than as two numbers. */}
+      <MonthlyTrends />
 
       <div className="mt-24">
         <BudgetPanel compact />

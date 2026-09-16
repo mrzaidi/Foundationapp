@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { requireCapability } from '@/lib/admin-guard';
+import { can } from '@/lib/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
@@ -25,21 +27,22 @@ function pkMonths(count: number): string[] {
  */
 export async function GET(request: Request) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
-  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (me?.role !== 'admin')
-    return NextResponse.json({ error: 'Administrators only.' }, { status: 403 });
+  /*
+   * The monthly totals are budget figures, which every administrator may see.
+   * Named givers and named recipients are not, so they are attached only for a
+   * level that may look at donors — the dashboard reads this endpoint too.
+   */
+  const gate = await requireCapability('view_budget');
+  if ('refusal' in gate) return gate.refusal;
+  const namesAllowed = can(gate.level, 'view_donors');
 
   const url = new URL(request.url);
   const months = Math.min(Math.max(Number(url.searchParams.get('months') ?? 12), 3), 24);
   const window = pkMonths(months);
   const from = window[0];
 
-  const [{ data: donationRows }, { data: transferRows }] = await Promise.all([
+  const [{ data: donationRows }, { data: transferRows }, { data: joinRows }] = await Promise.all([
     supabase
       .from('donations')
       .select('month, amount, donors(id, name, user_id, profiles:user_id(full_name))')
@@ -49,6 +52,10 @@ export async function GET(request: Request) {
       .select('amount_requested, amount_approved, transferred_at, profiles!fund_requests_user_id_fkey(id, full_name)')
       .eq('status', 'transferred')
       .not('transferred_at', 'is', null),
+    supabase
+      .from('profiles')
+      .select('created_at')
+      .gte('created_at', `${from}T00:00:00.000+05:00`),
   ]);
 
   type Donation = {
@@ -67,12 +74,22 @@ export async function GET(request: Request) {
   const transfers = (transferRows ?? []) as unknown as Transfer[];
 
   /* ---- what came in, month by month ---- */
-  const byMonth = new Map(window.map((m) => [m, { month: m, total: 0, donors: 0 }]));
+  const byMonth = new Map(window.map((m) => [m, { month: m, total: 0, donors: 0, joined: 0 }]));
   for (const d of donations) {
     const row = byMonth.get(d.month.slice(0, 10));
     if (!row) continue;
     row.total += Number(d.amount);
     row.donors += 1;
+  }
+
+  /* ---- who arrived, month by month ---- */
+  for (const j of (joinRows ?? []) as { created_at: string }[]) {
+    const month = new Date(new Date(j.created_at).getTime() + 5 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 8)
+      .concat('01');
+    const row = byMonth.get(month);
+    if (row) row.joined += 1;
   }
 
   /* ---- who gave it, over the whole window ---- */
@@ -109,7 +126,8 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     months: [...byMonth.values()],
-    donors: rank(perDonor),
-    recipients: rank(perMember),
+    donors: namesAllowed ? rank(perDonor) : [],
+    recipients: namesAllowed ? rank(perMember) : [],
+    namesAllowed,
   });
 }

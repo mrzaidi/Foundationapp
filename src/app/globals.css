@@ -3659,3 +3659,35 @@ table.grid .rowlink:hover {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Fund and arrivals, side by side. Rupees and people share no scale, so they
+   get one chart each rather than one chart with two axes. */
+.trend-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .trend-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.trend-headline {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.trend-headline strong {
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  line-height: 1.15;
+}
+.trend-headline span {
+  font-size: 12px;
+  color: var(--text-faint);
+  font-weight: 600;
+}
