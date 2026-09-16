@@ -3409,3 +3409,39 @@ table.grid .rowlink:hover {
   color: var(--text-dim);
 }
 
+
+/* Cash or bank, asked when a transfer is recorded. Two buttons rather than a
+   select: there are only ever two answers and both should be one tap away. */
+.paychoice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.paybtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.paybtn svg {
+  width: 17px;
+  height: 17px;
+}
+.paybtn:hover {
+  border-color: var(--brand-2);
+  color: var(--text);
+}
+.paybtn.on {
+  background: rgba(18, 184, 134, 0.1);
+  border-color: var(--brand-2);
+  color: var(--brand-3);
+}

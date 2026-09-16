@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { columnReady } from '@/lib/schema';
 import { createClient } from '@/lib/supabase/server';
 import type { RequestStatus } from '@/lib/types';
 
@@ -60,6 +61,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     amount_approved?: number | null;
     admin_note?: string | null;
     transfer_ref?: string | null;
+    payment_method?: string | null;
   };
   try {
     body = await request.json();
@@ -88,6 +90,19 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   if (body.admin_note !== undefined) patch.admin_note = body.admin_note;
   if (body.transfer_ref !== undefined) patch.transfer_ref = body.transfer_ref;
+
+  /*
+   * Cash or bank. Dropped silently until migration 0014 lands, so a deploy
+   * that outruns the SQL records the transfer without it rather than refusing
+   * the whole thing — the receipt then prints "Not recorded" instead of a
+   * guess, and the transfer itself is never held up.
+   */
+  if (body.payment_method !== undefined) {
+    if (body.payment_method !== null && !['cash', 'bank'].includes(body.payment_method))
+      return NextResponse.json({ error: 'Unknown payment method.' }, { status: 422 });
+    if (await columnReady(supabase, 'fund_requests', 'payment_method'))
+      patch.payment_method = body.payment_method;
+  }
 
   /*
    * A transfer cannot exceed the month's fund. There is a trigger enforcing

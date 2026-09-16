@@ -13,11 +13,17 @@
  * foundation's own infrastructure for Google's.
  */
 
-const MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash';
+/*
+ * Pinned, not tracking an alias. gemini-2.0-flash was retired under us and
+ * gemini-flash-latest was answering 503 while this was written, so a moving
+ * target is the less reliable of the two. Override with GEMINI_MODEL when this
+ * one is retired in turn; the log line below will say when that day comes.
+ */
+const MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.6-flash';
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-/** Long enough for a short completion, short enough that nobody waits on it. */
-const TIMEOUT_MS = 7000;
+/** Long enough for a slow call, short enough that nobody waits on it. */
+const TIMEOUT_MS = 10_000;
 
 export const geminiReady = () => Boolean(process.env.GEMINI_API_KEY);
 
@@ -77,8 +83,15 @@ export async function phrase(question: string, facts: unknown): Promise<string |
         generationConfig: {
           // Low, not zero: the wording may vary, the figures cannot.
           temperature: 0.2,
-          maxOutputTokens: 300,
+          maxOutputTokens: 400,
           candidateCount: 1,
+          /*
+           * No reasoning budget. The thinking is already done — the figures
+           * arrived settled and the job is to word one sentence about them.
+           * Paying a model to deliberate over that cost four seconds a
+           * question; without it the same answer comes back in one.
+           */
+          thinkingConfig: { thinkingBudget: 0 },
         },
       }),
     });

@@ -59,6 +59,7 @@ export default function RequestActions({ request }: { request: FundRequest }) {
   );
   const [note, setNote] = useState(request.admin_note ?? '');
   const [transferRef, setTransferRef] = useState(request.transfer_ref ?? '');
+  const [payment, setPayment] = useState<'cash' | 'bank'>(request.payment_method ?? 'bank');
   const [receipts, setReceipts] = useState<File[]>([]);
   // What is left in this month's fund. Null until it loads, so the button is
   // never disabled on a figure nobody has yet.
@@ -157,7 +158,10 @@ export default function RequestActions({ request }: { request: FundRequest }) {
 
       const body: Record<string, unknown> = { status: action, admin_note: note.trim() || null };
       if (action === 'accepted' || action === 'transferred') body.amount_approved = Number(amount);
-      if (action === 'transferred') body.transfer_ref = transferRef.trim() || null;
+      if (action === 'transferred') {
+        body.transfer_ref = transferRef.trim() || null;
+        body.payment_method = payment;
+      }
 
       const res = await fetch(`/api/requests/${request.id}`, {
         method: 'PATCH',
@@ -206,9 +210,24 @@ export default function RequestActions({ request }: { request: FundRequest }) {
     <>
       <div className="admin-actions">
         {available.length === 0 ? (
-          <div className="note">
-            This application is {STATUS_LABEL[status].toLowerCase()} — no further action is needed.
-          </div>
+          <>
+            <div className="note">
+              This application is {STATUS_LABEL[status].toLowerCase()} — no further action is needed.
+            </div>
+
+            {/* The money has moved, so there is a receipt to hand over. */}
+            {status === 'transferred' && (
+              <a
+                className="admin-btn plum"
+                style={{ justifyContent: 'center', width: '100%', marginTop: 10 }}
+                href={`/api/admin/requests/${request.id}/invoice`}
+                download={`receipt-${request.reference}.pdf`}
+              >
+                <Icon name="download" />
+                Generate invoice (PDF)
+              </a>
+            )}
+          </>
         ) : (
           available.map((a) => (
             <button
@@ -257,15 +276,44 @@ export default function RequestActions({ request }: { request: FundRequest }) {
           {open === 'transferred' && (
             <>
               <div className="field">
-                <label htmlFor="tref">Transfer reference</label>
-                <input
-                  id="tref"
-                  className="input"
-                  value={transferRef}
-                  onChange={(e) => setTransferRef(e.target.value)}
-                  placeholder="Bank / Easypaisa / JazzCash reference"
-                />
+                <label>How was it paid?</label>
+                <div className="paychoice">
+                  {(
+                    [
+                      { k: 'bank', l: 'Bank transfer', i: 'bank' },
+                      { k: 'cash', l: 'Cash', i: 'wallet' },
+                    ] as const
+                  ).map((p) => (
+                    <button
+                      key={p.k}
+                      type="button"
+                      className={`paybtn ${payment === p.k ? 'on' : ''}`}
+                      onClick={() => setPayment(p.k)}
+                      aria-pressed={payment === p.k}
+                    >
+                      <Icon name={p.i} />
+                      {p.l}
+                    </button>
+                  ))}
+                </div>
+                <p className="err-msg" style={{ color: 'var(--text-faint)', fontWeight: 500 }}>
+                  This appears on the receipt the member is given.
+                </p>
               </div>
+
+              {/* Cash has no reference to quote, so it is not asked for. */}
+              {payment === 'bank' && (
+                <div className="field">
+                  <label htmlFor="tref">Transfer reference</label>
+                  <input
+                    id="tref"
+                    className="input"
+                    value={transferRef}
+                    onChange={(e) => setTransferRef(e.target.value)}
+                    placeholder="Bank / Easypaisa / JazzCash reference"
+                  />
+                </div>
+              )}
 
               <div className="field">
                 <label htmlFor="receipt">
