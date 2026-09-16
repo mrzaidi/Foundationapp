@@ -3428,13 +3428,29 @@ table.grid .rowlink:hover {
     transform: scale(1);
   }
 }
-/* Movement is decoration here; the mark alone says working. */
+/*
+ * Reduced motion is a request to stop things moving, not a request for a
+ * loading indicator that does not indicate. Turning both animations off left a
+ * frozen mark that looked like a failed image — and since Windows maps its
+ * "show animations" setting to this, that is what a good number of people saw.
+ * The rotation goes; a slow opacity pulse stays, because fading is the
+ * substitute this preference is meant to leave available.
+ */
 @media (prefers-reduced-motion: reduce) {
-  .center-loader .cl-sweep,
-  .center-loader .cl-hands {
-    animation: none;
+  .center-loader .cl-sweep {
+    animation: cl-fade 1.6s ease-in-out infinite;
   }
   .center-loader .cl-hands {
+    animation: cl-fade 1.6s ease-in-out infinite;
+    animation-delay: 0.8s;
+  }
+}
+@keyframes cl-fade {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
     opacity: 1;
   }
 }
