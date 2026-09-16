@@ -16,7 +16,7 @@
 import { normalise } from './assistant';
 import { APPROVE_WORDS, NEGATION, REJECT_WORDS, REVIEW_WORDS } from './assistant-actions';
 
-export type FlowKind = 'create_member' | 'set_status';
+export type FlowKind = 'create_member' | 'set_status' | 'set_amount' | 'add_donor';
 
 export interface Field {
   key: string;
@@ -134,7 +134,77 @@ export const FLOWS: Record<FlowKind, Flow> = {
       },
     ],
   },
+
+  /*
+   * Correcting the figure on an application, from the chat.
+   *
+   * The reference question is skipped when the conversation has just been
+   * about one — "edit the requested amount", said straight after looking at an
+   * application, should not be answered with "which one?".
+   */
+  set_amount: {
+    kind: 'set_amount',
+    opening: 'I can correct the amount on an application.',
+    fields: [
+      {
+        key: 'reference',
+        ask: 'Which application? Give me its reference, like SHF-26-01001.',
+        check: (v) =>
+          /\bSHF[-\s]?\d{2}[-\s]?\d{1,6}\b/i.test(v) ? null : 'I need a reference like SHF-26-01001.',
+      },
+      {
+        key: 'amount',
+        ask: 'What should the requested amount be?',
+        check: (v) => {
+          const n = Number(v.replace(/[^\d.]/g, ''));
+          return Number.isFinite(n) && n > 0 ? null : 'Give me an amount, like 1500.';
+        },
+      },
+    ],
+  },
+
+  /*
+   * Putting a member on the donor list.
+   *
+   * Two separate figures, deliberately asked separately. A pledge is what
+   * somebody said they would give each month; a donation is what actually
+   * arrived. Only the second moves the fund, and conflating them is how a
+   * committee ends up spending against a promise.
+   */
+  add_donor: {
+    kind: 'add_donor',
+    opening: 'I can put them on the donor list.',
+    fields: [
+      {
+        key: 'member',
+        ask: 'Which member? Give me their name as it is registered.',
+      },
+      {
+        key: 'pledge',
+        ask: 'How much do they pledge each month? Say "none" if there is no fixed amount.',
+        check: (v) =>
+          /^(none|no|nothing|0)$/i.test(v.trim()) || Number(v.replace(/[^\d.]/g, '')) > 0
+            ? null
+            : 'Give me an amount, or say "none".',
+      },
+      {
+        key: 'given',
+        ask: 'And how much have they given this month? Say "none" if nothing yet.',
+        check: (v) =>
+          /^(none|no|nothing|0|not yet)$/i.test(v.trim()) || Number(v.replace(/[^\d.]/g, '')) > 0
+            ? null
+            : 'Give me an amount, or say "none".',
+      },
+    ],
+  },
 };
+
+/** "none", "nothing", "not yet" — all of them mean zero. */
+export function amountOrNone(answer = ''): number {
+  if (/^(none|no|nothing|0|not yet|nil)$/i.test(answer.trim())) return 0;
+  const n = Number(answer.replace(/[^\d.]/g, ''));
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
 
 /** What the administrator meant by their answer to the status question. */
 export function statusFromAnswer(answer = ''): 'accepted' | 'rejected' | 'review' | null {
@@ -160,6 +230,19 @@ export function nextField(flow: Flow, collected: Record<string, string>): Field 
  */
 export function flowFrom(question: string): FlowKind | null {
   const q = normalise(question);
+
+  // Before the status flow: "change the requested amount" contains "change"
+  // and "request", and is not a status change.
+  if (
+    /\b(edit|change|update|correct|amend|fix|set)\b/.test(q) &&
+    /\b(amount|figure|sum)\b/.test(q)
+  )
+    return 'set_amount';
+
+  // Before the member rule: "add him as a donor" contains both "add" and a
+  // word for a person, and is about the donor list rather than a new account.
+  if (/\b(add|make|register|put|set up|include)\b/.test(q) && /\bdonors?\b/.test(q))
+    return 'add_donor';
 
   if (/\b(add|create|register|new)\b/.test(q) && /\b(member|user|person|account|someone)\b/.test(q))
     return 'create_member';

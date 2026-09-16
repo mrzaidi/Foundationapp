@@ -20,6 +20,7 @@ import {
 } from '@/lib/assistant-actions';
 import {
   FLOWS,
+  amountOrNone,
   flowFrom,
   nextField,
   statusFromAnswer,
@@ -109,6 +110,8 @@ export async function POST(request: Request) {
     question?: string;
     /** A guided instruction already under way. */
     pending?: { kind: FlowKind; collected: Record<string, string> };
+    /** The application this conversation was last about, so "it" means something. */
+    context?: { reference?: string | null; memberId?: string | null; memberName?: string | null };
   };
   try {
     body = await request.json();
@@ -200,8 +203,25 @@ export async function POST(request: Request) {
    * the temporal dead zone — which throws, and a throw here returns an   *
    * empty body that the browser cannot parse as JSON.                    *
    * ------------------------------------------------------------------ */
+  const startKind = flowFrom(question);
+  const carried = referenceFrom(question) ?? body.context?.reference ?? undefined;
+
   const started =
-    body.pending ?? (flowFrom(question) ? { kind: flowFrom(question)!, collected: {} } : null);
+    body.pending ??
+    (startKind
+      ? {
+          kind: startKind,
+          // Skip the reference question when the conversation already names one.
+          collected:
+            startKind === 'add_donor'
+              ? body.context?.memberName
+                ? { member: body.context.memberName }
+                : {}
+              : carried && startKind !== 'create_member'
+                ? { reference: carried }
+                : {},
+        }
+      : null);
 
   if (started) {
     const writeGate = await requireCapability('use_assistant_writes');
@@ -215,7 +235,8 @@ export async function POST(request: Request) {
         },
       });
 
-    return NextResponse.json(await step(started, body.pending ? question : null));
+    const out = await step(started, body.pending ? question : null);
+    return NextResponse.json({ ...out, context: { reference: carried ?? null } });
   }
 
   /* ------------------------------------------------------------------ *
@@ -394,7 +415,17 @@ export async function POST(request: Request) {
   }
 
   delete answer.facts;
-  return NextResponse.json({ intent, month, answer });
+  return NextResponse.json({
+    intent,
+    month,
+    answer,
+    // Lets the next turn understand it without being told again.
+    context: {
+      reference: reference ?? body.context?.reference ?? null,
+      memberId: person?.id ?? body.context?.memberId ?? null,
+      memberName: person?.full_name ?? body.context?.memberName ?? null,
+    },
+  });
 
   /**
    * Work out what the administrator is asking to change, and describe it back
@@ -479,6 +510,21 @@ export async function POST(request: Request) {
         row: x,
       }))
     );
+
+    /*
+     * No name in the sentence. Before asking for one, use whoever the
+     * conversation was just about — "add him as a donor", said straight after
+     * the assistant described Sadaan Shahid, means Sadaan Shahid. Asking
+     * "which member?" one line after naming them reads as not listening.
+     */
+    if (!hits.length && body.context?.memberId) {
+      const remembered = ((people ?? []) as P[]).find((x) => x.id === body.context!.memberId);
+      if (remembered)
+        hits.push({
+          item: { id: remembered.id, name: remembered.full_name, aliases: [], row: remembered },
+          score: 1,
+        });
+    }
 
     if (!hits.length) return ask('Which member? Give me their name as it is registered.');
 
@@ -665,6 +711,110 @@ export async function POST(request: Request) {
           },
         },
       };
+
+    /* ---- putting a member on the donor list ---- */
+    if (state.kind === 'add_donor') {
+      const { data: people } = await supabase.from('profiles').select('id, full_name, email');
+      type P = { id: string; full_name: string; email: string };
+
+      const hits = rank(
+        collected.member,
+        ((people ?? []) as P[]).map((x) => ({ id: x.id, name: x.full_name, row: x }))
+      );
+
+      if (!hits.length)
+        return {
+          intent: 'flow',
+          month: monthStart,
+          answer: { text: `I cannot find a member called “${collected.member}”. Try their registered name.` },
+        };
+
+      const person = hits[0].item.row;
+      const pledge = amountOrNone(collected.pledge);
+      const given = amountOrNone(collected.given);
+
+      const parts = [`Add ${person.full_name} to the donor list`];
+      if (pledge) parts.push(`with a monthly pledge of ${pkr(pledge)}`);
+      if (given) parts.push(`and record ${pkr(given)} received for ${label}`);
+
+      return {
+        intent: 'action',
+        month: monthStart,
+        answer: {
+          text: `${parts.join(', ')}?${
+            pledge && !given
+              ? ' A pledge is what they said; only a recorded donation adds to the fund.'
+              : ''
+          }`,
+          figures: [
+            { label: 'Monthly pledge', value: pledge ? pkr(pledge) : '—' },
+            { label: `Given in ${label}`, value: given ? pkr(given) : '—' },
+          ],
+          action: {
+            kind: 'add_donor',
+            memberId: person.id,
+            pledge,
+            given,
+            month: monthStart,
+            subject: person.full_name,
+          },
+        },
+      };
+    }
+
+    /* ---- correcting the amount on an application ---- */
+    if (state.kind === 'set_amount') {
+      const ref = referenceFrom(collected.reference)!;
+      const wanted = Number(collected.amount.replace(/[^\d.]/g, ''));
+
+      const { data } = await supabase
+        .from('fund_requests')
+        .select('id, reference, status, amount_requested, profiles!fund_requests_user_id_fkey(full_name)')
+        .eq('reference', ref)
+        .maybeSingle();
+
+      const r = data as unknown as {
+        id: string;
+        reference: string;
+        status: string;
+        amount_requested: number;
+        profiles: { full_name: string } | null;
+      } | null;
+
+      if (!r)
+        return {
+          intent: 'flow',
+          month: monthStart,
+          answer: { text: `There is no application with reference ${ref}.` },
+        };
+
+      if (r.status === 'transferred')
+        return {
+          intent: 'flow',
+          month: monthStart,
+          answer: {
+            text: `${r.reference} has already been transferred, so its amount cannot be changed — the record has to match the receipt the member was given.`,
+          },
+        };
+
+      return {
+        intent: 'action',
+        month: monthStart,
+        answer: {
+          text: `Change ${r.reference} for ${r.profiles?.full_name ?? 'the member'} from ${pkr(Number(r.amount_requested))} to ${pkr(wanted)}?`,
+          figures: [
+            { label: 'Currently asks for', value: pkr(Number(r.amount_requested)) },
+            { label: 'Will ask for', value: pkr(wanted) },
+          ],
+          action: {
+            kind: 'set_requested_amount',
+            requestId: r.id,
+            amount: wanted,
+            subject: r.reference,
+          },
+        },
+      };
+    }
 
     /* ---- a status change, resolved against the real application ---- */
     const ref = referenceFrom(collected.reference)!;

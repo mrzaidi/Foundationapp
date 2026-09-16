@@ -178,6 +178,110 @@ export async function POST(request: Request) {
     }
 
     /* ---------------------------------------------------------------- */
+    case 'add_donor': {
+      if (!action.memberId) return NextResponse.json({ error: 'Which member?' }, { status: 422 });
+
+      const { data: person } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('id', action.memberId)
+        .single();
+      if (!person)
+        return NextResponse.json({ error: 'That member no longer exists.' }, { status: 404 });
+
+      const pledge = Number(action.pledge ?? 0);
+      const given = Number(action.given ?? 0);
+
+      const { data: existing } = await supabase
+        .from('donors')
+        .select('id')
+        .eq('user_id', action.memberId)
+        .maybeSingle();
+
+      let donorId = (existing as { id: string } | null)?.id ?? null;
+
+      if (donorId) {
+        const { error } = await supabase
+          .from('donors')
+          .update({ monthly_pledge: pledge, is_active: true })
+          .eq('id', donorId);
+        if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+      } else {
+        const { data: made, error } = await supabase
+          .from('donors')
+          .insert({ user_id: action.memberId, name: person.full_name, monthly_pledge: pledge })
+          .select('id')
+          .single();
+        if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+        donorId = (made as { id: string }).id;
+      }
+
+      // A pledge is a promise; only this moves the month's fund.
+      if (given > 0 && isMonth(action.month)) {
+        const { error } = await supabase.from('donations').upsert(
+          {
+            donor_id: donorId,
+            month: action.month,
+            amount: given,
+            received_on: new Date().toISOString().slice(0, 10),
+            recorded_by: user.id,
+          },
+          { onConflict: 'donor_id,month' }
+        );
+        if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+
+      const bits = [`${person.full_name} is on the donor list`];
+      if (pledge) bits.push(`pledging ${pkr(pledge)} a month`);
+      if (given) bits.push(`with ${pkr(given)} recorded for ${monthLabel(action.month!)}`);
+
+      return NextResponse.json({
+        done: `${bits.join(', ')}.${given ? '' : ' Nothing has been added to the fund — a pledge is not a donation.'}`,
+        link: { href: '/admin/donors', label: 'Open the donors' },
+      });
+    }
+
+    /* ---------------------------------------------------------------- */
+    case 'set_requested_amount': {
+      if (!action.requestId) return NextResponse.json({ error: 'Which application?' }, { status: 422 });
+
+      const amount = Number(action.amount);
+      if (!Number.isFinite(amount) || amount <= 0)
+        return NextResponse.json({ error: 'That is not a valid amount.' }, { status: 422 });
+
+      const { data: current } = await supabase
+        .from('fund_requests')
+        .select('reference, status, profiles!fund_requests_user_id_fkey(full_name)')
+        .eq('id', action.requestId)
+        .single();
+
+      const r = current as unknown as {
+        reference: string;
+        status: string;
+        profiles: { full_name: string } | null;
+      } | null;
+      if (!r) return NextResponse.json({ error: 'That application no longer exists.' }, { status: 404 });
+
+      // Once money has moved the record has to match the receipt that went out.
+      if (r.status === 'transferred')
+        return NextResponse.json(
+          { error: `${r.reference} has already been transferred — the amount cannot be changed now.` },
+          { status: 409 }
+        );
+
+      const { error } = await supabase
+        .from('fund_requests')
+        .update({ amount_requested: amount, reviewed_by: user.id })
+        .eq('id', action.requestId);
+      if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+      return NextResponse.json({
+        done: `${r.reference} now asks for ${pkr(amount)}.`,
+        link: { href: `/admin/requests/${action.requestId}`, label: 'Open the application' },
+      });
+    }
+
+    /* ---------------------------------------------------------------- */
     case 'set_donor_active': {
       if (!action.memberId) return NextResponse.json({ error: 'Which member?' }, { status: 422 });
 

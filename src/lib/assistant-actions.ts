@@ -25,7 +25,9 @@ export type ActionKind =
   | 'set_status'
   | 'block_member'
   | 'unblock_member'
-  | 'create_member';
+  | 'create_member'
+  | 'set_requested_amount'
+  | 'add_donor';
 
 export interface Action {
   kind: ActionKind;
@@ -37,6 +39,9 @@ export interface Action {
   status?: 'review' | 'accepted' | 'rejected';
   /** For set_donor_active: whether they stay on the donor list. */
   active?: boolean;
+  /** For add_donor: what they promise each month, and what has arrived. */
+  pledge?: number;
+  given?: number;
   note?: string;
   /** For showing the administrator what they are about to change. */
   subject?: string;

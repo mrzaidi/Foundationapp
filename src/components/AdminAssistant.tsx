@@ -38,11 +38,26 @@ interface Pending {
   collected: Record<string, string>;
 }
 
+/**
+ * Who and what the conversation is currently about.
+ *
+ * Without this, "approve it", "edit the amount", "add him as a donor" all
+ * arrive as if nothing had been said before — and get asked which application
+ * or which member, immediately after the assistant itself named one.
+ */
+interface Context {
+  reference?: string | null;
+  memberId?: string | null;
+  memberName?: string | null;
+}
+
 interface ApiReply {
   error?: string;
   answer?: Answer;
   /** A guided instruction still gathering answers. */
   pending?: Pending | null;
+  /** Carried into the next question so "it" and "him" mean something. */
+  context?: Context;
   /** What was carried out, from the act endpoint. */
   done?: string;
   link?: { href: string; label: string };
@@ -94,6 +109,7 @@ export default function AdminAssistant() {
   /* A guided instruction part-way through. Held here rather than on the server
      so nothing is half-written while somebody is still answering. */
   const [pending, setPending] = useState<Pending | null>(null);
+  const [context, setContext] = useState<Context>({});
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -125,11 +141,17 @@ export default function AdminAssistant() {
       const res = await fetch('/api/admin/assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q, ...(pending ? { pending } : {}) }),
+        body: JSON.stringify({
+          question: q,
+          ...(pending ? { pending } : {}),
+          context,
+        }),
       });
       const json = await readJson(res);
       if (!res.ok) throw new Error(json.error ?? 'Something went wrong.');
       setPending(json.pending ?? null);
+      // Merge, so naming a member does not erase the application in hand.
+      if (json.context) setContext((c) => ({ ...c, ...json.context }));
       setTurns((t) => [...t, { from: 'bot', text: '', answer: json.answer }]);
     } catch (e) {
       setTurns((t) => [
