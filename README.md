@@ -153,6 +153,7 @@ preview/                       design review & clickable prototype (build script
 | `GET` | `/api/admin/budget` | The month's fund, spend and history |
 | `GET` | `/api/admin/export?month=` | The month as one CSV statement |
 | `GET` | `/api/rates` | PKR → EUR/USD, cached hourly |
+| `POST` | `/api/admin/assistant` | Answers a question about the foundation’s figures |
 | `POST` | `/api/admin/import` | Preview, then apply, a month of donations |
 
 ### Security model
@@ -261,6 +262,23 @@ Enforced three times, narrowest last: the transfer dialog shows what is left
 and disables the button, `PATCH /api/requests/:id` answers 422 with a readable
 sentence, and a `before update` trigger on `fund_requests` refuses the row
 outright so the rule holds for anything that writes.
+
+### Ask about the figures
+
+A question box in the corner of the admin portal: what came in this month,
+what went out, what is left, who registered, who gave, what is pending.
+
+Deliberately not a language model. Every answer is a figure the committee may
+act on, and a model that is usually right about a balance is worse than a
+narrow tool that is always right — it would also mean posting member data to
+a third party and paying per question. `lib/assistant.ts` matches intent from
+stemmed keywords, `POST /api/admin/assistant` runs the SQL, and anything it
+does not understand gets an honest "here is what I can answer" rather than a
+guess.
+
+Keywords are stems, not words: "receiv" catches both *receive* and *received*,
+which are the same question asked two ways. Months are understood as "this
+month", "last month", a name, or `YYYY-MM`, defaulting to the current one.
 
 ### Foreign currency
 

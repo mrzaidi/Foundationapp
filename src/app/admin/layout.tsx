@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { RatesProvider } from '@/components/Fx';
+import AdminAssistant from '@/components/AdminAssistant';
 import AdminSidebar from '@/components/AdminSidebar';
 import { createClient } from '@/lib/supabase/server';
 
@@ -35,6 +36,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <AdminSidebar name={profile.full_name} email={profile.email} pending={pending ?? 0} />
           <main className="main">{children}</main>
         </div>
+        <AdminAssistant />
       </div>
     </RatesProvider>
   );
