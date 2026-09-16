@@ -22,27 +22,6 @@ export default async function AdminBudgetPage() {
 
       <MonthlyStatement />
 
-      <div className="panel mt-24">
-        <div className="panel-head">
-          <div>
-            <h2>How the balance is worked out</h2>
-            <div className="ph-sub">Derived, never stored</div>
-          </div>
-        </div>
-        <div className="panel-body">
-          <p className="muted" style={{ marginTop: 0 }}>
-            The month&rsquo;s fund is <strong>the donations recorded against that month</strong>, and
-            remaining is that <strong>minus everything transferred in it</strong>. Both are computed
-            from the rows themselves, so there is no running total to fall out of step: correct a
-            donation or a transfer and the balance corrects with it.
-          </p>
-          <div className="note">
-            The fund cannot be typed in. A figure somebody set was a promise, and the committee was
-            spending against it — the only way it goes up is a donor actually giving. A transfer that would take the month past the fund is refused outright — by the database
-            itself, not just by this screen.
-          </div>
-        </div>
-      </div>
     </>
   );
 }

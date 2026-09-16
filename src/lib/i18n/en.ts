@@ -129,7 +129,6 @@ const en = {
     privateTitle: 'Your documents are private',
     privateBody:
       'Reports, bills and your CNIC are stored securely and are only opened by foundation administrators reviewing your application.',
-    footer: (amount: string) => `Mohammad Husnain Foundation · ${amount} PKR received to date`,
   },
 
   apply: {

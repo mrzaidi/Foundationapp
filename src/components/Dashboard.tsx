@@ -8,7 +8,7 @@ import { useI18n } from './LocaleProvider';
 import { StatusBar } from './PhoneShell';
 import StatusBadge from './StatusBadge';
 import { fundText } from '@/lib/funds';
-import { initials, money, shortMoney, timeAgo } from '@/lib/format';
+import { initials, money, timeAgo } from '@/lib/format';
 import type { FundRequest, FundType, Profile } from '@/lib/types';
 
 const STAT_KEYS = ['requested', 'review', 'accepted', 'transferred'] as const;
@@ -195,7 +195,6 @@ export default function Dashboard({
               </span>
             </Link>
 
-            <p className="portal-footnote">{d.dashboard.footer(shortMoney(disbursed))}</p>
           </div>
         </aside>
       </div>

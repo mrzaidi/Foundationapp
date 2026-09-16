@@ -243,10 +243,6 @@ export default async function AdminDashboard() {
               ))
             )}
 
-            <div className="note mt-16">
-              Totals are computed live from <code>fund_requests</code> by the{' '}
-              <code>admin_stats()</code> function in Postgres, so they always match the database.
-            </div>
           </div>
         </div>
       </div>

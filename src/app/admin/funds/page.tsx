@@ -113,27 +113,6 @@ export default async function AdminFundsPage() {
         })}
       </div>
 
-      <div className="panel mt-24">
-        <div className="panel-head">
-          <div>
-            <h2>Editing funds</h2>
-            <div className="ph-sub">Funds are rows, not code</div>
-          </div>
-        </div>
-        <div className="panel-body">
-          <p className="muted" style={{ marginTop: 0 }}>
-            <strong>Edit</strong> on any card changes its name, description, amount range, colour,
-            icon, whether a document is required and whether members can see it at all — in both
-            English and Urdu. Changes are live on the member dashboard immediately; nothing is
-            deployed and nothing is cached.
-          </p>
-          <div className="note">
-            A fund&apos;s id cannot be changed here — every application ever filed points at it.
-            <em> Adding</em> a whole new fund is still an insert into <code>fund_types</code>: give
-            it an id, a name, a gradient class and an icon name, and it appears on the dashboard.
-          </div>
-        </div>
-      </div>
     </>
   );
 }
