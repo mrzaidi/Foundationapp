@@ -92,31 +92,6 @@ export async function POST(request: Request) {
   const question = (body.question ?? '').trim();
   if (!question) return NextResponse.json({ error: 'Ask me something.' }, { status: 422 });
 
-  /* ------------------------------------------------------------------ *
-   * Instructions that take more than one sentence.                      *
-   *                                                                     *
-   * "Add a new member" cannot be answered in one step, so the assistant  *
-   * asks for each detail in turn. The answers travel in the conversation *
-   * rather than being stored here, and nothing reaches the database      *
-   * until the last one is in and the administrator confirms.            *
-   * ------------------------------------------------------------------ */
-  const started = body.pending ?? (flowFrom(question) ? { kind: flowFrom(question)!, collected: {} } : null);
-
-  if (started) {
-    const writeGate = await requireCapability('use_assistant_writes');
-    if ('refusal' in writeGate)
-      return NextResponse.json({
-        intent: 'help',
-        month: monthFrom(question).month,
-        answer: {
-          text: 'Your administrator account can ask me about the figures, but cannot change anything.',
-          suggestions: SUGGESTIONS.slice(0, 3),
-        },
-      });
-
-    return NextResponse.json(await step(started, body.pending ? question : null));
-  }
-
   /*
    * Say hello back, by name. It costs one branch and no query, and a box that
    * answers "hi" with a list of things it cannot do reads as broken.
@@ -184,6 +159,37 @@ export async function POST(request: Request) {
       committed?: number;
     };
   };
+
+  /* ------------------------------------------------------------------ *
+   * Instructions that take more than one sentence.                      *
+   *                                                                     *
+   * "Add a new member" cannot be answered in one step, so the assistant  *
+   * asks for each detail in turn. The answers travel in the conversation *
+   * rather than being stored here, and nothing reaches the database      *
+   * until the last one is in and the administrator confirms.             *
+   *                                                                     *
+   * Placed after the month and currency helpers above, not before them:  *
+   * step() reads both, and running it any earlier reaches them inside    *
+   * the temporal dead zone — which throws, and a throw here returns an   *
+   * empty body that the browser cannot parse as JSON.                    *
+   * ------------------------------------------------------------------ */
+  const started =
+    body.pending ?? (flowFrom(question) ? { kind: flowFrom(question)!, collected: {} } : null);
+
+  if (started) {
+    const writeGate = await requireCapability('use_assistant_writes');
+    if ('refusal' in writeGate)
+      return NextResponse.json({
+        intent: 'help',
+        month,
+        answer: {
+          text: 'Your administrator account can ask me about the figures, but cannot change anything.',
+          suggestions: SUGGESTIONS.slice(0, 3),
+        },
+      });
+
+    return NextResponse.json(await step(started, body.pending ? question : null));
+  }
 
   /* ------------------------------------------------------------------ *
    * What is this question about?                                        *

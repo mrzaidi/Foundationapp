@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Icon from './Icon';
 import { SUGGESTIONS, WRITE_VOCABULARY } from '@/lib/assistant';
 
+
 interface Figure {
   label: string;
   value: string;
@@ -30,6 +31,39 @@ interface Turn {
   answer?: Answer;
   /** Set once a proposal has been confirmed or dismissed, so it cannot be run twice. */
   settled?: 'done' | 'cancelled';
+}
+
+interface Pending {
+  kind: string;
+  collected: Record<string, string>;
+}
+
+interface ApiReply {
+  error?: string;
+  answer?: Answer;
+  /** A guided instruction still gathering answers. */
+  pending?: Pending | null;
+  /** What was carried out, from the act endpoint. */
+  done?: string;
+  link?: { href: string; label: string };
+}
+
+/**
+ * A failed request does not always carry JSON.
+ *
+ * A crash on the server returns an empty body or an HTML error page, and
+ * res.json() then throws "Unexpected end of JSON input" — which says nothing
+ * about what happened and reads as though the chat itself is broken. This
+ * turns both into a sentence somebody can act on.
+ */
+async function readJson(res: Response): Promise<ApiReply> {
+  const text = await res.text();
+  if (!text) throw new Error(`The server did not answer (HTTP ${res.status}). Please try again.`);
+  try {
+    return JSON.parse(text) as ApiReply;
+  } catch {
+    throw new Error(`Something went wrong on the server (HTTP ${res.status}).`);
+  }
 }
 
 const OPENING: Turn = {
@@ -59,7 +93,7 @@ export default function AdminAssistant() {
   const [busy, setBusy] = useState(false);
   /* A guided instruction part-way through. Held here rather than on the server
      so nothing is half-written while somebody is still answering. */
-  const [pending, setPending] = useState<{ kind: string; collected: Record<string, string> } | null>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -93,7 +127,7 @@ export default function AdminAssistant() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: q, ...(pending ? { pending } : {}) }),
       });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error ?? 'Something went wrong.');
       setPending(json.pending ?? null);
       setTurns((t) => [...t, { from: 'bot', text: '', answer: json.answer }]);
@@ -125,10 +159,13 @@ export default function AdminAssistant() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
       });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error ?? 'That did not go through.');
 
-      setTurns((t) => [...t, { from: 'bot', text: '', answer: { text: json.done, link: json.link } }]);
+      setTurns((t) => [
+        ...t,
+        { from: 'bot', text: '', answer: { text: json.done ?? 'Done.', link: json.link } },
+      ]);
       // The screen behind is now out of date with what was just changed.
       router.refresh();
     } catch (e) {
