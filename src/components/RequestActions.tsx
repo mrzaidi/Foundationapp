@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from './Icon';
+import Modal from './Modal';
 import { useToast } from './Toast';
 import { createClient } from '@/lib/supabase/client';
 import { STATUS_LABEL, bytes, money } from '@/lib/format';
@@ -193,144 +194,142 @@ export default function RequestActions({ request }: { request: FundRequest }) {
       </div>
 
       {open && (
-        <div className="amodal-back" onClick={busy ? undefined : close}>
-          <div className="amodal" onClick={(e) => e.stopPropagation()}>
-            <h3>{ACTION_COPY[open].title}</h3>
-            <p className="sub">{ACTION_COPY[open].sub}</p>
+        <Modal busy={busy} onClose={close} label={ACTION_COPY[open].title}>
+          <h3>{ACTION_COPY[open].title}</h3>
+          <p className="sub">{ACTION_COPY[open].sub}</p>
 
-            {(open === 'accepted' || open === 'transferred') && (
-              <div className="field">
-                <label htmlFor="approved">Approved amount (PKR)</label>
-                <input
-                  id="approved"
-                  className="input"
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-                <p className="err-msg" style={{ color: 'var(--text-faint)', fontWeight: 500 }}>
-                  Member requested {money(Number(request.amount_requested))}
-                </p>
-              </div>
-            )}
-
-            {open === 'transferred' && (
-              <>
-                <div className="field">
-                  <label htmlFor="tref">Transfer reference</label>
-                  <input
-                    id="tref"
-                    className="input"
-                    value={transferRef}
-                    onChange={(e) => setTransferRef(e.target.value)}
-                    placeholder="Bank / Easypaisa / JazzCash reference"
-                  />
-                </div>
-
-                <div className="field">
-                  <label htmlFor="receipt">
-                    Transfer receipt{' '}
-                    <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>(optional)</span>
-                    {receipts.length > 0 && (
-                      <span className="file-count num">
-                        {receipts.length}/{MAX_RECEIPTS}
-                      </span>
-                    )}
-                  </label>
-
-                  <label className="upload small" htmlFor="receipt">
-                    <div className="u-ico">
-                      <Icon name={receipts.length ? 'checkCircle' : 'upload'} />
-                    </div>
-                    <div className="u-t">
-                      {receipts.length ? 'Add another receipt' : 'Upload the transfer receipt'}
-                    </div>
-                    <div className="u-d">
-                      Screenshot or PDF — up to {MAX_RECEIPTS} files, 10 MB each. The member sees
-                      this on their application.
-                    </div>
-                    <input
-                      id="receipt"
-                      ref={receiptInput}
-                      type="file"
-                      multiple
-                      accept="image/*,application/pdf"
-                      onChange={(e) => {
-                        addReceipts(e.target.files);
-                        if (receiptInput.current) receiptInput.current.value = '';
-                      }}
-                    />
-                  </label>
-
-                  {receipts.length > 0 && (
-                    <div className="filelist">
-                      {receipts.map((file, i) => (
-                        <div className="fileitem" key={`${file.name}-${i}`}>
-                          <div className="fi">
-                            <Icon name={file.type.startsWith('image/') ? 'image' : 'file'} />
-                          </div>
-                          <div className="fmid">
-                            <div className="fn" dir="ltr">
-                              {file.name}
-                            </div>
-                            <div className="fs">{bytes(file.size)}</div>
-                          </div>
-                          <button
-                            type="button"
-                            className="rm"
-                            aria-label={`Remove ${file.name}`}
-                            onClick={() => setReceipts((p) => p.filter((_, x) => x !== i))}
-                          >
-                            <Icon name="x" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
+          {(open === 'accepted' || open === 'transferred') && (
             <div className="field">
-              <label htmlFor="note">
-                Note to the member {open === 'rejected' && <span className="req-star">*</span>}
-              </label>
-              <textarea
-                id="note"
+              <label htmlFor="approved">Approved amount (PKR)</label>
+              <input
+                id="approved"
                 className="input"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder={
-                  open === 'rejected'
-                    ? 'Explain why this application could not be approved…'
-                    : 'Optional note shown on the member&apos;s application screen'
-                }
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
               />
+              <p className="err-msg" style={{ color: 'var(--text-faint)', fontWeight: 500 }}>
+                Member requested {money(Number(request.amount_requested))}
+              </p>
             </div>
+          )}
 
-            <div className="btn-row mt-8">
-              <button
-                className="admin-btn ghost"
-                style={{ flex: 1, justifyContent: 'center' }}
-                onClick={close}
-                disabled={busy}
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                className={`admin-btn ${ACTION_COPY[open].cls}`}
-                style={{ flex: 1, justifyContent: 'center' }}
-                onClick={() => apply(open)}
-                disabled={busy || (open === 'rejected' && !note.trim())}
-                type="button"
-              >
-                {busy ? <span className="spin" /> : <Icon name={ACTION_COPY[open].icon} />}
-                {busy ? 'Saving…' : ACTION_COPY[open].cta}
-              </button>
-            </div>
+          {open === 'transferred' && (
+            <>
+              <div className="field">
+                <label htmlFor="tref">Transfer reference</label>
+                <input
+                  id="tref"
+                  className="input"
+                  value={transferRef}
+                  onChange={(e) => setTransferRef(e.target.value)}
+                  placeholder="Bank / Easypaisa / JazzCash reference"
+                />
+              </div>
+
+              <div className="field">
+                <label htmlFor="receipt">
+                  Transfer receipt{' '}
+                  <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>(optional)</span>
+                  {receipts.length > 0 && (
+                    <span className="file-count num">
+                      {receipts.length}/{MAX_RECEIPTS}
+                    </span>
+                  )}
+                </label>
+
+                <label className="upload small" htmlFor="receipt">
+                  <div className="u-ico">
+                    <Icon name={receipts.length ? 'checkCircle' : 'upload'} />
+                  </div>
+                  <div className="u-t">
+                    {receipts.length ? 'Add another receipt' : 'Upload the transfer receipt'}
+                  </div>
+                  <div className="u-d">
+                    Screenshot or PDF — up to {MAX_RECEIPTS} files, 10 MB each. The member sees
+                    this on their application.
+                  </div>
+                  <input
+                    id="receipt"
+                    ref={receiptInput}
+                    type="file"
+                    multiple
+                    accept="image/*,application/pdf"
+                    onChange={(e) => {
+                      addReceipts(e.target.files);
+                      if (receiptInput.current) receiptInput.current.value = '';
+                    }}
+                  />
+                </label>
+
+                {receipts.length > 0 && (
+                  <div className="filelist">
+                    {receipts.map((file, i) => (
+                      <div className="fileitem" key={`${file.name}-${i}`}>
+                        <div className="fi">
+                          <Icon name={file.type.startsWith('image/') ? 'image' : 'file'} />
+                        </div>
+                        <div className="fmid">
+                          <div className="fn" dir="ltr">
+                            {file.name}
+                          </div>
+                          <div className="fs">{bytes(file.size)}</div>
+                        </div>
+                        <button
+                          type="button"
+                          className="rm"
+                          aria-label={`Remove ${file.name}`}
+                          onClick={() => setReceipts((p) => p.filter((_, x) => x !== i))}
+                        >
+                          <Icon name="x" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          <div className="field">
+            <label htmlFor="note">
+              Note to the member {open === 'rejected' && <span className="req-star">*</span>}
+            </label>
+            <textarea
+              id="note"
+              className="input"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={
+                open === 'rejected'
+                  ? 'Explain why this application could not be approved…'
+                  : 'Optional note shown on the member&apos;s application screen'
+              }
+            />
           </div>
-        </div>
+
+          <div className="btn-row mt-8">
+            <button
+              className="admin-btn ghost"
+              style={{ flex: 1, justifyContent: 'center' }}
+              onClick={close}
+              disabled={busy}
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              className={`admin-btn ${ACTION_COPY[open].cls}`}
+              style={{ flex: 1, justifyContent: 'center' }}
+              onClick={() => apply(open)}
+              disabled={busy || (open === 'rejected' && !note.trim())}
+              type="button"
+            >
+              {busy ? <span className="spin" /> : <Icon name={ACTION_COPY[open].icon} />}
+              {busy ? 'Saving…' : ACTION_COPY[open].cta}
+            </button>
+          </div>
+        </Modal>
       )}
     </>
   );

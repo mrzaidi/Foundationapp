@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from './Icon';
+import Modal from './Modal';
 import { useToast } from './Toast';
 import type { FundType } from '@/lib/types';
 
@@ -147,218 +148,221 @@ export default function FundEditor({
       </button>
 
       {open && (
-        <div className="amodal-back" onClick={busy ? undefined : () => setOpen(false)}>
-          <div className="amodal wide" onClick={(e) => e.stopPropagation()}>
-            <h3>Edit {fund.name}</h3>
-            <p className="sub">
-              Changes show on every member&apos;s dashboard immediately. The fund&apos;s id (
-              <code>{fund.id}</code>) cannot change — applications are filed against it.
-            </p>
+        <Modal
+          className="wide"
+          busy={busy}
+          onClose={() => setOpen(false)}
+          label={`Edit ${fund.name}`}
+        >
+          <h3>Edit {fund.name}</h3>
+          <p className="sub">
+            Changes show on every member&apos;s dashboard immediately. The fund&apos;s id (
+            <code>{fund.id}</code>) cannot change — applications are filed against it.
+          </p>
 
-            <div className="row-2">
-              <div className="field">
-                <label htmlFor={`n_${fund.id}`}>Name (English)</label>
-                <input
-                  id={`n_${fund.id}`}
-                  className="input"
-                  value={d.name}
-                  onChange={(e) => set('name', e.target.value)}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor={`nu_${fund.id}`}>Name (اردو)</label>
-                <input
-                  id={`nu_${fund.id}`}
-                  className="input"
-                  lang="ur"
-                  dir="rtl"
-                  value={d.name_ur}
-                  onChange={(e) => set('name_ur', e.target.value)}
-                />
-              </div>
-            </div>
-
+          <div className="row-2">
             <div className="field">
-              <label htmlFor={`d_${fund.id}`}>Description (English)</label>
-              <textarea
-                id={`d_${fund.id}`}
+              <label htmlFor={`n_${fund.id}`}>Name (English)</label>
+              <input
+                id={`n_${fund.id}`}
                 className="input"
-                rows={2}
-                value={d.description}
-                onChange={(e) => set('description', e.target.value)}
+                value={d.name}
+                onChange={(e) => set('name', e.target.value)}
               />
             </div>
-
             <div className="field">
-              <label htmlFor={`du_${fund.id}`}>Description (اردو)</label>
-              <textarea
-                id={`du_${fund.id}`}
+              <label htmlFor={`nu_${fund.id}`}>Name (اردو)</label>
+              <input
+                id={`nu_${fund.id}`}
                 className="input"
-                rows={2}
                 lang="ur"
                 dir="rtl"
-                value={d.description_ur}
-                onChange={(e) => set('description_ur', e.target.value)}
+                value={d.name_ur}
+                onChange={(e) => set('name_ur', e.target.value)}
               />
             </div>
+          </div>
 
-            <div className="row-2">
-              <div className="field">
-                <label htmlFor={`min_${fund.id}`}>Minimum (PKR)</label>
-                <input
-                  id={`min_${fund.id}`}
-                  className="input"
-                  type="number"
-                  min={1}
-                  value={d.min_amount}
-                  onChange={(e) => set('min_amount', e.target.value)}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor={`max_${fund.id}`}>Maximum (PKR)</label>
-                <input
-                  id={`max_${fund.id}`}
-                  className="input"
-                  type="number"
-                  min={1}
-                  placeholder="No ceiling"
-                  value={d.max_amount}
-                  onChange={(e) => set('max_amount', e.target.value)}
-                />
-                <p className="field-hint">Leave blank for no upper limit.</p>
-              </div>
+          <div className="field">
+            <label htmlFor={`d_${fund.id}`}>Description (English)</label>
+            <textarea
+              id={`d_${fund.id}`}
+              className="input"
+              rows={2}
+              value={d.description}
+              onChange={(e) => set('description', e.target.value)}
+            />
+          </div>
+
+          <div className="field">
+            <label htmlFor={`du_${fund.id}`}>Description (اردو)</label>
+            <textarea
+              id={`du_${fund.id}`}
+              className="input"
+              rows={2}
+              lang="ur"
+              dir="rtl"
+              value={d.description_ur}
+              onChange={(e) => set('description_ur', e.target.value)}
+            />
+          </div>
+
+          <div className="row-2">
+            <div className="field">
+              <label htmlFor={`min_${fund.id}`}>Minimum (PKR)</label>
+              <input
+                id={`min_${fund.id}`}
+                className="input"
+                type="number"
+                min={1}
+                value={d.min_amount}
+                onChange={(e) => set('min_amount', e.target.value)}
+              />
             </div>
-
-            <div className="row-2">
-              <div className="field">
-                <label htmlFor={`dl_${fund.id}`}>Document label (English)</label>
-                <input
-                  id={`dl_${fund.id}`}
-                  className="input"
-                  value={d.document_label}
-                  onChange={(e) => set('document_label', e.target.value)}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor={`dlu_${fund.id}`}>Document label (اردو)</label>
-                <input
-                  id={`dlu_${fund.id}`}
-                  className="input"
-                  lang="ur"
-                  dir="rtl"
-                  value={d.document_label_ur}
-                  onChange={(e) => set('document_label_ur', e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="row-2">
-              <div className="field">
-                <label htmlFor={`g_${fund.id}`}>Colour</label>
-                <div className="swatches">
-                  {GRADIENTS.map((g) => (
-                    <button
-                      key={g}
-                      type="button"
-                      className={`swatch ${g} ${d.gradient === g ? 'on' : ''}`}
-                      aria-label={g}
-                      aria-pressed={d.gradient === g}
-                      onClick={() => set('gradient', g)}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="field">
-                <label htmlFor={`i_${fund.id}`}>Icon</label>
-                <div className="swatches">
-                  {ICONS.map((i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      className={`swatch icon ${d.icon === i ? 'on' : ''}`}
-                      aria-label={i}
-                      aria-pressed={d.icon === i}
-                      onClick={() => set('icon', i)}
-                    >
-                      <Icon name={i} width={16} height={16} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="row-2">
-              <div className="field">
-                <label htmlFor={`s_${fund.id}`}>Order on the dashboard</label>
-                <input
-                  id={`s_${fund.id}`}
-                  className="input"
-                  type="number"
-                  min={0}
-                  value={d.sort_order}
-                  onChange={(e) => set('sort_order', e.target.value)}
-                />
-              </div>
-              <div className="field">
-                <label>Settings</label>
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    checked={d.document_required}
-                    onChange={(e) => set('document_required', e.target.checked)}
-                  />
-                  <span>A document is required</span>
-                </label>
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    checked={d.is_active}
-                    onChange={(e) => set('is_active', e.target.checked)}
-                  />
-                  <span>Visible to members</span>
-                </label>
-                {recurringReady && (
-                  <label className="check">
-                    <input
-                      type="checkbox"
-                      checked={d.is_recurring}
-                      onChange={(e) => set('is_recurring', e.target.checked)}
-                    />
-                    <span>Recurs monthly once approved</span>
-                  </label>
-                )}
-              </div>
-            </div>
-
-            {error && (
-              <p className="err-msg" role="alert">
-                {error}
-              </p>
-            )}
-
-            <div className="btn-row mt-8">
-              <button
-                className="admin-btn ghost"
-                style={{ flex: 1, justifyContent: 'center' }}
-                onClick={() => setOpen(false)}
-                disabled={busy}
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                className="admin-btn"
-                style={{ flex: 1, justifyContent: 'center' }}
-                onClick={save}
-                disabled={busy}
-                type="button"
-              >
-                {busy ? <span className="spin" /> : <Icon name="check" />}
-                {busy ? 'Saving…' : 'Save fund'}
-              </button>
+            <div className="field">
+              <label htmlFor={`max_${fund.id}`}>Maximum (PKR)</label>
+              <input
+                id={`max_${fund.id}`}
+                className="input"
+                type="number"
+                min={1}
+                placeholder="No ceiling"
+                value={d.max_amount}
+                onChange={(e) => set('max_amount', e.target.value)}
+              />
+              <p className="field-hint">Leave blank for no upper limit.</p>
             </div>
           </div>
-        </div>
+
+          <div className="row-2">
+            <div className="field">
+              <label htmlFor={`dl_${fund.id}`}>Document label (English)</label>
+              <input
+                id={`dl_${fund.id}`}
+                className="input"
+                value={d.document_label}
+                onChange={(e) => set('document_label', e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor={`dlu_${fund.id}`}>Document label (اردو)</label>
+              <input
+                id={`dlu_${fund.id}`}
+                className="input"
+                lang="ur"
+                dir="rtl"
+                value={d.document_label_ur}
+                onChange={(e) => set('document_label_ur', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="row-2">
+            <div className="field">
+              <label htmlFor={`g_${fund.id}`}>Colour</label>
+              <div className="swatches">
+                {GRADIENTS.map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    className={`swatch ${g} ${d.gradient === g ? 'on' : ''}`}
+                    aria-label={g}
+                    aria-pressed={d.gradient === g}
+                    onClick={() => set('gradient', g)}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor={`i_${fund.id}`}>Icon</label>
+              <div className="swatches">
+                {ICONS.map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`swatch icon ${d.icon === i ? 'on' : ''}`}
+                    aria-label={i}
+                    aria-pressed={d.icon === i}
+                    onClick={() => set('icon', i)}
+                  >
+                    <Icon name={i} width={16} height={16} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="row-2">
+            <div className="field">
+              <label htmlFor={`s_${fund.id}`}>Order on the dashboard</label>
+              <input
+                id={`s_${fund.id}`}
+                className="input"
+                type="number"
+                min={0}
+                value={d.sort_order}
+                onChange={(e) => set('sort_order', e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label>Settings</label>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={d.document_required}
+                  onChange={(e) => set('document_required', e.target.checked)}
+                />
+                <span>A document is required</span>
+              </label>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={d.is_active}
+                  onChange={(e) => set('is_active', e.target.checked)}
+                />
+                <span>Visible to members</span>
+              </label>
+              {recurringReady && (
+                <label className="check">
+                  <input
+                    type="checkbox"
+                    checked={d.is_recurring}
+                    onChange={(e) => set('is_recurring', e.target.checked)}
+                  />
+                  <span>Recurs monthly once approved</span>
+                </label>
+              )}
+            </div>
+          </div>
+
+          {error && (
+            <p className="err-msg" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="btn-row mt-8">
+            <button
+              className="admin-btn ghost"
+              style={{ flex: 1, justifyContent: 'center' }}
+              onClick={() => setOpen(false)}
+              disabled={busy}
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              className="admin-btn"
+              style={{ flex: 1, justifyContent: 'center' }}
+              onClick={save}
+              disabled={busy}
+              type="button"
+            >
+              {busy ? <span className="spin" /> : <Icon name="check" />}
+              {busy ? 'Saving…' : 'Save fund'}
+            </button>
+          </div>
+        </Modal>
       )}
     </>
   );
