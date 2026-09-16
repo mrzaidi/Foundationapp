@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Fx, { FxNote } from './Fx';
 import { money } from '@/lib/format';
 
 interface BudgetStatus {
@@ -121,12 +122,14 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
             <span className="bf-value num" style={{ color: 'var(--brand-2)' }}>
               {money(Number(status.donated ?? 0))}
             </span>
+            <Fx pkr={Number(status.donated ?? 0)} />
           </div>
           <div className="bf">
             <span className="bf-label">Transferred</span>
             <span className="bf-value num" style={{ color: 'var(--st-transfer)' }}>
               −{money(status.spent)}
             </span>
+            <Fx pkr={status.spent} />
           </div>
           <div className="bf bf-remaining">
             <span className="bf-label">Remaining</span>
@@ -136,8 +139,11 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
             >
               {money(status.remaining)}
             </span>
+            <Fx pkr={status.remaining} />
           </div>
         </div>
+
+        <FxNote />
 
         <div className="budget-bar" aria-hidden="true">
           <span

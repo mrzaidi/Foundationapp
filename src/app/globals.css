@@ -2479,6 +2479,54 @@ table.grid .rowlink:hover {
   }
 }
 
+/* ---- foreign currency ---- */
+/* Always secondary to the rupee figure it sits under: these are indicative. */
+.fx {
+  display: block;
+  margin-top: 3px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.fx-note {
+  margin: 14px 0 0;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--text-faint);
+}
+
+/* What is left in the month, shown where the money is about to leave it. */
+.fundbar {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  padding: 9px 12px;
+  border-radius: var(--r-sm);
+  background: rgba(18, 184, 134, 0.09);
+  border: 1px solid rgba(18, 184, 134, 0.26);
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.fundbar strong {
+  color: var(--brand-3);
+}
+.fundbar .fx {
+  margin: 0;
+  flex-basis: 100%;
+}
+.fundbar.short {
+  background: rgba(208, 59, 59, 0.08);
+  border-color: rgba(208, 59, 59, 0.3);
+}
+.fundbar.short strong,
+.fundbar.short > span:first-child {
+  color: var(--danger);
+  font-weight: 700;
+}
+
 /* ---- import / export ---- */
 .stmt-actions {
   display: flex;

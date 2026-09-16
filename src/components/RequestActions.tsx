@@ -1,8 +1,9 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from './Icon';
+import Fx from './Fx';
 import Modal from './Modal';
 import { useToast } from './Toast';
 import { createClient } from '@/lib/supabase/client';
@@ -59,9 +60,31 @@ export default function RequestActions({ request }: { request: FundRequest }) {
   const [note, setNote] = useState(request.admin_note ?? '');
   const [transferRef, setTransferRef] = useState(request.transfer_ref ?? '');
   const [receipts, setReceipts] = useState<File[]>([]);
+  // What is left in this month's fund. Null until it loads, so the button is
+  // never disabled on a figure nobody has yet.
+  const [remaining, setRemaining] = useState<number | null>(null);
   const receiptInput = useRef<HTMLInputElement>(null);
 
   const status = request.status;
+
+  // Only when the transfer dialog is actually open: the committee's balance is
+  // not something every request row needs to fetch.
+  useEffect(() => {
+    if (open !== 'transferred') return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/budget');
+        const json = await res.json();
+        if (!cancelled && res.ok) setRemaining(Number(json.status?.remaining ?? 0));
+      } catch {
+        // leave it unknown; the server still refuses an overspend
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   function addReceipts(list: FileList | null) {
     if (!list?.length) return;
@@ -160,6 +183,15 @@ export default function RequestActions({ request }: { request: FundRequest }) {
     setOpen(null);
   }
 
+  // A transfer cannot exceed what donors gave. The server and a database
+  // trigger both refuse it; this just stops the admin finding out the hard way.
+  const wanted = Number(amount);
+  const overFund =
+    open === 'transferred' &&
+    remaining !== null &&
+    Number.isFinite(wanted) &&
+    wanted > remaining;
+
   /** Which buttons make sense from the current status. */
   const available: Action[] =
     status === 'requested'
@@ -211,6 +243,14 @@ export default function RequestActions({ request }: { request: FundRequest }) {
               <p className="err-msg" style={{ color: 'var(--text-faint)', fontWeight: 500 }}>
                 Member requested {money(Number(request.amount_requested))}
               </p>
+
+              {open === 'transferred' && remaining !== null && (
+                <div className={`fundbar ${overFund ? 'short' : ''}`}>
+                  <span>{overFund ? 'Not enough in the fund' : 'Left in this month’s fund'}</span>
+                  <strong className="num">{money(remaining)}</strong>
+                  <Fx pkr={remaining} />
+                </div>
+              )}
             </div>
           )}
 
@@ -322,11 +362,11 @@ export default function RequestActions({ request }: { request: FundRequest }) {
               className={`admin-btn ${ACTION_COPY[open].cls}`}
               style={{ flex: 1, justifyContent: 'center' }}
               onClick={() => apply(open)}
-              disabled={busy || (open === 'rejected' && !note.trim())}
+              disabled={busy || overFund || (open === 'rejected' && !note.trim())}
               type="button"
             >
               {busy ? <span className="spin" /> : <Icon name={ACTION_COPY[open].icon} />}
-              {busy ? 'Saving…' : ACTION_COPY[open].cta}
+              {busy ? 'Saving…' : overFund ? 'Fund is short' : ACTION_COPY[open].cta}
             </button>
           </div>
         </Modal>

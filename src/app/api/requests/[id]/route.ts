@@ -89,6 +89,43 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.admin_note !== undefined) patch.admin_note = body.admin_note;
   if (body.transfer_ref !== undefined) patch.transfer_ref = body.transfer_ref;
 
+  /*
+   * A transfer cannot exceed the month's fund. There is a trigger enforcing
+   * this too, but catching it here means the admin reads a sentence rather
+   * than a Postgres exception — and finds out before the row is touched.
+   */
+  if (body.status === 'transferred') {
+    const { data: current } = await supabase
+      .from('fund_requests')
+      .select('status, amount_approved, amount_requested')
+      .eq('id', id)
+      .single();
+
+    if (current && current.status !== 'transferred') {
+      const amount = Number(
+        patch.amount_approved ?? current.amount_approved ?? current.amount_requested
+      );
+
+      const { data: fundRow } = await supabase.rpc('budget_status');
+      const remaining = Number(
+        (fundRow as { remaining?: number } | null)?.remaining ?? 0
+      );
+
+      if (Number.isFinite(amount) && amount > remaining)
+        return NextResponse.json(
+          {
+            error:
+              remaining <= 0
+                ? 'There is nothing left in this month’s fund. Record a donation before transferring.'
+                : `This transfer is ${amount.toLocaleString()} but only ${remaining.toLocaleString()} is left in this month’s fund.`,
+            code: 'insufficient_fund',
+            remaining,
+          },
+          { status: 422 }
+        );
+    }
+  }
+
   const { data, error } = await supabase
     .from('fund_requests')
     .update(patch)
@@ -96,7 +133,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .select('*, fund_types(*), profiles!fund_requests_user_id_fkey(id, full_name, email, mobile, city, country)')
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) {
+    const shortFund = /is left in the .* fund|nothing left/i.test(error.message);
+    return NextResponse.json(
+      { error: error.message, ...(shortFund ? { code: 'insufficient_fund' } : {}) },
+      { status: shortFund ? 422 : 400 }
+    );
+  }
 
   return NextResponse.json({ request: data });
 }

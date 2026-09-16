@@ -38,6 +38,7 @@ idempotent — safe to re-run after any change:
 11. `0010_donors.sql` — donors, donations, and the month's fund
 12. `0011_family_details.sql` — the household behind an application
 13. `0012_donors_are_members.sql` — donors are members; the fund is donations only
+14. `0013_transfer_within_fund.sql` — a transfer cannot exceed the month's fund
 
 Edit those sources, never `SETUP.sql`. Regenerate it with:
 
@@ -151,6 +152,7 @@ preview/                       design review & clickable prototype (build script
 | `GET` | `/api/admin/analytics` | Rows behind the dashboard charts |
 | `GET` | `/api/admin/budget` | The month's fund, spend and history |
 | `GET` | `/api/admin/export?month=` | The month as one CSV statement |
+| `GET` | `/api/rates` | PKR → EUR/USD, cached hourly |
 | `POST` | `/api/admin/import` | Preview, then apply, a month of donations |
 
 ### Security model
@@ -246,6 +248,33 @@ anything else that reaches the database.
 
 Admins see the account on both the application and the member record, which is
 what they need in hand to make the transfer.
+
+### Spending within the fund
+
+A transfer cannot exceed what is left in the month. The portal used to warn
+and let it through; it now refuses. The fund is the donations that actually
+arrived, and paying out more than arrived is not a generous decision but an
+overdraft nobody agreed to — if the committee wants to give more, the answer
+is another donation.
+
+Enforced three times, narrowest last: the transfer dialog shows what is left
+and disables the button, `PATCH /api/requests/:id` answers 422 with a readable
+sentence, and a `before update` trigger on `fund_requests` refuses the row
+outright so the rule holds for anything that writes.
+
+### Foreign currency
+
+Every money figure in the admin portal carries an indicative euro and dollar
+equivalent, because the foundation reports to people who do not think in
+rupees. Rates come from open.er-api.com, with Fawaz Ahmed’s currency-api as a
+fallback — neither needs a key — proxied through `/api/rates` so the provider
+is named in one place, the hourly cache is shared across everyone looking at
+the portal, and no third party sees its visitors.
+
+It never blocks: a figure in rupees is still correct without its conversion,
+so a dead provider costs the euro line, not the page. The rate is quoted as
+rupees per euro rather than the other way round, because “PKR 1 = €0.0031”
+rounds to “€0.00” and tells nobody anything.
 
 ### Import and export
 

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { RatesProvider } from '@/components/Fx';
 import AdminSidebar from '@/components/AdminSidebar';
 import { createClient } from '@/lib/supabase/server';
 
@@ -27,15 +28,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .in('status', ['requested', 'review']);
 
   return (
-    <div className="admin-body">
-      <div className="admin-shell">
-        <AdminSidebar
-          name={profile.full_name}
-          email={profile.email}
-          pending={pending ?? 0}
-        />
-        <main className="main">{children}</main>
+    // One rate lookup per admin screen, shared by every amount on it.
+    <RatesProvider>
+      <div className="admin-body">
+        <div className="admin-shell">
+          <AdminSidebar name={profile.full_name} email={profile.email} pending={pending ?? 0} />
+          <main className="main">{children}</main>
+        </div>
       </div>
-    </div>
+    </RatesProvider>
   );
 }
