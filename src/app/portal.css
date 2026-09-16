@@ -1569,3 +1569,17 @@ table.grid .rowlink:focus-visible,
   display: block;
   overflow: visible;
 }
+
+/* Four cards in a grid that fits three across leaves the fourth alone with two
+   empty columns beside it — which is what the dashboard was doing. Above the
+   width where three fit, the columns are made explicit and the last card takes
+   the whole row. Below it auto-fit gives two or one, and four cards divide
+   evenly with no gap either way. */
+@media (min-width: 1340px) {
+  .vz-grid-2 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .vz-grid-2 > .vz-card:nth-child(4):last-child {
+    grid-column: 1 / -1;
+  }
+}
