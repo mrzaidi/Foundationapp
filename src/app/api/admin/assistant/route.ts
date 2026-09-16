@@ -3,6 +3,7 @@ import {
   CAPABILITIES,
   SUGGESTIONS,
   classify,
+  isGreeting,
   keywords,
   monthFrom,
   monthLabel,
@@ -59,7 +60,11 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
-  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  const { data: me } = await supabase
+    .from('profiles')
+    .select('role, full_name')
+    .eq('id', user.id)
+    .single();
   if (me?.role !== 'admin')
     return NextResponse.json({ error: 'Administrators only.' }, { status: 403 });
 
@@ -72,6 +77,27 @@ export async function POST(request: Request) {
 
   const question = (body.question ?? '').trim();
   if (!question) return NextResponse.json({ error: 'Ask me something.' }, { status: 422 });
+
+  /*
+   * Say hello back, by name. It costs one branch and no query, and a box that
+   * answers "hi" with a list of things it cannot do reads as broken.
+   */
+  if (isGreeting(question)) {
+    const first = (me.full_name ?? '').trim().split(' ')[0] || 'there';
+    const hour = Number(
+      new Date().toLocaleString('en-GB', { hour: '2-digit', hour12: false, timeZone: 'Asia/Karachi' })
+    );
+    const part = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+    return NextResponse.json({
+      intent: 'greeting',
+      month: monthFrom(question).month,
+      answer: {
+        text: `${part}, ${first}. Ask me anything about the foundation — or tell me something to change and I will show you what I am about to do first.`,
+        suggestions: SUGGESTIONS.slice(0, 3),
+      },
+    });
+  }
 
   const { month, explicit } = monthFrom(question);
   const label = monthLabel(month);

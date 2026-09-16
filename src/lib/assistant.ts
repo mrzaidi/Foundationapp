@@ -289,6 +289,21 @@ export function keywords(question: string): string[] {
     .filter((w) => w.length > 2 && !STOPWORDS.has(w));
 }
 
+/**
+ * Somebody saying hello rather than asking anything.
+ *
+ * Only when that is the whole message. "Hello, how much is left?" is a
+ * question with a greeting attached, and answering the greeting instead of the
+ * question would be worse than ignoring it.
+ */
+export function isGreeting(question: string): boolean {
+  const q = normalise(question);
+  if (q.trim().split(' ').length > 4) return false;
+  return /\b(hi|hey|hello|hiya|salam|salaam|assalam\w*|aoa|yo)\b|\bgood (morning|afternoon|evening)\b/.test(
+    q
+  );
+}
+
 /** SHF-26-00001, however it was typed. */
 export function referenceFrom(question: string): string | null {
   const m = question.toUpperCase().match(/\bSHF[-\s]?(\d{2})[-\s]?(\d{1,6})\b/);
