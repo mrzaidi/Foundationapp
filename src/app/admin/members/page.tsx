@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import AdminSearch from '@/components/AdminSearch';
+import NewMemberButton from '@/components/NewMemberButton';
 import Icon from '@/components/Icon';
 import { createClient } from '@/lib/supabase/server';
 import { dateLabel, initials } from '@/lib/format';
@@ -72,6 +73,9 @@ export default async function AdminMembersPage({
           </div>
         </div>
 
+        <div className="toolbar" style={{ gap: 8 }}>
+        <NewMemberButton />
+
         {/* Exports whatever the filters currently show, not just this page. */}
         <a
           className="admin-btn"
@@ -88,6 +92,7 @@ export default async function AdminMembersPage({
           <Icon name="download" />
           Export to Excel
         </a>
+        </div>
       </div>
 
       <div className="panel">

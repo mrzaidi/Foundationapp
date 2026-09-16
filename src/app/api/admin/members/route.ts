@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
@@ -77,4 +78,118 @@ export async function PATCH(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   return NextResponse.json({ member: data });
+}
+
+/**
+ * POST /api/admin/members — create a member, or another administrator.
+ *
+ * Most people register themselves. This is for the ones who cannot: someone at
+ * the foundation office with no email of their own, a household registered on
+ * a relative's phone. So the administrator sets the password and hands it over,
+ * rather than an invite being emailed to an inbox that may not exist.
+ *
+ * Bank details are optional here, unlike self-registration. An administrator
+ * taking down someone's details at a desk often does not have their account
+ * number yet, and the trigger from 0007 still refuses to let that member apply
+ * for a fund until one is on file — so the money stays protected either way.
+ */
+export async function POST(request: Request) {
+  const { error: authError, status, user } = await requireAdmin();
+  if (authError) return NextResponse.json({ error: authError }, { status });
+
+  let body: {
+    full_name?: string;
+    gender?: string;
+    age?: number | string;
+    country?: string;
+    city?: string;
+    email?: string;
+    mobile?: string;
+    password?: string;
+    role?: string;
+  };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
+  }
+
+  const full_name = (body.full_name ?? '').trim();
+  const gender = (body.gender ?? '').trim().toLowerCase();
+  const age = Number(body.age);
+  const country = (body.country ?? '').trim() || 'Pakistan';
+  const city = (body.city ?? '').trim();
+  const email = (body.email ?? '').trim().toLowerCase();
+  const mobile = (body.mobile ?? '').trim();
+  const password = body.password ?? '';
+  const role = body.role === 'admin' ? 'admin' : 'member';
+
+  const errors: Record<string, string> = {};
+  if (full_name.length < 3) errors.full_name = 'Enter their full name.';
+  if (!['male', 'female', 'other'].includes(gender)) errors.gender = 'Select a gender.';
+  if (!Number.isFinite(age) || age < 12 || age > 120) errors.age = 'Enter a valid age (12–120).';
+  if (!city) errors.city = 'Enter their city.';
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errors.email = 'Enter a valid email address.';
+  if (mobile.replace(/\D/g, '').length < 10) errors.mobile = 'Enter a valid mobile number.';
+  if (password.length < 8) errors.password = 'Password must be at least 8 characters.';
+
+  if (Object.keys(errors).length)
+    return NextResponse.json({ error: 'Please check the form.', errors }, { status: 422 });
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
+
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email,
+    password,
+    // No inbox round-trip: these accounts are made at the office, in person.
+    email_confirm: true,
+    user_metadata: { full_name },
+  });
+
+  if (createError || !created?.user) {
+    const msg = createError?.message ?? 'Could not create the account.';
+    const duplicate = /already|registered|exists/i.test(msg);
+    return NextResponse.json(
+      { error: duplicate ? 'Someone is already registered with that email address.' : msg },
+      { status: duplicate ? 409 : 400 }
+    );
+  }
+
+  const { error: profileError } = await admin.from('profiles').insert({
+    id: created.user.id,
+    full_name,
+    gender,
+    age,
+    country,
+    city,
+    email,
+    mobile,
+    role,
+  });
+
+  if (profileError) {
+    // Never leave an auth user behind with no profile to go with it.
+    await admin.auth.admin.deleteUser(created.user.id);
+    return NextResponse.json({ error: profileError.message }, { status: 400 });
+  }
+
+  console.info(`[admin] ${user!.id} created ${role} ${created.user.id}`);
+
+  return NextResponse.json(
+    {
+      ok: true,
+      id: created.user.id,
+      role,
+      message:
+        role === 'admin'
+          ? `${full_name} can now sign in as an administrator.`
+          : `${full_name} can now sign in. Add their bank details before they apply for a fund.`,
+    },
+    { status: 201 }
+  );
 }
