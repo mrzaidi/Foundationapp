@@ -37,6 +37,7 @@ idempotent — safe to re-run after any change:
 10. `0009_recurring_monthly.sql` — standing monthly arrangements + the nightly job
 11. `0010_donors.sql` — donors, donations, and the month's fund
 12. `0011_family_details.sql` — the household behind an application
+13. `0012_donors_are_members.sql` — donors are members; the fund is donations only
 
 Edit those sources, never `SETUP.sql`. Regenerate it with:
 
@@ -244,13 +245,20 @@ anything else that reaches the database.
 Admins see the account on both the application and the member record, which is
 what they need in hand to make the transfer.
 
-### Monthly budget
+### The month's fund
 
-The foundation sets a budget per month; every transfer draws it down.
-Remaining is always **budget − everything transferred that month**, computed
-from the transfers themselves rather than stored, so it cannot drift out of
-step with what was actually paid. A transfer that would exceed the budget is
-warned about, not blocked.
+Donors are registered members, chosen from the roll rather than typed in:
+free text let the same person in twice under two spellings and tied their
+giving to no account.
+
+A month's fund is the donations recorded against it, and remaining is that
+minus the transfers. Both are derived from the rows themselves, so neither can
+drift. The fund cannot be set by hand — a figure somebody typed was a promise,
+and the committee was spending against it. `PUT /api/admin/budget` answers 410
+rather than 404 so an old client is told why.
+
+A pledge is what a donor said they would give; a donation is what arrived.
+Only the donation counts.
 
 ### Funds are data
 

@@ -35,36 +35,20 @@ export async function GET(request: Request) {
   return NextResponse.json({ status: statusData, history: history ?? [] });
 }
 
-/** PUT /api/admin/budget — set (or change) the budget for a month. */
-export async function PUT(request: Request) {
-  const { supabase, user, error: authError, status } = await requireAdmin();
-  if (authError) return NextResponse.json({ error: authError }, { status });
-
-  let body: { month?: string; amount?: number | string; note?: string | null };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
-  }
-
-  const amount = Number(body.amount);
-  if (!Number.isFinite(amount) || amount < 0)
-    return NextResponse.json({ error: 'Enter a budget of zero or more.' }, { status: 422 });
-
-  if (!body.month || !/^\d{4}-\d{2}-\d{2}$/.test(body.month))
-    return NextResponse.json({ error: 'Pick a month.' }, { status: 422 });
-
-  // the DB trigger snaps this to the 1st, so any day in the month is accepted
-  const { data, error } = await supabase
-    .from('monthly_budgets')
-    .upsert(
-      { month: body.month, amount, note: body.note ?? null, updated_by: user!.id },
-      { onConflict: 'month' }
-    )
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-
-  return NextResponse.json({ budget: data });
+/**
+ * PUT /api/admin/budget — gone.
+ *
+ * A month's fund is the donations received in it. A figure somebody typed was
+ * a promise, and the committee was spending against it; the only way the fund
+ * goes up now is a donor actually giving. Answers rather than 404s so an old
+ * client gets told why.
+ */
+export async function PUT() {
+  return NextResponse.json(
+    {
+      error:
+        'The budget is no longer set by hand — a month’s fund is the donations recorded in it.',
+    },
+    { status: 410 }
+  );
 }

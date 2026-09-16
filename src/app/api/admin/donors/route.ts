@@ -20,12 +20,25 @@ async function requireAdmin() {
 
 const isMonth = (v: unknown): v is string => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
-/** GET /api/admin/donors?month=YYYY-MM-01 — donors and what each gave that month. */
+/**
+ * GET /api/admin/donors?month=YYYY-MM-01 — donors and what each gave.
+ * GET /api/admin/donors?candidates=1&q= — members not yet added, for the picker.
+ */
 export async function GET(request: Request) {
   const gate = await requireAdmin();
   if (gate.error) return gate.error;
 
-  const month = new URL(request.url).searchParams.get('month');
+  const url = new URL(request.url);
+
+  if (url.searchParams.get('candidates')) {
+    const { data, error } = await gate.supabase!.rpc('donor_candidates', {
+      p_query: url.searchParams.get('q') ?? '',
+    });
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ candidates: data ?? [] });
+  }
+
+  const month = url.searchParams.get('month');
   const { data, error } = await gate.supabase!.rpc('donor_month', {
     p_month: isMonth(month) ? month : new Date().toISOString().slice(0, 10),
   });
@@ -34,20 +47,32 @@ export async function GET(request: Request) {
   return NextResponse.json({ donors: data ?? [] });
 }
 
-/** POST /api/admin/donors — add a donor. */
+/**
+ * POST /api/admin/donors — add a member as a donor.
+ *
+ * A donor is an account, not a typed name: free text let the same person in
+ * twice under two spellings and tied their giving to nothing.
+ */
 export async function POST(request: Request) {
   const gate = await requireAdmin();
   if (gate.error) return gate.error;
 
-  let body: { name?: string; contact?: string; monthly_pledge?: number; note?: string };
+  let body: { user_id?: string; monthly_pledge?: number; note?: string };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
   }
 
-  const name = (body.name ?? '').trim();
-  if (name.length < 2) return NextResponse.json({ error: 'Enter the donor’s name.' }, { status: 422 });
+  const userId = (body.user_id ?? '').trim();
+  if (!userId) return NextResponse.json({ error: 'Choose a member.' }, { status: 422 });
+
+  const { data: member } = await gate
+    .supabase!.from('profiles')
+    .select('id, full_name, mobile')
+    .eq('id', userId)
+    .maybeSingle();
+  if (!member) return NextResponse.json({ error: 'Member not found.' }, { status: 404 });
 
   const pledge = body.monthly_pledge === undefined ? 0 : Number(body.monthly_pledge);
   if (!Number.isFinite(pledge) || pledge < 0)
@@ -56,15 +81,23 @@ export async function POST(request: Request) {
   const { data, error } = await gate
     .supabase!.from('donors')
     .insert({
-      name,
-      contact: (body.contact ?? '').trim() || null,
+      user_id: member.id,
+      // Kept as a display fallback if the account is ever removed.
+      name: member.full_name,
+      contact: member.mobile,
       monthly_pledge: pledge,
       note: (body.note ?? '').trim() || null,
     })
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) {
+    const duplicate = /duplicate|unique/i.test(error.message);
+    return NextResponse.json(
+      { error: duplicate ? 'That member is already a donor.' : error.message },
+      { status: duplicate ? 409 : 400 }
+    );
+  }
   return NextResponse.json({ donor: data }, { status: 201 });
 }
 
@@ -76,8 +109,6 @@ export async function PATCH(request: Request) {
 
   let body: {
     id?: string;
-    name?: string;
-    contact?: string;
     monthly_pledge?: number;
     is_active?: boolean;
     note?: string;
@@ -139,14 +170,8 @@ export async function PATCH(request: Request) {
   }
 
   /* ---- editing the donor themselves ---- */
+  // Name and contact belong to the member’s profile, not to the donor row.
   const patch: Record<string, unknown> = {};
-  if ('name' in body) {
-    const name = (body.name ?? '').trim();
-    if (name.length < 2)
-      return NextResponse.json({ error: 'Enter the donor’s name.' }, { status: 422 });
-    patch.name = name;
-  }
-  if ('contact' in body) patch.contact = (body.contact ?? '').trim() || null;
   if ('note' in body) patch.note = (body.note ?? '').trim() || null;
   if ('is_active' in body) patch.is_active = Boolean(body.is_active);
   if ('monthly_pledge' in body) {

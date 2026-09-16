@@ -24,6 +24,7 @@ const FILES = [
   'migrations/0009_recurring_monthly.sql',
   'migrations/0010_donors.sql',
   'migrations/0011_family_details.sql',
+  'migrations/0012_donors_are_members.sql',
 ];
 
 const header = `-- =====================================================================

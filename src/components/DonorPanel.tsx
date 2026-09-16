@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Icon from './Icon';
+import MemberPicker, { type Candidate } from './MemberPicker';
 import { useToast } from './Toast';
 import { money } from '@/lib/format';
 
@@ -47,7 +48,8 @@ export default function DonorPanel() {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const [adding, setAdding] = useState(false);
-  const [newDonor, setNewDonor] = useState({ name: '', contact: '', monthly_pledge: '' });
+  const [picked, setPicked] = useState<Candidate | null>(null);
+  const [pledge, setPledge] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -121,9 +123,8 @@ export default function DonorPanel() {
   }
 
   async function add() {
-    const name = newDonor.name.trim();
-    if (name.length < 2) {
-      toast('Enter the donor’s name.', 'bad');
+    if (!picked) {
+      toast('Choose a member first.', 'bad');
       return;
     }
     setBusyId('new');
@@ -132,15 +133,15 @@ export default function DonorPanel() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name,
-          contact: newDonor.contact,
-          monthly_pledge: newDonor.monthly_pledge === '' ? 0 : Number(newDonor.monthly_pledge),
+          user_id: picked.id,
+          monthly_pledge: pledge === '' ? 0 : Number(pledge),
         }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-      toast(`${name} added`);
-      setNewDonor({ name: '', contact: '', monthly_pledge: '' });
+      toast(`${picked.full_name} added`);
+      setPicked(null);
+      setPledge('');
       setAdding(false);
       await load();
     } catch (e) {
@@ -162,7 +163,7 @@ export default function DonorPanel() {
         <div>
           <h2>Donors</h2>
           <div className="ph-sub">
-            What each donor gave in {monthLabel(month)} — this adds to the month&rsquo;s fund
+            What each donor gave in {monthLabel(month)} — this is the month&rsquo;s fund
           </div>
         </div>
         <div className="donor-head-actions">
@@ -182,27 +183,10 @@ export default function DonorPanel() {
 
       {adding && (
         <div className="panel-body donor-add">
-          <div className="row-3">
+          <div className="donor-add-row">
             <div className="field mb-0">
-              <label htmlFor="dn_name">Name</label>
-              <input
-                id="dn_name"
-                className="input"
-                value={newDonor.name}
-                onChange={(e) => setNewDonor({ ...newDonor, name: e.target.value })}
-                placeholder="e.g. Hafiz Abdullah"
-              />
-            </div>
-            <div className="field mb-0">
-              <label htmlFor="dn_contact">Contact (optional)</label>
-              <input
-                id="dn_contact"
-                className="input"
-                dir="ltr"
-                value={newDonor.contact}
-                onChange={(e) => setNewDonor({ ...newDonor, contact: e.target.value })}
-                placeholder="+92 300 1234567"
-              />
+              <label>Member</label>
+              <MemberPicker value={picked} onPick={setPicked} />
             </div>
             <div className="field mb-0">
               <label htmlFor="dn_pledge">Monthly pledge (PKR)</label>
@@ -211,8 +195,8 @@ export default function DonorPanel() {
                 className="input"
                 type="number"
                 min={0}
-                value={newDonor.monthly_pledge}
-                onChange={(e) => setNewDonor({ ...newDonor, monthly_pledge: e.target.value })}
+                value={pledge}
+                onChange={(e) => setPledge(e.target.value)}
                 placeholder="0"
               />
             </div>
@@ -227,8 +211,8 @@ export default function DonorPanel() {
             Add donor
           </button>
           <p className="field-hint">
-            The pledge is what they said they would give. Only what you record below counts toward
-            the fund.
+            Donors are chosen from registered members. The pledge is what they said they would
+            give; only what you record below counts toward the fund.
           </p>
         </div>
       )}
@@ -252,7 +236,10 @@ export default function DonorPanel() {
               <Icon name="users" />
             </div>
             <h3>No donors yet</h3>
-            <p>Add the people who give each month and record what arrives.</p>
+            <p>
+              Add the members who give each month and record what arrives — that is what the
+              month&rsquo;s fund is made of.
+            </p>
           </div>
         </div>
       )}

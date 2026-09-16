@@ -1,8 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Icon from './Icon';
-import { useToast } from './Toast';
 import { money } from '@/lib/format';
 
 interface BudgetStatus {
@@ -35,13 +33,14 @@ const monthLabel = (iso: string) =>
 const monthInputValue = (iso: string) => iso.slice(0, 7);
 
 /**
- * The foundation sets what it can give away this month; every transfer draws
- * that balance down. The remaining figure is computed from the transfers
- * themselves, never stored — so it cannot drift away from what was actually
- * paid out.
+ * What the foundation can give away this month, and what is left after
+ * transfers.
+ *
+ * Both halves are derived, never stored: the fund is the donations recorded for
+ * the month, and remaining is that minus the transfers themselves. Nothing here
+ * writes — the way to raise the fund is to record a donation below.
  */
 export default function BudgetPanel({ compact = false }: { compact?: boolean }) {
-  const toast = useToast();
 
   const [month, setMonth] = useState(() => {
     const n = new Date();
@@ -49,10 +48,6 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
   });
   const [status, setStatus] = useState<BudgetStatus | null>(null);
   const [history, setHistory] = useState<HistoryRow[]>([]);
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState('');
-  const [note, setNote] = useState('');
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
@@ -62,7 +57,6 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
       if (!res.ok) throw new Error(json.error);
       setStatus(json.status);
       setHistory(json.history ?? []);
-      setDraft(json.status?.budget ? String(json.status.budget) : '');
     } catch (e) {
       setError((e as Error).message || 'Could not load the budget.');
     }
@@ -72,32 +66,6 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
     void load();
   }, [load]);
 
-  async function save() {
-    const amount = Number(draft);
-    if (!Number.isFinite(amount) || amount < 0) {
-      setError('Enter a budget of zero or more.');
-      return;
-    }
-
-    setBusy(true);
-    setError('');
-    try {
-      const res = await fetch('/api/admin/budget', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month, amount, note: note.trim() || null }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      toast(`Budget for ${monthLabel(month)} saved`);
-      setEditing(false);
-      await load();
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
 
   if (!status) {
     return (
@@ -113,9 +81,9 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
     );
   }
 
-  // Everything is measured against the month's fund — the budget an admin
-  // set plus what donors actually gave.
-  const fund = Number(status.fund ?? status.budget);
+  // The month's fund is what donors gave it. Nothing else adds to it: a
+  // figure somebody typed was a promise, and the committee spent against it.
+  const fund = Number(status.fund ?? status.donated ?? 0);
   const used = fund > 0 ? Math.min(1, status.spent / fund) : 0;
   const over = status.remaining < 0;
   const tight = !over && fund > 0 && status.remaining < fund * 0.15;
@@ -124,11 +92,11 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
     <div className="panel budget-panel">
       <div className="panel-head">
         <div>
-          <h2>Monthly budget</h2>
+          <h2>Month&rsquo;s fund</h2>
           <div className="ph-sub">
-            {status.has_budget
+            {fund > 0
               ? `${monthLabel(status.month)} · ${status.transfers} transfer${status.transfers === 1 ? '' : 's'} so far`
-              : `No budget set for ${monthLabel(status.month)}`}
+              : `Nothing donated yet for ${monthLabel(status.month)}`}
           </div>
         </div>
 
@@ -140,74 +108,19 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
             onChange={(e) => setMonth(`${e.target.value}-01`)}
             aria-label="Budget month"
           />
-          <button
-            className="admin-btn"
-            type="button"
-            onClick={() => {
-              setEditing((v) => !v);
-              setError('');
-            }}
-          >
-            <Icon name="budget" />
-            {status.has_budget ? 'Change budget' : 'Set budget'}
-          </button>
+
         </div>
       </div>
 
       <div className="panel-body">
-        {editing && (
-          <div className="budget-edit">
-            <div className="field" style={{ flex: 1, minWidth: 200, marginBottom: 0 }}>
-              <label htmlFor="budget-amount">Budget for {monthLabel(month)} (PKR)</label>
-              <input
-                id="budget-amount"
-                className="input"
-                type="number"
-                min={0}
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder="e.g. 500000"
-              />
-            </div>
-            <div className="field" style={{ flex: 2, minWidth: 220, marginBottom: 0 }}>
-              <label htmlFor="budget-note">Note (optional)</label>
-              <input
-                id="budget-note"
-                className="input"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Where the month's funds came from"
-              />
-            </div>
-            <button className="admin-btn" onClick={save} disabled={busy} type="button">
-              {busy ? <span className="spin" /> : <Icon name="check" />}
-              {busy ? 'Saving…' : 'Save'}
-            </button>
-          </div>
-        )}
-
-        {error && (
-          <p className="err-msg" role="alert">
-            {error}
-          </p>
-        )}
-
         <div className="budget-figures">
-          <div className="bf">
-            <span className="bf-label">Set budget</span>
-            <span className="bf-value num">{money(status.budget)}</span>
-          </div>
           <div className="bf">
             <span className="bf-label">
               Donations{status.donors > 0 ? ` · ${status.donors}` : ''}
             </span>
             <span className="bf-value num" style={{ color: 'var(--brand-2)' }}>
-              +{money(Number(status.donated ?? 0))}
+              {money(Number(status.donated ?? 0))}
             </span>
-          </div>
-          <div className="bf">
-            <span className="bf-label">Month&rsquo;s fund</span>
-            <span className="bf-value num">{money(fund)}</span>
           </div>
           <div className="bf">
             <span className="bf-label">Transferred</span>
@@ -238,7 +151,7 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
           <span>
             {fund > 0
               ? `${Math.round(used * 100)}% of the month used`
-              : 'Set a budget or record a donation to track spending'}
+              : 'Record a donation below to start the month&rsquo;s fund'}
           </span>
           {status.committed > 0 && (
             <span>{money(status.committed)} approved and awaiting transfer</span>
@@ -247,9 +160,9 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
 
         {over && (
           <div className="note budget-alert">
-            <strong style={{ color: 'var(--danger)' }}>Over budget.</strong> Transfers this month
-            exceed the budget by {money(Math.abs(status.remaining))}. Transfers are not blocked —
-            this is a warning, not a limit.
+            <strong style={{ color: 'var(--danger)' }}>Over the fund.</strong> Transfers this month
+            exceed what donors gave by {money(Math.abs(status.remaining))}. Transfers are not
+            blocked — this is a warning, not a limit.
           </div>
         )}
         {tight && (
@@ -267,22 +180,18 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
               <thead>
                 <tr>
                   <th>Month</th>
-                  <th>Budget</th>
                   <th>Donations</th>
-                  <th>Fund</th>
                   <th>Transferred</th>
                   <th>Remaining</th>
                 </tr>
               </thead>
               <tbody>
                 {history.map((h) => {
-                  const hFund = Number(h.fund ?? h.budget);
+                  const hFund = Number(h.fund ?? h.donated ?? 0);
                   const rem = hFund - Number(h.spent);
                   return (
                     <tr key={h.month}>
                       <td>{monthLabel(h.month)}</td>
-                      <td className="num">{money(Number(h.budget), false)}</td>
-                      <td className="num">{money(Number(h.donated ?? 0), false)}</td>
                       <td className="num">{money(hFund, false)}</td>
                       <td className="num">{money(Number(h.spent), false)}</td>
                       <td className="num" style={{ color: rem < 0 ? 'var(--danger)' : undefined }}>

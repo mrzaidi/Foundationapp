@@ -28,14 +28,16 @@ export default function AdminBudgetPage() {
         </div>
         <div className="panel-body">
           <p className="muted" style={{ marginTop: 0 }}>
-            Remaining is always <strong>the month&rsquo;s fund − everything transferred in that
-            month</strong>, where the fund is the budget you set plus what donors gave,
-            computed from the transfers themselves. There is no running total to fall out of step:
-            correct a transfer and the balance corrects with it.
+            The month&rsquo;s fund is <strong>the donations recorded against that month</strong>, and
+            remaining is that <strong>minus everything transferred in it</strong>. Both are computed
+            from the rows themselves, so there is no running total to fall out of step: correct a
+            donation or a transfer and the balance corrects with it.
           </p>
           <div className="note">
-            A transfer that would take the month over budget is still allowed — the portal warns,
-            it does not block. Say the word if you would rather it refused.
+            The fund cannot be typed in. A figure somebody set was a promise, and the committee was
+            spending against it — the only way it goes up is a donor actually giving. A transfer
+            that would take the month past the fund is still allowed: the portal warns, it does not
+            block.
           </div>
         </div>
       </div>

@@ -2479,6 +2479,132 @@ table.grid .rowlink:hover {
   }
 }
 
+/* ---- member picker ---- */
+.mpicker {
+  position: relative;
+}
+.mpicker-list {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  padding: 5px;
+}
+.mpicker-note {
+  padding: 12px 11px;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+.mpicker-note.bad {
+  color: var(--danger);
+}
+.mpicker-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mpicker-item:hover,
+.mpicker-item:focus-visible {
+  background: var(--card-soft);
+}
+.mpi-av,
+.picked-av {
+  flex: 0 0 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  font-weight: 800;
+  background: linear-gradient(135deg, rgba(20, 184, 146, 0.18), rgba(224, 165, 43, 0.22));
+  color: var(--brand-3);
+}
+.mpi-text,
+.picked-who {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.mpi-name,
+.picked-name {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text);
+}
+.mpi-sub,
+.picked-sub {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mpi-city {
+  font-size: 11px;
+  color: var(--text-faint);
+  flex: 0 0 auto;
+}
+
+/* the chosen member, in place of the search box */
+.picked {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  background: var(--card-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  min-height: 44px;
+}
+.picked-clear {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 0;
+  background: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.picked-clear:hover {
+  background: rgba(208, 59, 59, 0.1);
+  color: var(--danger);
+}
+.picked-clear svg {
+  width: 15px;
+  height: 15px;
+}
+
+.donor-add-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(160px, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 720px) {
+  .donor-add-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---- donors ---- */
 .donor-head-actions {
   display: flex;
