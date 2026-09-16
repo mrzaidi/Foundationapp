@@ -30,8 +30,8 @@ export const LEVEL_LABEL: Record<AdminLevel, string> = {
 
 export const LEVEL_BLURB: Record<AdminLevel, string> = {
   master: 'Every module, and the only level that can approve, transfer or change who is who.',
-  reports: 'Can see every module and export reports, but cannot change anything.',
-  intake: 'Can add people and see the month’s budget totals. No donors, no applications.',
+  reports: 'Member records and report exports only. No budget, no donors, no applications.',
+  intake: 'Member records and the month’s budget totals. No donor details, no applications.',
 };
 
 /** Every capability the admin portal gates on. */
@@ -68,20 +68,28 @@ const MASTER: Capability[] = [
   'use_assistant_writes',
 ];
 
-/* "Can only see, but can extract reports" — everything readable, nothing writable. */
+/*
+ * Admin 1: "add members info, or extract reports — that's it. No budget
+ * related task, no request status change."
+ *
+ * So member records and exports, and nothing that touches money. No budget,
+ * no donors, no applications — not even to look at, because the line drawn
+ * was around the job rather than around the buttons.
+ */
 const REPORTS: Capability[] = [
   'view_dashboard',
   'view_members',
-  'view_requests',
-  'view_budget',
-  'view_donors',
-  'view_funds',
+  'edit_members',
+  'create_members',
   'export_reports',
 ];
 
 /*
- * "Only the budget section without the donor details, and can add the user
- * details." Applications are not mentioned, so they are not granted: on a
+ * Admin 2: "the budget section without the donor details, and can add the
+ * user details."
+ *
+ * The same member work, plus the month's balance — but never who paid it, and
+ * no exports. Applications were not mentioned, so they are not granted: on a
  * system that moves money, silence in a specification means no.
  */
 const INTAKE: Capability[] = [

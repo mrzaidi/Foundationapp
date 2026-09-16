@@ -33,8 +33,9 @@ export async function GET(request: Request) {
    * Named givers and named recipients are not, so they are attached only for a
    * level that may look at donors — the dashboard reads this endpoint too.
    */
-  const gate = await requireCapability('view_budget');
+  const gate = await requireCapability('view_dashboard');
   if ('refusal' in gate) return gate.refusal;
+  const moneyAllowed = can(gate.level, 'view_budget');
   const namesAllowed = can(gate.level, 'view_donors');
 
   const url = new URL(request.url);
@@ -124,8 +125,18 @@ export async function GET(request: Request) {
   const rank = <T extends { total: number }>(m: Map<string, T>) =>
     [...m.values()].sort((a, b) => b.total - a.total).slice(0, 8);
 
+  /*
+   * How many people arrived is not a money figure, so every administrator gets
+   * it — the dashboard's new-members chart is drawn from this. The amounts are
+   * stripped for a level without the budget rather than the whole request being
+   * refused, which would have taken that chart down with them.
+   */
+  const months_out = [...byMonth.values()].map((m) =>
+    moneyAllowed ? m : { ...m, total: 0, donors: 0 }
+  );
+
   return NextResponse.json({
-    months: [...byMonth.values()],
+    months: months_out,
     donors: namesAllowed ? rank(perDonor) : [],
     recipients: namesAllowed ? rank(perMember) : [],
     namesAllowed,

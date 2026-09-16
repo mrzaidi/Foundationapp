@@ -7,6 +7,7 @@ import Icon from '@/components/Icon';
 import StatusBadge from '@/components/StatusBadge';
 import { createClient } from '@/lib/supabase/server';
 import { initials, money, shortMoney, timeAgo } from '@/lib/format';
+import { can } from '@/lib/permissions';
 import type { AdminStats, FundRequest } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -78,6 +79,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* ---------- KPI row ---------- */}
+      {can(level, 'view_requests') && (
       <div className="kpis">
         {KPIS.map((k) => (
           <Link className="kpi" key={k.key} href={`/admin/requests?status=${k.key}`}>
@@ -90,8 +92,10 @@ export default async function AdminDashboard() {
           </Link>
         ))}
       </div>
+      )}
 
       {/* ---------- money row ---------- */}
+      {can(level, 'view_budget') && (
       <div className="kpis mt-16">
         <div className="kpi">
           <div className="kico g-gold" style={{ color: '#6b4a06' }}>
@@ -122,17 +126,22 @@ export default async function AdminDashboard() {
           <div className="kl">Registered accounts</div>
         </Link>
       </div>
+      )}
 
       {/* The two monthly figures, as trends rather than as two numbers. */}
-      <MonthlyTrends />
+      <MonthlyTrends showFund={can(level, 'view_budget')} />
 
-      <div className="mt-24">
-        <BudgetPanel compact />
-      </div>
+      {can(level, 'view_budget') && (
+        <div className="mt-24">
+          <BudgetPanel compact />
+        </div>
+      )}
 
-      <div className="mt-24">
-        <AdminCharts />
-      </div>
+      {can(level, 'view_requests') && (
+        <div className="mt-24">
+          <AdminCharts />
+        </div>
+      )}
 
       <div className="two-col mt-24">
         {/* ---------- recent applications ---------- */}

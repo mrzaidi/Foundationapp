@@ -1,3 +1,4 @@
+import { requireCapability } from '@/lib/admin-guard';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -20,6 +21,9 @@ async function requireAdmin() {
 
 /** GET /api/admin/budget?month=YYYY-MM-01 — position for a month plus history. */
 export async function GET(request: Request) {
+  const gate = await requireCapability('view_budget');
+  if ('refusal' in gate) return gate.refusal;
+
   const { supabase, error: authError, status } = await requireAdmin();
   if (authError) return NextResponse.json({ error: authError }, { status });
 

@@ -29,7 +29,7 @@ const monthLabel = (iso: string) =>
  * Two charts rather than one with two axes: rupees and people share no scale,
  * and a dual axis invites a comparison between them that means nothing.
  */
-export default function MonthlyTrends() {
+export default function MonthlyTrends({ showFund = true }: { showFund?: boolean }) {
   const [data, setData] = useState<Month[] | null>(null);
   const [error, setError] = useState('');
   const [months, setMonths] = useState(6);
@@ -78,7 +78,10 @@ export default function MonthlyTrends() {
   const latest = data[data.length - 1];
 
   return (
-    <div className="trend-row mt-16">
+    <div className={`trend-row mt-16 ${showFund ? '' : 'one-up'}`}>
+      {/* The money half is a budget figure, so a level without the budget
+          sees only who arrived. */}
+      {showFund && (
       <TrendChart
         title="Fund by month"
         sub="What donors gave, month by month"
@@ -93,6 +96,7 @@ export default function MonthlyTrends() {
         range={months}
         onRange={setMonths}
       />
+      )}
       <TrendChart
         title="New members by month"
         sub="Accounts registered, month by month"

@@ -1,3 +1,4 @@
+import { requireCapability } from '@/lib/admin-guard';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -25,6 +26,9 @@ const isMonth = (v: unknown): v is string => typeof v === 'string' && /^\d{4}-\d
  * GET /api/admin/donors?candidates=1&q= — members not yet added, for the picker.
  */
 export async function GET(request: Request) {
+  const level = await requireCapability('view_donors');
+  if ('refusal' in level) return level.refusal;
+
   const gate = await requireAdmin();
   if (gate.error) return gate.error;
 
@@ -54,6 +58,9 @@ export async function GET(request: Request) {
  * twice under two spellings and tied their giving to nothing.
  */
 export async function POST(request: Request) {
+  const level = await requireCapability('view_donors');
+  if ('refusal' in level) return level.refusal;
+
   const gate = await requireAdmin();
   if (gate.error) return gate.error;
 
@@ -103,6 +110,9 @@ export async function POST(request: Request) {
 
 /** PATCH /api/admin/donors — edit a donor, or record what they gave in a month. */
 export async function PATCH(request: Request) {
+  const level = await requireCapability('view_donors');
+  if ('refusal' in level) return level.refusal;
+
   const gate = await requireAdmin();
   if (gate.error) return gate.error;
   const supabase = gate.supabase!;

@@ -19,6 +19,7 @@ import {
   type Action,
 } from '@/lib/assistant-actions';
 import { requireCapability } from '@/lib/admin-guard';
+import { can, type Capability } from '@/lib/permissions';
 import { geminiReady, phrase } from '@/lib/gemini';
 import { getRates, type Rates } from '@/lib/rates';
 import { createClient } from '@/lib/supabase/server';
@@ -153,6 +154,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ intent: 'action', month, answer: proposal });
   }
 
+  /*
+   * Reading is gated too, not only writing. An account with no budget module
+   * must not be able to ask the balance in a sentence and be told — the chat
+   * box would otherwise be a way round every door the levels just closed.
+   */
+  const NEEDS: Partial<Record<Intent, Capability>> = {
+    donations: 'view_budget',
+    transferred: 'view_budget',
+    remaining: 'view_budget',
+    month_summary: 'view_budget',
+    disbursed_total: 'view_budget',
+    fx_rate: 'view_budget',
+    donor_count: 'view_donors',
+    top_donors: 'view_donors',
+    pending: 'view_requests',
+    by_status: 'view_requests',
+    biggest_request: 'view_requests',
+    rejected: 'view_requests',
+    fund_breakdown: 'view_requests',
+    request_lookup: 'view_requests',
+    recurring: 'view_requests',
+  };
+
+  const readGate = await requireCapability('view_dashboard');
+  if ('refusal' in readGate) return readGate.refusal;
+  const level = readGate.level;
+
   let intent: Intent = classify(question);
 
   type Person = { id: string; full_name: string; email: string };
@@ -212,6 +240,17 @@ export async function POST(request: Request) {
       }
     }
   }
+
+  const needed = NEEDS[intent];
+  if (needed && !can(level, needed))
+    return NextResponse.json({
+      intent: 'help',
+      month,
+      answer: {
+        text: 'Your administrator account does not have access to that part of the foundation, so I cannot answer it. Ask a master administrator.',
+        suggestions: ['How many members are there?', 'How many new members registered this month?'],
+      },
+    });
 
   // Overlapped with everything above rather than waited for at the start.
   rates = await ratesPromise;

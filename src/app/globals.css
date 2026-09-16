@@ -3691,3 +3691,9 @@ table.grid .rowlink:hover {
   color: var(--text-faint);
   font-weight: 600;
 }
+
+/* When only one of the two trend charts is shown, it should not sit in half a
+   row with a hole beside it. */
+.trend-row.one-up {
+  grid-template-columns: minmax(0, 1fr);
+}

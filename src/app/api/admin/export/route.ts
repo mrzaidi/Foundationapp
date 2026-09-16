@@ -1,3 +1,4 @@
+import { requireCapability } from '@/lib/admin-guard';
 import { NextResponse } from 'next/server';
 import { toCsv } from '@/lib/csv';
 import { createClient } from '@/lib/supabase/server';
@@ -24,6 +25,9 @@ const monthName = (iso: string) =>
  * and send it back.
  */
 export async function GET(request: Request) {
+  const gate = await requireCapability('view_budget');
+  if ('refusal' in gate) return gate.refusal;
+
   const supabase = await createClient();
   const {
     data: { user },

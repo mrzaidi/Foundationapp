@@ -1,3 +1,4 @@
+import { requireCapability } from '@/lib/admin-guard';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -12,6 +13,9 @@ export const dynamic = 'force-dynamic';
  * and does not cost a round trip. Only the columns the charts read are sent.
  */
 export async function GET(request: Request) {
+  const gate = await requireCapability('view_requests');
+  if ('refusal' in gate) return gate.refusal;
+
   const supabase = await createClient();
 
   const {
