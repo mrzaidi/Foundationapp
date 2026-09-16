@@ -1,5 +1,4 @@
 import BudgetPanel from '@/components/BudgetPanel';
-import DonorPanel from '@/components/DonorPanel';
 import MonthlyStatement from '@/components/MonthlyStatement';
 
 export const dynamic = 'force-dynamic';
@@ -17,8 +16,6 @@ export default function AdminBudgetPage() {
       </div>
 
       <BudgetPanel />
-
-      <DonorPanel />
 
       <MonthlyStatement />
 
@@ -38,9 +35,8 @@ export default function AdminBudgetPage() {
           </p>
           <div className="note">
             The fund cannot be typed in. A figure somebody set was a promise, and the committee was
-            spending against it — the only way it goes up is a donor actually giving. A transfer
-            that would take the month past the fund is still allowed: the portal warns, it does not
-            block.
+            spending against it — the only way it goes up is a donor actually giving. A transfer that would take the month past the fund is refused outright — by the database
+            itself, not just by this screen.
           </div>
         </div>
       </div>

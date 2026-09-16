@@ -1560,3 +1560,12 @@ table.grid .rowlink:focus-visible,
 [dir='rtl'] .budget-alert {
   border-inline-start-color: var(--danger);
 }
+
+/* The donor charts live in .panel rather than .vz-card, so they need the same
+   svg sizing that .vz-card already gives its own. */
+.vz-plot svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
