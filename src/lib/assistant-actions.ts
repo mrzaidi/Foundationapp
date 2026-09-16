@@ -221,13 +221,6 @@ export function parse(question: string): Parsed {
   };
 }
 
-/** Shown when an instruction is understood but incomplete. */
-export const WRITE_EXAMPLES = [
-  'Aiman donated 5000',
-  'Approve SHF-26-01001 at 5000',
-  'Reject SHF-26-01002 because the documents are incomplete',
-  'Block Zaidi',
-];
 
 /** Re-exported so the route resolves names the same way reads do. */
 export { rank };

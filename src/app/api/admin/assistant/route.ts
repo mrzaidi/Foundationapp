@@ -12,7 +12,6 @@ import {
   type Intent,
 } from '@/lib/assistant';
 import {
-  WRITE_EXAMPLES,
   donorActiveFrom,
   isWrite,
   parse,
@@ -350,7 +349,12 @@ export async function POST(request: Request) {
     const p = parse(text);
     const ref = referenceFrom(text);
 
-    const ask = (why: string): Answer => ({ text: why, suggestions: WRITE_EXAMPLES });
+    /*
+     * Just the question. This used to carry four worked examples as buttons,
+     * naming real members and running the instruction when clicked — offered
+     * in the middle of asking for something else entirely.
+     */
+    const ask = (why: string): Answer => ({ text: why });
 
     /* ---- an application, named by its reference ---- */
     if (p.kind === 'set_status') {
