@@ -496,19 +496,116 @@
     transform: translate(-50%, -50%) scale(1);
   }
 
-  /* ---- sign in / register: a centred card, no top bar to clear ---- */
+  /* ---- sign in / register ----
+     A desktop is not a large phone. The card that suits a handset leaves a
+     480px column marooned in the middle of a 1440px screen, so from here up
+     the page becomes what it should have been: the foundation's own panel
+     filling one side, the form sitting quietly on the other. The phone layout
+     below 1024px is untouched. */
   .auth-body {
     padding-top: 0;
   }
+
+  /* Registration keeps the centred card it already had — it is a multi-step
+     form, not a front door, and nobody asked for it to change. */
   .app-body .screen.no-nav {
     max-width: 480px;
     margin: 0 auto;
     padding-bottom: 60px;
   }
-  .app-body .auth-hero {
+  .app-body .screen.no-nav .auth-hero {
     border-radius: var(--r-xl);
     margin-top: 44px;
     padding: 40px 32px 46px;
+  }
+
+  /* The device mock has nothing to frame once the page fills the window. */
+  .auth-body:has(.auth-hero) .stage-bg {
+    display: none;
+  }
+  .auth-body:has(.auth-hero) .phone {
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: hidden;
+  }
+
+  .app-body.auth-body .screen.no-nav:has(> .auth-hero) {
+    display: grid;
+    /* The brand side takes the larger share; the form only needs its column. */
+    grid-template-columns: 1.05fr 0.95fr;
+    height: 100dvh;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .app-body.auth-body .screen.no-nav:has(> .auth-hero) > .auth-hero {
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    text-align: start;
+    padding: 0 clamp(48px, 5.5vw, 104px);
+  }
+  .app-body.auth-body .screen.no-nav:has(> .auth-hero) > .auth-hero .mark {
+    margin: 0 0 26px;
+  }
+  .app-body.auth-body .screen.no-nav:has(> .auth-hero) > .auth-hero .mark img {
+    width: 88px;
+    height: 88px;
+  }
+  .app-body.auth-body .screen.no-nav:has(> .auth-hero) > .auth-hero h1 {
+    font-size: clamp(30px, 2.9vw, 44px);
+    line-height: 1.12;
+    letter-spacing: -0.8px;
+    margin: 0 0 14px;
+    max-width: 14ch;
+  }
+  .app-body.auth-body .screen.no-nav:has(> .auth-hero) > .auth-hero > p {
+    font-size: 15.5px;
+    line-height: 1.7;
+    max-width: 44ch;
+    opacity: 0.92;
+  }
+  /* The language switch belongs to the page, not to the middle of the panel. */
+  .app-body.auth-body .screen.no-nav:has(> .auth-hero) > .auth-hero > div:has(> .lang-toggle),
+  .app-body.auth-body .screen.no-nav:has(> .auth-hero) > .auth-hero > div:first-of-type {
+    position: absolute;
+    top: 26px;
+    inset-inline-end: 28px;
+    margin: 0;
+  }
+
+  /* The form column: a comfortable reading width, centred in its own half. */
+  .app-body.auth-body .screen.no-nav:has(> .auth-hero) > .pad {
+    align-self: center;
+    justify-self: center;
+    width: min(420px, 100%);
+    max-height: 100dvh;
+    overflow-y: auto;
+    margin: 0;
+    padding: 40px 24px;
+  }
+  .app-body.auth-body .screen.no-nav:has(> .auth-hero) > .pad > h2 {
+    font-size: 27px !important;
+  }
+}
+
+/* Between tablet and laptop the split would squeeze both halves, so the
+   phone-style single column is kept a little longer. */
+@media (min-width: 1024px) and (max-width: 1150px) {
+  .app-body.auth-body .screen.no-nav:has(> .auth-hero) {
+    grid-template-columns: 1fr 1fr;
+  }
+  .app-body.auth-body .screen.no-nav:has(> .auth-hero) > .auth-hero {
+    padding: 0 40px;
   }
 }
 
