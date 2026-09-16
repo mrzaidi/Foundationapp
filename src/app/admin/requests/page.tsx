@@ -1,3 +1,4 @@
+import { requirePage } from '@/lib/admin-guard';
 import Link from 'next/link';
 import Icon from '@/components/Icon';
 import AdminDateFilter from '@/components/AdminDateFilter';

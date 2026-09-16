@@ -1,3 +1,4 @@
+import { requirePage } from '@/lib/admin-guard';
 import DonorCharts from '@/components/charts/DonorCharts';
 import DonorPanel from '@/components/DonorPanel';
 
@@ -12,7 +13,9 @@ export const dynamic = 'force-dynamic';
  * the month's balance without being handed a list of named givers and what
  * each of them gave.
  */
-export default function AdminDonorsPage() {
+export default async function AdminDonorsPage() {
+  await requirePage('view_donors');
+
   return (
     <>
       <div className="topbar">

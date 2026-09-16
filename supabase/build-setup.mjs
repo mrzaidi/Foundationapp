@@ -27,6 +27,7 @@ const FILES = [
   'migrations/0012_donors_are_members.sql',
   'migrations/0013_transfer_within_fund.sql',
   'migrations/0014_payment_method.sql',
+  'migrations/0015_admin_levels.sql',
 ];
 
 const header = `-- =====================================================================

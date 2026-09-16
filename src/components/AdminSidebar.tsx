@@ -5,14 +5,16 @@ import { usePathname, useRouter } from 'next/navigation';
 import Icon from './Icon';
 import { createClient } from '@/lib/supabase/client';
 import { initials } from '@/lib/format';
+import { LEVEL_LABEL, MODULES, can, type AdminLevel } from '@/lib/permissions';
 
 interface Props {
   name: string;
   email: string;
   pending: number;
+  level: AdminLevel | null;
 }
 
-export default function AdminSidebar({ name, email, pending }: Props) {
+export default function AdminSidebar({ name, email, pending, level }: Props) {
   const path = usePathname();
   const router = useRouter();
 
@@ -36,43 +38,34 @@ export default function AdminSidebar({ name, email, pending }: Props) {
         </div>
       </div>
 
+      {/* Only what this administrator may actually open. The pages refuse it
+          again on the server — a hidden link is tidiness, not a rule. */}
       <nav>
-        <div className="nav-label">Overview</div>
-        <Link href="/admin" className={on('/admin') ? 'on' : ''}>
-          <Icon name="grid" />
-          <span>Dashboard</span>
-        </Link>
-
-        <div className="nav-label">Manage</div>
-        <Link href="/admin/requests" className={on('/admin/requests') ? 'on' : ''}>
-          <Icon name="inbox" />
-          <span>Applications</span>
-          {pending > 0 && <span className="count">{pending}</span>}
-        </Link>
-        <Link href="/admin/members" className={on('/admin/members') ? 'on' : ''}>
-          <Icon name="users" />
-          <span>Members</span>
-        </Link>
-        <Link href="/admin/funds" className={on('/admin/funds') ? 'on' : ''}>
-          <Icon name="wallet" />
-          <span>Funds</span>
-        </Link>
-        <Link href="/admin/donors" className={on('/admin/donors') ? 'on' : ''}>
-          <Icon name="heart" />
-          <span>Donors</span>
-        </Link>
-        <Link href="/admin/budget" className={on('/admin/budget') ? 'on' : ''}>
-          <Icon name="budget" />
-          <span>Budget</span>
-        </Link>
-
+        {(['Overview', 'Manage'] as const).map((group) => {
+          const items = MODULES.filter((m) => m.group === group && can(level, m.needs));
+          if (!items.length) return null;
+          return (
+            <div key={group}>
+              <div className="nav-label">{group}</div>
+              {items.map((m) => (
+                <Link key={m.href} href={m.href} className={on(m.href) ? 'on' : ''}>
+                  <Icon name={m.icon} />
+                  <span>{m.label}</span>
+                  {m.href === '/admin/requests' && pending > 0 && (
+                    <span className="count">{pending}</span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          );
+        })}
       </nav>
 
       <div className="side-foot">
         <div className="av">{initials(name)}</div>
         <div className="who">
           <div className="wn">{name}</div>
-          <div className="we">{email}</div>
+          <div className="we">{level ? LEVEL_LABEL[level] : email}</div>
         </div>
         <button className="out" onClick={signOut} aria-label="Sign out" type="button">
           <Icon name="logout" />

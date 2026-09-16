@@ -1,3 +1,4 @@
+import { requirePage } from '@/lib/admin-guard';
 import FundEditor from '@/components/FundEditor';
 import Icon from '@/components/Icon';
 import { rowHasColumn } from '@/lib/schema';
@@ -8,6 +9,8 @@ import type { FundType } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminFundsPage() {
+  await requirePage('view_funds');
+
   const supabase = await createClient();
 
   const [{ data: fundsData }, { data: reqRows }] = await Promise.all([

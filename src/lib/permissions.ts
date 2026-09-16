@@ -1,0 +1,124 @@
+/**
+ * What each kind of administrator may do.
+ *
+ * One table, read by the sidebar, by every admin page and by every write
+ * endpoint, so the menu and the rules cannot drift apart — a hidden link that
+ * still answers when typed into the address bar is not access control.
+ *
+ * The database enforces the same thing again in migration 0015. That is not
+ * duplication for its own sake: this layer decides what to render and gives a
+ * readable refusal, and the policies underneath hold even if something calls
+ * PostgREST directly.
+ */
+
+export type AdminLevel = 'master' | 'reports' | 'intake';
+
+/** Null means master — every administrator predating levels had full access. */
+export const levelOf = (
+  role: string | null | undefined,
+  adminLevel: string | null | undefined
+): AdminLevel | null => {
+  if (role !== 'admin') return null;
+  return (adminLevel as AdminLevel) ?? 'master';
+};
+
+export const LEVEL_LABEL: Record<AdminLevel, string> = {
+  master: 'Master Admin',
+  reports: 'Admin 1',
+  intake: 'Admin 2',
+};
+
+export const LEVEL_BLURB: Record<AdminLevel, string> = {
+  master: 'Every module, and the only level that can approve, transfer or change who is who.',
+  reports: 'Can see every module and export reports, but cannot change anything.',
+  intake: 'Can add people and see the month’s budget totals. No donors, no applications.',
+};
+
+/** Every capability the admin portal gates on. */
+export type Capability =
+  | 'view_dashboard'
+  | 'view_members'
+  | 'edit_members'
+  | 'create_members'
+  | 'create_admins'
+  | 'view_requests'
+  | 'decide_requests'
+  | 'view_budget'
+  | 'view_donors'
+  | 'edit_donors'
+  | 'view_funds'
+  | 'edit_funds'
+  | 'export_reports'
+  | 'use_assistant_writes';
+
+const MASTER: Capability[] = [
+  'view_dashboard',
+  'view_members',
+  'edit_members',
+  'create_members',
+  'create_admins',
+  'view_requests',
+  'decide_requests',
+  'view_budget',
+  'view_donors',
+  'edit_donors',
+  'view_funds',
+  'edit_funds',
+  'export_reports',
+  'use_assistant_writes',
+];
+
+/* "Can only see, but can extract reports" — everything readable, nothing writable. */
+const REPORTS: Capability[] = [
+  'view_dashboard',
+  'view_members',
+  'view_requests',
+  'view_budget',
+  'view_donors',
+  'view_funds',
+  'export_reports',
+];
+
+/*
+ * "Only the budget section without the donor details, and can add the user
+ * details." Applications are not mentioned, so they are not granted: on a
+ * system that moves money, silence in a specification means no.
+ */
+const INTAKE: Capability[] = [
+  'view_dashboard',
+  'view_members',
+  'edit_members',
+  'create_members',
+  'view_budget',
+];
+
+const BY_LEVEL: Record<AdminLevel, Capability[]> = {
+  master: MASTER,
+  reports: REPORTS,
+  intake: INTAKE,
+};
+
+export function can(level: AdminLevel | null, capability: Capability): boolean {
+  if (!level) return false;
+  return BY_LEVEL[level].includes(capability);
+}
+
+/** The sidebar, in order, filtered to what this administrator may open. */
+export const MODULES: {
+  href: string;
+  label: string;
+  icon: string;
+  needs: Capability;
+  group: 'Overview' | 'Manage';
+}[] = [
+  { href: '/admin', label: 'Dashboard', icon: 'grid', needs: 'view_dashboard', group: 'Overview' },
+  { href: '/admin/requests', label: 'Applications', icon: 'inbox', needs: 'view_requests', group: 'Manage' },
+  { href: '/admin/members', label: 'Members', icon: 'users', needs: 'view_members', group: 'Manage' },
+  { href: '/admin/funds', label: 'Funds', icon: 'wallet', needs: 'view_funds', group: 'Manage' },
+  { href: '/admin/donors', label: 'Donors', icon: 'heart', needs: 'view_donors', group: 'Manage' },
+  { href: '/admin/budget', label: 'Budget', icon: 'budget', needs: 'view_budget', group: 'Manage' },
+];
+
+/** Where to send someone who has no business on the page they asked for. */
+export const firstAllowed = (level: AdminLevel | null): string =>
+  MODULES.find((m) => can(level, m.needs))?.href ?? '/';

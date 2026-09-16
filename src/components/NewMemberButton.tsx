@@ -6,7 +6,16 @@ import Icon from './Icon';
 import Modal from './Modal';
 import { useToast } from './Toast';
 
-type Role = 'member' | 'admin';
+import { LEVEL_BLURB, LEVEL_LABEL, type AdminLevel } from '@/lib/permissions';
+
+type Kind = 'member' | AdminLevel;
+
+const KINDS: { k: Kind; label: string; icon: string; blurb: string }[] = [
+  { k: 'member', label: 'Member', icon: 'user', blurb: 'Applies for funds. Sees only their own applications.' },
+  { k: 'master', label: LEVEL_LABEL.master, icon: 'shield', blurb: LEVEL_BLURB.master },
+  { k: 'reports', label: LEVEL_LABEL.reports, icon: 'eye', blurb: LEVEL_BLURB.reports },
+  { k: 'intake', label: LEVEL_LABEL.intake, icon: 'users', blurb: LEVEL_BLURB.intake },
+];
 
 const BLANK = {
   full_name: '',
@@ -35,7 +44,7 @@ export default function NewMemberButton() {
   const toast = useToast();
 
   const [open, setOpen] = useState(false);
-  const [role, setRole] = useState<Role>('member');
+  const [kind, setKind] = useState<Kind>('member');
   const [form, setForm] = useState(BLANK);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -47,7 +56,7 @@ export default function NewMemberButton() {
     setOpen(false);
     setForm(BLANK);
     setErrors({});
-    setRole('member');
+    setKind('member');
   }
 
   /** Something they can read out over a counter without misreading it. */
@@ -66,7 +75,11 @@ export default function NewMemberButton() {
       const res = await fetch('/api/admin/members', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, role }),
+        body: JSON.stringify({
+          ...form,
+          role: kind === 'member' ? 'member' : 'admin',
+          admin_level: kind === 'member' ? undefined : kind,
+        }),
       });
       const json = await res.json();
 
@@ -119,32 +132,34 @@ export default function NewMemberButton() {
           </p>
 
           <form onSubmit={submit} className="form-grid">
+            {/* What kind of account. Each says what it grants, because the
+                difference between these four is entirely what they can reach
+                and nobody should have to remember which is which. */}
             <div className="field span-2">
-              <label>What are they?</label>
-              <div className="paychoice">
-                {(
-                  [
-                    { k: 'member', l: 'Member', i: 'user' },
-                    { k: 'admin', l: 'Administrator', i: 'shield' },
-                  ] as const
-                ).map((r) => (
+              <label>What kind of account?</label>
+              <div className="kindchoice">
+                {KINDS.map((k) => (
                   <button
-                    key={r.k}
+                    key={k.k}
                     type="button"
-                    className={`paybtn ${role === r.k ? 'on' : ''}`}
-                    onClick={() => setRole(r.k)}
-                    aria-pressed={role === r.k}
+                    className={`paybtn ${kind === k.k ? 'on' : ''}`}
+                    onClick={() => setKind(k.k)}
+                    aria-pressed={kind === k.k}
                   >
-                    <Icon name={r.i} />
-                    {r.l}
+                    <Icon name={k.icon} />
+                    {k.label}
                   </button>
                 ))}
               </div>
-              {role === 'admin' && (
-                <p className="err-msg" style={{ color: 'var(--st-review)', fontWeight: 600 }}>
-                  An administrator can see every member&apos;s details and move money.
-                </p>
-              )}
+              <p
+                className="err-msg"
+                style={{
+                  color: kind === 'master' ? 'var(--st-review)' : 'var(--text-faint)',
+                  fontWeight: kind === 'master' ? 600 : 500,
+                }}
+              >
+                {KINDS.find((k) => k.k === kind)?.blurb}
+              </p>
             </div>
 
             {field('full_name', 'Full name', { autoComplete: 'off', required: true }, true)}
@@ -226,7 +241,7 @@ export default function NewMemberButton() {
                 type="submit"
               >
                 {busy ? <span className="spin" /> : <Icon name="check" />}
-                {busy ? 'Creating…' : role === 'admin' ? 'Create administrator' : 'Create member'}
+                {busy ? 'Creating…' : kind === 'member' ? 'Create member' : 'Create ' + (KINDS.find((k) => k.k === kind)?.label ?? 'account')}
               </button>
             </div>
           </form>

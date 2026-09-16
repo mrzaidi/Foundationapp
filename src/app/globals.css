@@ -3632,3 +3632,30 @@ table.grid .rowlink:hover {
   opacity: 0.55;
   cursor: default;
 }
+
+/* Four account kinds rather than two: a 2x2 grid keeps every option one tap
+   away without the dialog growing a scroll. */
+.kindchoice {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+@media (min-width: 620px) {
+  .kindchoice {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* The three donor charts, side by side. Below a laptop they stack — three
+   240px plots is three charts nobody can read. */
+.donor-charts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 1240px) {
+  .donor-charts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { requireCapability } from '@/lib/admin-guard';
+import { columnReady } from '@/lib/schema';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
@@ -97,6 +99,9 @@ export async function POST(request: Request) {
   const { error: authError, status, user } = await requireAdmin();
   if (authError) return NextResponse.json({ error: authError }, { status });
 
+  const gate = await requireCapability('create_members');
+  if ('refusal' in gate) return gate.refusal;
+
   let body: {
     full_name?: string;
     gender?: string;
@@ -107,6 +112,7 @@ export async function POST(request: Request) {
     mobile?: string;
     password?: string;
     role?: string;
+    admin_level?: string;
   };
   try {
     body = await request.json();
@@ -123,6 +129,16 @@ export async function POST(request: Request) {
   const mobile = (body.mobile ?? '').trim();
   const password = body.password ?? '';
   const role = body.role === 'admin' ? 'admin' : 'member';
+  const adminLevelWanted = ['master', 'reports', 'intake'].includes(body.admin_level ?? '')
+    ? (body.admin_level as string)
+    : 'master';
+
+  // Making another administrator is a different permission from adding a
+  // member, and only a master has it.
+  if (role === 'admin') {
+    const adminGate = await requireCapability('create_admins');
+    if ('refusal' in adminGate) return adminGate.refusal;
+  }
 
   const errors: Record<string, string> = {};
   if (full_name.length < 3) errors.full_name = 'Enter their full name.';
@@ -160,6 +176,10 @@ export async function POST(request: Request) {
     );
   }
 
+  // Absent until migration 0015; without it every administrator is a master,
+  // which is what they all were before levels existed.
+  const levelsReady = await columnReady(admin, 'profiles', 'admin_level');
+
   const { error: profileError } = await admin.from('profiles').insert({
     id: created.user.id,
     full_name,
@@ -170,6 +190,7 @@ export async function POST(request: Request) {
     email,
     mobile,
     role,
+    ...(role === 'admin' && levelsReady ? { admin_level: adminLevelWanted } : {}),
   });
 
   if (profileError) {

@@ -1,9 +1,12 @@
+import { requirePage } from '@/lib/admin-guard';
 import BudgetPanel from '@/components/BudgetPanel';
 import MonthlyStatement from '@/components/MonthlyStatement';
 
 export const dynamic = 'force-dynamic';
 
-export default function AdminBudgetPage() {
+export default async function AdminBudgetPage() {
+  await requirePage('view_budget');
+
   return (
     <>
       <div className="topbar">

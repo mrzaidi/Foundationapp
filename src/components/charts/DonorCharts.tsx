@@ -78,21 +78,23 @@ export default function DonorCharts() {
 
   const anyGiving = data.months.some((m) => m.total > 0);
 
-  /* ---- monthly bars ---- */
-  const W = 720;
-  const H = 240;
-  const x0 = 46;
+  /* ---- monthly bars ----
+     Narrower than it was: all three charts share one row now, so this one
+     lives in a third of the width rather than the whole of it. */
+  const W = 420;
+  const H = 250;
+  const x0 = 42;
   const y0 = 12;
-  const plotW = W - x0 - 12;
-  const plotH = H - y0 - 30;
+  const plotW = W - x0 - 10;
+  const plotH = H - y0 - 34;
   const max = niceMax(Math.max(1, ...data.months.map((m) => m.total)));
   const ticks = axisTicks(max);
   const step = plotW / Math.max(1, data.months.length);
-  const barW = Math.min(38, step * 0.62);
+  const barW = Math.min(26, step * 0.6);
 
   return (
-    <>
-      <div className="panel mt-24">
+    <div className="donor-charts mt-24">
+      <div className="panel">
         <div className="panel-head">
           <div>
             <h2>Donations by month</h2>
@@ -137,7 +139,7 @@ export default function DonorCharts() {
                         className="vz-tick"
                         textAnchor="middle"
                       >
-                        {monthLabel(m.month)}
+                        {data.months.length > 8 && i % 2 === 1 ? '' : monthLabel(m.month)}
                       </text>
                       {(i === 0 || m.month.slice(5, 7) === '01') && (
                         <text
@@ -186,7 +188,7 @@ export default function DonorCharts() {
         </div>
       </div>
 
-      <div className="vz-grid-2 mt-24">
+
         <RankPanel
           title="Who gave the most"
           sub={`Across the last ${months} months`}
@@ -211,8 +213,7 @@ export default function DonorCharts() {
           }))}
           empty="Nothing has been transferred in this period."
         />
-      </div>
-    </>
+    </div>
   );
 }
 
