@@ -468,8 +468,23 @@ export default function ApplySheet({
           <br />
           {d.apply.trackHint}
         </p>
+        {/*
+          Both of these refresh before leaving.
+
+          An application was just created, and every screen that lists them was
+          rendered before it existed. Without this the member taps Track, lands
+          on a cached Requests page showing nothing, and is invited to apply for
+          a fund again — which is what they had just finished doing.
+        */}
         <div className="btn-row">
-          <button className="btn ghost" onClick={onClose} type="button">
+          <button
+            className="btn ghost"
+            type="button"
+            onClick={() => {
+              onClose();
+              router.refresh();
+            }}
+          >
             <span>{d.common.done}</span>
           </button>
           <button
@@ -478,6 +493,7 @@ export default function ApplySheet({
             onClick={() => {
               onClose();
               router.push('/requests');
+              router.refresh();
             }}
           >
             <Icon name="list" />
