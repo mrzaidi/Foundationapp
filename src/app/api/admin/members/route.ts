@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireCapability } from '@/lib/admin-guard';
-import { brevoReady, sendInBackground } from '@/lib/brevo';
+import { mailReady, sendInBackground } from '@/lib/mailer';
 import { welcomeEmail } from '@/lib/emails';
 import { columnReady } from '@/lib/schema';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -205,7 +205,7 @@ export async function POST(request: Request) {
 
   // Confirms the address works and says where to sign in. Deliberately without
   // the password — see lib/emails.
-  if (brevoReady()) sendInBackground(welcomeEmail(email, full_name));
+  if (mailReady()) sendInBackground(welcomeEmail(email, full_name));
 
   return NextResponse.json(
     {

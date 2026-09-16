@@ -1,4 +1,4 @@
-import type { Mail } from './brevo';
+import type { Mail } from './mailer';
 
 /**
  * What the foundation says to a member, and when.

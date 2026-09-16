@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { brevoReady, sendInBackground } from '@/lib/brevo';
+import { mailReady, sendInBackground } from '@/lib/mailer';
 import { decisionEmail, transferEmail } from '@/lib/emails';
 import { buildReceipt } from '@/lib/invoice-pdf';
 import { columnReady } from '@/lib/schema';
@@ -168,7 +168,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
    * moved has moved, and an email provider having a bad afternoon must not
    * turn a recorded transfer into a failed request.
    */
-  if (body.status && brevoReady()) {
+  if (body.status && mailReady()) {
     const row = data as unknown as {
       reference: string;
       status: string;

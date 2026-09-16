@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "deploy": "node scripts/deploy.mjs",
     "deploy:preview": "node scripts/deploy.mjs --preview",
-    "icons": "node scripts/build-icons.mjs"
+    "icons": "node scripts/build-icons.mjs",
+    "email:check": "node scripts/check-email.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
