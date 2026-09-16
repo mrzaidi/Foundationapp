@@ -14,6 +14,7 @@
  */
 
 import { normalise } from './assistant';
+import { APPROVE_WORDS, NEGATION, REJECT_WORDS, REVIEW_WORDS } from './assistant-actions';
 
 export type FlowKind = 'create_member' | 'set_status';
 
@@ -116,13 +117,8 @@ export const FLOWS: Record<FlowKind, Flow> = {
           { value: 'rejected', label: 'Reject' },
           { value: 'review', label: 'Move to review' },
         ],
-        check: (v) => {
-          const q = normalise(v);
-          if (/\bapprove|accept/.test(q)) return null;
-          if (/\breject|declin/.test(q)) return null;
-          if (/\breview/.test(q)) return null;
-          return 'Approve, reject, or move to review?';
-        },
+        check: (v) =>
+          statusFromAnswer(v) ? null : 'Approve, reject, or move to review?',
       },
       {
         key: 'amount',
@@ -143,9 +139,10 @@ export const FLOWS: Record<FlowKind, Flow> = {
 /** What the administrator meant by their answer to the status question. */
 export function statusFromAnswer(answer = ''): 'accepted' | 'rejected' | 'review' | null {
   const q = normalise(answer);
-  if (/\breject|declin/.test(q)) return 'rejected';
-  if (/\bapprove|accept/.test(q)) return 'accepted';
-  if (/\breview/.test(q)) return 'review';
+  // Rejection first: "do not approve" contains an approving word.
+  if (REJECT_WORDS.test(q)) return 'rejected';
+  if (APPROVE_WORDS.test(q)) return NEGATION.test(q) ? null : 'accepted';
+  if (REVIEW_WORDS.test(q)) return 'review';
   return null;
 }
 

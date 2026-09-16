@@ -73,6 +73,24 @@ const ADD = /\b(add|added|adding|record|recorded|log|logged|enter|entered|put|re
 const EDIT = /\b(update|updated|change|changed|set|edit|correct|amend|revise|make)\b/;
 const REMOVE = /\b(remove|removed|delete|deleted|clear|cleared|cancel|cancelled|undo|reverse)\b/;
 
+/*
+ * The words a committee actually uses for a decision. Exported so the guided
+ * flow reads them the same way — "allow 500" should not mean one thing typed
+ * in one place and nothing at all typed in another.
+ */
+export const APPROVE_WORDS =
+  /\b(approve[ds]?|approving|accept(ed|s)?|allow(ed|s)?|grant(ed|s)?|sanction(ed|s)?|authoris(e|ed)|authoriz(e|ed)|pass(ed)?|ok(ay)?)\b/;
+export const REJECT_WORDS =
+  /\b(reject(ed|s)?|declin(e|ed|es)|refus(e|ed|es)|deny|denied)\b|\bturn(ed|s)?\b.{0,8}\bdown\b/;
+export const REVIEW_WORDS = /\breview(ing)?\b/;
+
+/**
+ * "Do not approve" contains an approving word, and reading it as approval
+ * would pay somebody the committee just refused. Anything negated is treated
+ * as unclear rather than guessed at — the cost is one extra question.
+ */
+export const NEGATION = /\b(not|never|dont|cannot|cant|no)\b|\bdo not\b|\bdon t\b|\bcan t\b/;
+
 const GIVING = /\b(donation|donations|donated|donate|donor|gave|given|giving|contribution|contributed|payment|paid in|amount)\b/;
 const PLEDGE = /\b(pledge|pledged|pledges|commits?|committed|promise[sd]?)\b/;
 
@@ -108,7 +126,7 @@ function detectKind(question: string): ActionKind | null {
   if (/\b(unblock|unsuspend|reinstate)\b|\brestore access\b/.test(q)) return 'unblock_member';
   if (/\b(block|suspend|bar)\b/.test(q)) return 'block_member';
 
-  if (/\b(approve|approved|accept|accepted|reject|rejected|decline|declined)\b|\bturn(ed)? down\b|\bto review\b|\bunder review\b/.test(q))
+  if (APPROVE_WORDS.test(q) || REJECT_WORDS.test(q) || /\b(to|under|for) review\b/.test(q))
     return 'set_status';
 
   if (PLEDGE.test(q)) return 'set_pledge';
@@ -164,9 +182,10 @@ export function amountFrom(question: string): number | null {
 /** The status an instruction is asking for. */
 export function statusFrom(question: string): 'review' | 'accepted' | 'rejected' | null {
   const q = normalise(question);
-  if (/\breject|declin|turn(ed)? down/.test(q)) return 'rejected';
-  if (/\bapprove|accept/.test(q)) return 'accepted';
-  if (/\breview/.test(q)) return 'review';
+  // Rejection first: "do not approve" contains an approving word.
+  if (REJECT_WORDS.test(q)) return 'rejected';
+  if (APPROVE_WORDS.test(q)) return NEGATION.test(q) ? null : 'accepted';
+  if (REVIEW_WORDS.test(q)) return 'review';
   return null;
 }
 

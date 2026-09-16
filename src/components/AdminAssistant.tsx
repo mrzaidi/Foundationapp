@@ -245,13 +245,17 @@ export default function AdminAssistant() {
                     {turn.answer?.vocabulary && (
                       <div className="bot-vocab">
                         <p className="bv-head">To change something, start with one of these:</p>
+                        {/*
+                          The words only. There used to be a worked example
+                          under each — "Aiman donated 5000", "Block Zaidi" —
+                          and they were not examples: clicking one proposed
+                          that exact change against that exact person. An
+                          illustration should not be a loaded action.
+                        */}
                         {WRITE_VOCABULARY.map((v) => (
                           <div className="bv-row" key={v.does}>
                             <div className="bv-does">{v.does}</div>
                             <div className="bv-words">{v.words}</div>
-                            <button type="button" onClick={() => ask(v.example)} disabled={busy}>
-                              {v.example}
-                            </button>
                           </div>
                         ))}
                       </div>

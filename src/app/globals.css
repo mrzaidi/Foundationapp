@@ -3613,25 +3613,6 @@ table.grid .rowlink:hover {
   margin: 1px 0 4px;
   line-height: 1.5;
 }
-.bv-row button {
-  border: 1px solid var(--line);
-  background: var(--card-soft, #f4f7f5);
-  color: var(--text-dim);
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  font-style: italic;
-}
-.bv-row button:hover:not(:disabled) {
-  border-color: var(--brand-2);
-  color: var(--text);
-}
-.bv-row button:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
 
 /* Four account kinds rather than two: a 2x2 grid keeps every option one tap
    away without the dialog growing a scroll. */
