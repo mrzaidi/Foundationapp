@@ -19,6 +19,8 @@
  * a bad afternoon must never turn a recorded transfer into a failed request.
  */
 
+import { after } from 'next/server';
+
 /** Long enough for a normal send, short enough that nobody waits on it. */
 const TIMEOUT_MS = 8000;
 
@@ -136,14 +138,29 @@ export async function sendEmail(mail: Mail): Promise<{ sent: boolean; reason?: s
 }
 
 /**
- * Send without making the caller wait or care.
+ * Send without making the caller wait, but make sure it actually sends.
  *
- * For the places where the work is already done and committed — the status has
- * moved, the account exists — and the email is a courtesy on top of it.
+ * The obvious version of this — fire the promise, return, let it finish —
+ * works locally and silently does nothing in production. A serverless function
+ * is frozen the instant it returns its response, so a fetch still in flight is
+ * simply abandoned: no email, no error, nothing in the log to explain it.
+ *
+ * `after` is Next's answer to that. The response still goes back immediately;
+ * the runtime just keeps the function alive until this finishes. Outside a
+ * request — a script, a test — it throws, so that case falls back to awaiting
+ * the send directly.
  */
 export function sendInBackground(mail: Mail): void {
   if (!mailReady()) return;
-  void sendEmail(mail).then((r) => {
+
+  const deliver = async () => {
+    const r = await sendEmail(mail);
     if (!r.sent) console.warn(`[mail] not sent to ${mail.to}: ${r.reason}`);
-  });
+  };
+
+  try {
+    after(deliver);
+  } catch {
+    void deliver();
+  }
 }
