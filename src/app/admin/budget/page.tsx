@@ -5,7 +5,7 @@ import MonthlyStatement from '@/components/MonthlyStatement';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminBudgetPage() {
-  await requirePage('view_budget');
+  const level = await requirePage('view_budget');
 
   return (
     <>

@@ -18,6 +18,7 @@ import {
   statusFrom,
   type Action,
 } from '@/lib/assistant-actions';
+import { requireCapability } from '@/lib/admin-guard';
 import { geminiReady, phrase } from '@/lib/gemini';
 import { getRates, type Rates } from '@/lib/rates';
 import { createClient } from '@/lib/supabase/server';
@@ -134,6 +135,20 @@ export async function POST(request: Request) {
    * would happen and confirms it, which is the only thing that calls /act.
    */
   if (isWrite(question)) {
+    // A chat box must not be a way round the permission that applies to every
+    // button. A level that cannot approve from the application screen cannot
+    // approve by asking for it either.
+    const gate = await requireCapability('use_assistant_writes');
+    if ('refusal' in gate)
+      return NextResponse.json({
+        intent: 'help',
+        month,
+        answer: {
+          text: 'Your administrator account can ask me about the figures, but cannot change anything. Ask a master administrator to make that change.',
+          suggestions: SUGGESTIONS.slice(0, 4),
+        },
+      });
+
     const proposal = await propose(question);
     return NextResponse.json({ intent: 'action', month, answer: proposal });
   }

@@ -1,3 +1,4 @@
+import { requirePage } from '@/lib/admin-guard';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import DocumentGallery from '@/components/DocumentGallery';
@@ -9,6 +10,7 @@ import Tracker from '@/components/Tracker';
 import { createClient } from '@/lib/supabase/server';
 import { formatAccount, hasBankDetails } from '@/lib/banks';
 import { STATUS_LABEL, dateTimeLabel, initials, money } from '@/lib/format';
+import { can } from '@/lib/permissions';
 import type { FundRequest, RecurringGrant } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +20,8 @@ export default async function AdminRequestDetail({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const level = await requirePage('view_requests');
+
   const { id } = await params;
   const supabase = await createClient();
 
@@ -267,15 +271,29 @@ export default async function AdminRequestDetail({
 
         {/* ---------------- right: member + actions ---------------- */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* Deciding an application is the master's alone. A level that may
+              read this page still sees where it stands — it simply is not
+              offered buttons the database would refuse anyway. */}
           <div className="panel">
             <div className="panel-head">
               <div>
                 <h2>Decision</h2>
-                <div className="ph-sub">Move this application along the pipeline</div>
+                <div className="ph-sub">
+                  {can(level, 'decide_requests')
+                    ? 'Move this application along the pipeline'
+                    : 'Where this application stands'}
+                </div>
               </div>
             </div>
             <div className="panel-body">
-              <RequestActions request={r} />
+              {can(level, 'decide_requests') ? (
+                <RequestActions request={r} />
+              ) : (
+                <div className="note">
+                  This application is {STATUS_LABEL[r.status].toLowerCase()}. Your administrator
+                  account can see applications but cannot approve, reject or transfer them.
+                </div>
+              )}
             </div>
           </div>
 

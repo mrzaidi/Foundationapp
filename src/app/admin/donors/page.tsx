@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
  * each of them gave.
  */
 export default async function AdminDonorsPage() {
-  await requirePage('view_donors');
+  const level = await requirePage('view_donors');
 
   return (
     <>

@@ -1,3 +1,4 @@
+import { requirePage } from '@/lib/admin-guard';
 import Link from 'next/link';
 import AdminCharts from '@/components/charts/AdminCharts';
 import MonthlyTrends from '@/components/charts/MonthlyTrends';
@@ -25,6 +26,8 @@ const FUND_GRAD: Record<string, string> = {
 };
 
 export default async function AdminDashboard() {
+  const level = await requirePage('view_dashboard');
+
   const supabase = await createClient();
 
   // The monthly fund and the monthly arrivals are fetched by MonthlyTrends,

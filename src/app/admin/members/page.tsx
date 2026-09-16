@@ -1,7 +1,9 @@
+import { requirePage } from '@/lib/admin-guard';
 import { Suspense } from 'react';
 import Link from 'next/link';
 import AdminSearch from '@/components/AdminSearch';
 import NewMemberButton from '@/components/NewMemberButton';
+import { can } from '@/lib/permissions';
 import Icon from '@/components/Icon';
 import { createClient } from '@/lib/supabase/server';
 import { dateLabel, initials } from '@/lib/format';
@@ -16,6 +18,8 @@ export default async function AdminMembersPage({
 }: {
   searchParams: Promise<{ q?: string; page?: string; role?: string }>;
 }) {
+  const level = await requirePage('view_members');
+
   const sp = await searchParams;
   const q = sp.q?.trim() ?? '';
   const role = sp.role ?? 'all';
@@ -74,9 +78,10 @@ export default async function AdminMembersPage({
         </div>
 
         <div className="toolbar" style={{ gap: 8 }}>
-        <NewMemberButton />
+        {can(level, 'create_members') && <NewMemberButton />}
 
         {/* Exports whatever the filters currently show, not just this page. */}
+        {can(level, 'export_reports') && (
         <a
           className="admin-btn"
           href={`/api/admin/members/export${
@@ -92,6 +97,7 @@ export default async function AdminMembersPage({
           <Icon name="download" />
           Export to Excel
         </a>
+        )}
         </div>
       </div>
 

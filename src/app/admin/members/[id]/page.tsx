@@ -1,3 +1,4 @@
+import { requirePage } from '@/lib/admin-guard';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import DocumentGallery from '@/components/DocumentGallery';
@@ -14,6 +15,8 @@ import type { FundRequest, Profile, RecurringGrant } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminMemberDetail({ params }: { params: Promise<{ id: string }> }) {
+  const level = await requirePage('view_members');
+
   const { id } = await params;
   const supabase = await createClient();
 

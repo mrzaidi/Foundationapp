@@ -1,4 +1,5 @@
 import { requirePage } from '@/lib/admin-guard';
+import { can } from '@/lib/permissions';
 import FundEditor from '@/components/FundEditor';
 import Icon from '@/components/Icon';
 import { rowHasColumn } from '@/lib/schema';
@@ -9,7 +10,7 @@ import type { FundType } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminFundsPage() {
-  await requirePage('view_funds');
+  const level = await requirePage('view_funds');
 
   const supabase = await createClient();
 
@@ -103,7 +104,9 @@ export default async function AdminFundsPage() {
                   {f.is_active ? 'Active' : 'Hidden'}
                 </span>
               </div>
-              <FundEditor fund={f} recurringReady={recurringReady} />
+              {can(level, 'edit_funds') && (
+                <FundEditor fund={f} recurringReady={recurringReady} />
+              )}
               <div className="kedge" />
             </div>
           );

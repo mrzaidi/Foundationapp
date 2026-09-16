@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { monthLabel } from '@/lib/assistant';
 import type { Action } from '@/lib/assistant-actions';
+import { requireCapability } from '@/lib/admin-guard';
 import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
@@ -28,6 +29,9 @@ export async function POST(request: Request) {
   const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   if (me?.role !== 'admin')
     return NextResponse.json({ error: 'Administrators only.' }, { status: 403 });
+
+  const gate = await requireCapability('use_assistant_writes');
+  if ('refusal' in gate) return gate.refusal;
 
   let action: Action;
   try {
