@@ -50,11 +50,8 @@ interface Part {
   text?: string;
 }
 
-/**
- * Word an answer from figures already established. Returns null on any
- * problem at all, which the caller reads as "use the deterministic sentence".
- */
-export async function phrase(question: string, facts: unknown): Promise<string | null> {
+/** One request, one place. Returns null on any problem at all. */
+async function ask(system: string, user: string, json = false): Promise<string | null> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
 
@@ -67,21 +64,8 @@ export async function phrase(question: string, facts: unknown): Promise<string |
       signal: ctrl.signal,
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM }] },
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              {
-                text: `Question: ${question}\n\nFigures held by the application:\n${JSON.stringify(
-                  facts,
-                  null,
-                  1
-                )}`,
-              },
-            ],
-          },
-        ],
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [{ role: 'user', parts: [{ text: user }] }],
         generationConfig: {
           // Low, not zero: the wording may vary, the figures cannot.
           temperature: 0.2,
@@ -94,6 +78,8 @@ export async function phrase(question: string, facts: unknown): Promise<string |
            * question; without it the same answer comes back in one.
            */
           thinkingConfig: { thinkingBudget: 0 },
+          // Routing must parse, so the model is told to emit JSON and nothing else.
+          ...(json ? { responseMimeType: 'application/json' } : {}),
         },
       }),
     });
@@ -105,17 +91,17 @@ export async function phrase(question: string, facts: unknown): Promise<string |
       return null;
     }
 
-    const json = (await res.json()) as {
+    const reply = (await res.json()) as {
       candidates?: { content?: { parts?: Part[] }; finishReason?: string }[];
     };
 
-    const text = (json.candidates?.[0]?.content?.parts ?? [])
+    const text = (reply.candidates?.[0]?.content?.parts ?? [])
       .map((p) => p.text ?? '')
       .join('')
       .trim();
 
     // A truncated sentence is worse than the deterministic one it replaces.
-    if (!text || json.candidates?.[0]?.finishReason === 'MAX_TOKENS') return null;
+    if (!text || reply.candidates?.[0]?.finishReason === 'MAX_TOKENS') return null;
 
     return text.replace(/\*\*/g, '').replace(/\s+\n/g, '\n').trim();
   } catch (e) {
@@ -123,5 +109,102 @@ export async function phrase(question: string, facts: unknown): Promise<string |
     return null;
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/**
+ * Word an answer from figures already established. Returns null on any
+ * problem at all, which the caller reads as "use the deterministic sentence".
+ */
+export async function phrase(question: string, facts: unknown): Promise<string | null> {
+  return ask(
+    SYSTEM,
+    `Question: ${question}\n\nFigures held by the application:\n${JSON.stringify(facts, null, 1)}`
+  );
+}
+
+const EXPLAIN_SYSTEM = [
+  'You answer questions from administrators of a welfare foundation about how their own',
+  'software works. You are given a description of that software. Rules:',
+  '',
+  '1. Answer only from the description. If it does not cover the question, say so plainly',
+  '   and name the closest thing it does cover. Never describe a feature that is not there —',
+  '   a confident answer about a button that does not exist is worse than no answer at all.',
+  '2. Never state a figure, balance, name or date. You hold the rules, not the data. If they',
+  '   are asking for a number, tell them to ask for it directly, such as "what is left".',
+  '3. Two or three sentences. Plain English, no headings, no bullet points, no markdown.',
+  '   Address the administrator directly.',
+].join('\n');
+
+/**
+ * Answer a question about how the system works, from a written description.
+ *
+ * Kept apart from phrase() because the risk is different. There, the model is
+ * handed figures and cannot invent one. Here it is describing software — and a
+ * model asked about software will cheerfully describe a plausible version of
+ * it — so it gets the real description and is told to refuse anything outside
+ * it.
+ */
+export async function explain(question: string, guide: string): Promise<string | null> {
+  return ask(EXPLAIN_SYSTEM, `Question: ${question}\n\nThe software:\n${guide}`);
+}
+
+/* ------------------------------------------------------------------------ *
+ * Understanding the question — which is a different job from answering it.  *
+ * ------------------------------------------------------------------------ */
+
+export interface Routed {
+  /** One of the topics offered, when the question clearly asks for it. */
+  topic?: string;
+  /** A question to ask back, when it genuinely is not clear. */
+  clarify?: string;
+  /** Friendly noise: thanks, how are you, goodbye. */
+  smalltalk?: string;
+}
+
+const ROUTE_SYSTEM = [
+  'You read a question from an administrator of a welfare foundation and decide which',
+  'of the listed topics it is asking about. You do not answer it.',
+  '',
+  'The people asking are not technical and will not use the right words. Read what they',
+  'meant, not what they typed: "paisa kitna bacha" is the remaining balance, "who gave',
+  'money" is the donors, "kitne log" is the member count. Spelling, grammar and language',
+  'do not matter.',
+  '',
+  'Reply with JSON only, one of these shapes:',
+  '  {"topic": "<exact id from the list>"}      when it clearly asks for one of them',
+  '  {"smalltalk": "<a short friendly reply>"}  for thanks, greetings, how are you',
+  '  {"clarify": "<one short question>"}        when you genuinely cannot tell which',
+  '',
+  'Prefer a topic over clarify — asking a question they have to answer costs them time.',
+  'Only clarify when two topics are equally likely, or when the question names nothing.',
+  'Never invent a topic id. Never answer the question yourself. Never state a figure.',
+].join('\n');
+
+/**
+ * Pick which question is being asked, from a fixed list.
+ *
+ * The deterministic matcher handles the phrasings it knows and shrugs at the
+ * rest, which is the wrong behaviour for people who will not know the right
+ * words. This is the model doing the one thing it is genuinely better at than
+ * a rule — reading intent out of loose language — while every figure still
+ * comes from the database afterwards. The model chooses the question; it never
+ * supplies the answer.
+ */
+export async function route(
+  question: string,
+  topics: { id: string; describes: string }[]
+): Promise<Routed | null> {
+  const list = topics.map((t) => `  ${t.id}: ${t.describes}`).join('\n');
+  const raw = await ask(ROUTE_SYSTEM, `Question: ${question}\n\nTopics:\n${list}`, true);
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as Routed;
+    // A topic the model made up is worse than no topic at all.
+    if (parsed.topic && !topics.some((t) => t.id === parsed.topic)) return null;
+    return parsed;
+  } catch {
+    return null;
   }
 }

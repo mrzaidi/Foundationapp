@@ -28,7 +28,8 @@ import {
 } from '@/lib/assistant-flows';
 import { requireCapability } from '@/lib/admin-guard';
 import { can, type Capability } from '@/lib/permissions';
-import { geminiReady, phrase } from '@/lib/gemini';
+import { explain, geminiReady, phrase, route } from '@/lib/gemini';
+import { SYSTEM_GUIDE } from '@/lib/system-guide';
 import { getRates, type Rates } from '@/lib/rates';
 import { createClient } from '@/lib/supabase/server';
 
@@ -36,6 +37,33 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const PK = '+05:00';
+
+/**
+ * What the assistant can be asked for, described so a model can match loose
+ * wording to one of them. Only the questions a query can answer — explanations
+ * and instructions are handled elsewhere.
+ */
+const ROUTABLE: { id: string; describes: string }[] = [
+  { id: 'month_summary', describes: 'how the month is going overall; a summary of everything' },
+  { id: 'remaining', describes: 'what is left to spend; the balance; how much money remains' },
+  { id: 'donations', describes: 'what came in; money received; how much was donated' },
+  { id: 'transferred', describes: 'what went out; money paid to members this month' },
+  { id: 'disbursed_total', describes: 'total ever paid out, across all time' },
+  { id: 'top_donors', describes: 'who gave, and who gave the most' },
+  { id: 'donor_count', describes: 'how many donors gave' },
+  { id: 'new_members', describes: 'who registered or joined this month' },
+  { id: 'members_total', describes: 'how many members or accounts exist in total' },
+  { id: 'missing_bank', describes: 'members with no bank details, who cannot be paid' },
+  { id: 'missing_cnic', describes: 'members who have not uploaded a CNIC' },
+  { id: 'blocked_members', describes: 'accounts that are blocked' },
+  { id: 'pending', describes: 'applications waiting for a decision' },
+  { id: 'rejected', describes: 'applications that were refused' },
+  { id: 'by_status', describes: 'a breakdown of applications by their stage' },
+  { id: 'biggest_request', describes: 'the largest application by amount' },
+  { id: 'fund_breakdown', describes: 'the fund types, and activity per fund' },
+  { id: 'recurring', describes: 'standing monthly arrangements' },
+  { id: 'fx_rate', describes: 'the euro or dollar exchange rate' },
+];
 
 interface Answer {
   text: string;
@@ -302,6 +330,34 @@ export async function POST(request: Request) {
           fundId = fundHits[0].item.id;
           fundName = fundHits[0].item.name;
           intent = 'fund_breakdown';
+        } else if (intent === 'help' && geminiReady()) {
+          /*
+           * The rules did not recognise it. Before shrugging, let the model
+           * decide which question was meant — this portal is used by people
+           * who will not know the words the matcher expects, and "paisa kitna
+           * bacha" deserves the balance rather than a list of capabilities.
+           *
+           * The model picks the question; the answer is still read from the
+           * database afterwards. A topic it invents is discarded.
+           */
+          const routed = await route(question, ROUTABLE);
+
+          if (routed?.smalltalk)
+            return NextResponse.json({
+              intent: 'smalltalk',
+              month,
+              answer: { text: routed.smalltalk, suggestions: SUGGESTIONS.slice(0, 3) },
+            });
+
+          if (routed?.clarify)
+            return NextResponse.json({
+              intent: 'clarify',
+              month,
+              answer: { text: routed.clarify },
+            });
+
+          if (routed?.topic) intent = routed.topic as Intent;
+          else if (explicit) intent = 'month_summary';
         } else if (intent === 'help' && explicit) {
           // "what happened in March" names a month and nothing else. The month
           // is the subject, so answer for the month rather than shrug.
@@ -1304,6 +1360,22 @@ export async function POST(request: Request) {
 
       case 'help':
       default: {
+        /*
+         * Nothing in the data matched. Before giving up, try it as a question
+         * about how the foundation works — "what happens when I reject an
+         * application?" has an answer, just not one any query can produce.
+         *
+         * Answered from a written description of this system, never from the
+         * model's own idea of how a welfare portal might behave, and it is
+         * told to say so rather than invent a feature. It is also forbidden
+         * from stating a figure: explanations and figures come from different
+         * places here and must not be confused for one another.
+         */
+        if (geminiReady()) {
+          const explained = await explain(question, SYSTEM_GUIDE);
+          if (explained) return { text: explained, suggestions: SUGGESTIONS.slice(0, 3) };
+        }
+
         const words = keywords(question);
         const picked = words.slice(0, 3).join(', ');
         return {
