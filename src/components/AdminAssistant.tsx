@@ -27,7 +27,7 @@ const OPENING: Turn = {
   from: 'bot',
   text: '',
   answer: {
-    text: "Ask me about the foundation's figures — what came in, what went out, what is left, who registered. I read them live from the database.",
+    text: "Ask me anything about the foundation — money in and out, what is left, a member by name, a fund, or an application by its reference. Ask it however you like; I read the figures live from the database.",
     suggestions: SUGGESTIONS.slice(0, 4),
   },
 };
@@ -35,11 +35,11 @@ const OPENING: Turn = {
 /**
  * A question box over the foundation's own numbers.
  *
- * It matches intent and runs SQL rather than asking a language model: every
- * answer is a figure somebody may act on, and a model that is usually right
- * about a balance is worse than a narrow tool that is always right. When it
- * does not understand it says so and offers what it can answer, which is the
- * one behaviour a guessing model cannot give you.
+ * The question is read here, the figures are looked up in Postgres, and only
+ * then — if a key is configured — is a language model given those figures to
+ * word the reply. It never supplies a number, so an answer can be clumsily
+ * phrased but not wrong. When nothing matches, it says so and offers what it
+ * can answer, which is the one behaviour a guessing model cannot give you.
  */
 export default function AdminAssistant() {
   const [open, setOpen] = useState(false);
@@ -189,7 +189,7 @@ export default function AdminAssistant() {
               className="input"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="How much is left this month?"
+              placeholder="Ask anything — a name, a fund, a month…"
               aria-label="Your question"
               disabled={busy}
             />

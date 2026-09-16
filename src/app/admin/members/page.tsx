@@ -67,8 +67,27 @@ export default async function AdminMembersPage({
           <h1>Members</h1>
           <div className="crumb">
             {total} registered {total === 1 ? 'account' : 'accounts'}
+            {q && ` · matching “${q}”`}
+            {role !== 'all' && ` · ${role}s only`}
           </div>
         </div>
+
+        {/* Exports whatever the filters currently show, not just this page. */}
+        <a
+          className="admin-btn"
+          href={`/api/admin/members/export${
+            q || role !== 'all'
+              ? `?${new URLSearchParams({
+                  ...(q ? { q } : {}),
+                  ...(role !== 'all' ? { role } : {}),
+                }).toString()}`
+              : ''
+          }`}
+          download
+        >
+          <Icon name="download" />
+          Export to Excel
+        </a>
       </div>
 
       <div className="panel">

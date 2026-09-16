@@ -1,5 +1,16 @@
 import { NextResponse } from 'next/server';
-import { SUGGESTIONS, classify, monthFrom, monthLabel, type Intent } from '@/lib/assistant';
+import {
+  CAPABILITIES,
+  SUGGESTIONS,
+  classify,
+  keywords,
+  monthFrom,
+  monthLabel,
+  rank,
+  referenceFrom,
+  type Intent,
+} from '@/lib/assistant';
+import { geminiReady, phrase } from '@/lib/gemini';
 import { getRates } from '@/lib/rates';
 import { createClient } from '@/lib/supabase/server';
 
@@ -15,14 +26,19 @@ interface Answer {
   /** Where to go for the detail behind the answer. */
   link?: { href: string; label: string };
   suggestions?: string[];
+  /**
+   * The figures this answer rests on, in machine form. Handed to the language
+   * model when one is configured so it can word the reply without ever being
+   * the source of a number. Never sent to the browser.
+   */
+  facts?: Record<string, unknown>;
 }
 
 /**
  * POST /api/admin/assistant — answer a question about the foundation's own data.
  *
- * Every figure here is read live from Postgres. Nothing is summarised by a model
- * and nothing is cached, because the one thing worse than a slow answer about a
- * balance is a confident stale one.
+ * Every figure here is read live from Postgres. Nothing is cached, because the
+ * one thing worse than a slow answer about a balance is a confident stale one.
  */
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -45,7 +61,6 @@ export async function POST(request: Request) {
   const question = (body.question ?? '').trim();
   if (!question) return NextResponse.json({ error: 'Ask me something.' }, { status: 422 });
 
-  const intent = classify(question);
   const { month, explicit } = monthFrom(question);
   const label = monthLabel(month);
   const when = explicit ? `in ${label}` : `this month (${label})`;
@@ -84,7 +99,88 @@ export async function POST(request: Request) {
     };
   };
 
+  /* ------------------------------------------------------------------ *
+   * What is this question about?                                        *
+   *                                                                     *
+   * An intent covers the recurring questions. A subject covers the rest: *
+   * anything that names a person, a fund or an application is answered  *
+   * about that thing, whatever words surround it.                       *
+   * ------------------------------------------------------------------ */
+
+  const reference = referenceFrom(question);
+  let intent: Intent = classify(question);
+
+  type Person = { id: string; full_name: string; email: string };
+  let person: Person | null = null;
+  let alsoMatched: string[] = [];
+  let fundId: string | null = null;
+  let fundName = '';
+
+  if (reference) {
+    intent = 'request_lookup';
+  } else {
+    const words = keywords(question);
+
+    // Only worth a lookup if anything survived the grammar strip.
+    if (words.length) {
+      const { data: people } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .limit(2000);
+
+      const hits = rank(
+        question,
+        ((people ?? []) as Person[]).map((p) => ({
+          id: p.id,
+          name: p.full_name,
+          aliases: [p.email.split('@')[0].replace(/[._-]/g, ' ')],
+          row: p,
+        }))
+      );
+
+      if (hits.length) {
+        person = hits[0].item.row;
+        intent = 'member_lookup';
+        // A tie means two people share the matched name; say so rather than pick.
+        alsoMatched = hits
+          .filter((h) => h.score === hits[0].score && h.item.row.id !== person!.id)
+          .map((h) => h.item.row.full_name);
+      } else {
+        /*
+         * Naming a fund outranks any general reading of the question: "the
+         * accidental fund" is about that fund, not about donations at large.
+         * Only a fund's distinctive words can match — "fund" and "monthly" are
+         * ordinary vocabulary here and are never matched on.
+         */
+        const { data: funds } = await supabase.from('fund_types').select('id, name');
+        const fundHits = rank(question, (funds ?? []) as { id: string; name: string }[]);
+
+        if (fundHits.length) {
+          fundId = fundHits[0].item.id;
+          fundName = fundHits[0].item.name;
+          intent = 'fund_breakdown';
+        } else if (intent === 'help' && explicit) {
+          // "what happened in March" names a month and nothing else. The month
+          // is the subject, so answer for the month rather than shrug.
+          intent = 'month_summary';
+        }
+      }
+    }
+  }
+
   const answer = await build(intent);
+
+  /*
+   * The model only ever rewrites a sentence we could already produce, from
+   * figures we already hold. If it is off, slow or unhappy, the deterministic
+   * sentence ships unchanged — so this can fail without the answer failing.
+   */
+  if (geminiReady() && answer.facts && intent !== 'help') {
+    const worded = await phrase(question, { month: label, ...answer.facts });
+    if (worded) answer.text = worded;
+  }
+
+  delete answer.facts;
   return NextResponse.json({ intent, month, answer });
 
   async function build(kind: Intent): Promise<Answer> {
@@ -98,6 +194,7 @@ export async function POST(request: Request) {
             : `No donations are recorded ${when} yet, so the month's fund is zero and no transfers can be made until one is.`,
           figures: [{ label: `Received ${label}`, value: pkr(total), pkr: total }],
           link: { href: '/admin/budget', label: 'Open the budget' },
+          facts: { received_pkr: total, donors_who_gave: Number(b.donors ?? 0) },
         };
       }
 
@@ -110,6 +207,7 @@ export async function POST(request: Request) {
             : `Nothing has been transferred ${when}.`,
           figures: [{ label: `Transferred ${label}`, value: pkr(total), pkr: total }],
           link: { href: '/admin/requests?status=transferred', label: 'See the transfers' },
+          facts: { transferred_pkr: total, number_of_transfers: Number(b.transfers ?? 0) },
         };
       }
 
@@ -117,10 +215,7 @@ export async function POST(request: Request) {
         const b = await budget();
         const left = Number(b.remaining ?? 0);
         const committed = Number(b.committed ?? 0);
-        const tail =
-          committed > 0
-            ? ` ${pkr(committed)} is approved and still waiting to be paid.`
-            : '';
+        const tail = committed > 0 ? ` ${pkr(committed)} is approved and still waiting to be paid.` : '';
         return {
           text:
             left > 0
@@ -132,6 +227,47 @@ export async function POST(request: Request) {
             { label: 'Remaining', value: pkr(left), pkr: left },
           ],
           link: { href: '/admin/budget', label: 'Open the budget' },
+          facts: {
+            received_pkr: Number(b.donated ?? 0),
+            transferred_pkr: Number(b.spent ?? 0),
+            remaining_pkr: left,
+            approved_but_not_yet_paid_pkr: committed,
+          },
+        };
+      }
+
+      case 'month_summary': {
+        const b = await budget();
+        const { count: joined } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', `${monthStart}T00:00:00.000${PK}`)
+          .lt('created_at', `${monthEnd}T00:00:00.000${PK}`);
+        const { count: waiting } = await supabase
+          .from('fund_requests')
+          .select('*', { count: 'exact', head: true })
+          .in('status', ['requested', 'review']);
+
+        const left = Number(b.remaining ?? 0);
+        return {
+          text: `${label}: ${pkr(Number(b.donated ?? 0))} in from ${b.donors ?? 0} donor${b.donors === 1 ? '' : 's'}, ${pkr(Number(b.spent ?? 0))} out across ${b.transfers ?? 0} transfer${b.transfers === 1 ? '' : 's'}, leaving ${withFx(left)}. ${joined ?? 0} new member${joined === 1 ? '' : 's'} registered and ${waiting ?? 0} application${waiting === 1 ? ' is' : 's are'} waiting on the committee.`,
+          figures: [
+            { label: 'Received', value: pkr(Number(b.donated ?? 0)) },
+            { label: 'Transferred', value: pkr(Number(b.spent ?? 0)) },
+            { label: 'Remaining', value: pkr(left), pkr: left },
+            { label: 'New members', value: String(joined ?? 0) },
+            { label: 'Awaiting', value: String(waiting ?? 0) },
+          ],
+          link: { href: '/admin/budget', label: 'Open the budget' },
+          facts: {
+            received_pkr: Number(b.donated ?? 0),
+            donors_who_gave: Number(b.donors ?? 0),
+            transferred_pkr: Number(b.spent ?? 0),
+            number_of_transfers: Number(b.transfers ?? 0),
+            remaining_pkr: left,
+            new_members_this_month: joined ?? 0,
+            applications_awaiting_committee: waiting ?? 0,
+          },
         };
       }
 
@@ -148,13 +284,12 @@ export async function POST(request: Request) {
             : `Nobody new registered ${when}.`,
           figures: [{ label: `New ${label}`, value: String(n) }],
           link: { href: '/admin/members', label: 'See the members' },
+          facts: { new_registrations: n },
         };
       }
 
       case 'members_total': {
-        const { count } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true });
+        const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
         const { count: admins } = await supabase
           .from('profiles')
           .select('*', { count: 'exact', head: true })
@@ -166,6 +301,7 @@ export async function POST(request: Request) {
             { label: 'Administrators', value: String(admins ?? 0) },
           ],
           link: { href: '/admin/members', label: 'See the members' },
+          facts: { total_accounts: count ?? 0, administrators: admins ?? 0 },
         };
       }
 
@@ -183,6 +319,7 @@ export async function POST(request: Request) {
             { label: 'On the list', value: String(list.length) },
           ],
           link: { href: '/admin/budget', label: 'Open the donors' },
+          facts: { donors_who_gave: gave, donors_on_the_list: list.length, received_pkr: Number(b.donated ?? 0) },
         };
       }
 
@@ -197,6 +334,7 @@ export async function POST(request: Request) {
           return {
             text: `Nobody has given ${when}, so there is no ranking to show.`,
             link: { href: '/admin/budget', label: 'Open the donors' },
+            facts: { donations_this_month: [] },
           };
 
         return {
@@ -207,6 +345,9 @@ export async function POST(request: Request) {
             pkr: Number(d.given),
           })),
           link: { href: '/admin/budget', label: 'Open the donors' },
+          facts: {
+            donations_this_month: list.map((d) => ({ donor: d.name, given_pkr: Number(d.given) })),
+          },
         };
       }
 
@@ -229,6 +370,83 @@ export async function POST(request: Request) {
             { label: 'Under review', value: String(review ?? 0) },
           ],
           link: { href: '/admin/requests?status=requested', label: 'Review them' },
+          facts: { newly_requested: requested ?? 0, under_review: review ?? 0, total_waiting: total },
+        };
+      }
+
+      case 'rejected': {
+        const { data, count } = await supabase
+          .from('fund_requests')
+          .select('reference, amount_requested, admin_note, profiles!fund_requests_user_id_fkey(full_name)', { count: 'exact' })
+          .eq('status', 'rejected')
+          .order('updated_at', { ascending: false })
+          .limit(5);
+
+        const rows = (data ?? []) as unknown as {
+          reference: string;
+          amount_requested: number;
+          admin_note: string | null;
+          profiles: { full_name: string } | null;
+        }[];
+
+        return {
+          text: count
+            ? `${count} application${count === 1 ? ' has' : 's have'} been rejected. The most recent:`
+            : 'No application has been rejected.',
+          figures: rows.map((r) => ({
+            label: `${r.profiles?.full_name ?? 'Member'} · ${r.reference}`,
+            value: pkr(Number(r.amount_requested)),
+          })),
+          link: { href: '/admin/requests?status=rejected', label: 'See them' },
+          facts: {
+            total_rejected: count ?? 0,
+            most_recent: rows.map((r) => ({
+              reference: r.reference,
+              member: r.profiles?.full_name ?? null,
+              amount_requested_pkr: Number(r.amount_requested),
+              reason: r.admin_note,
+            })),
+          },
+        };
+      }
+
+      case 'biggest_request': {
+        const { data } = await supabase
+          .from('fund_requests')
+          .select('reference, amount_requested, amount_approved, status, profiles!fund_requests_user_id_fkey(full_name), fund_types(name)')
+          .order('amount_requested', { ascending: false })
+          .limit(5);
+
+        const rows = (data ?? []) as unknown as {
+          reference: string;
+          amount_requested: number;
+          amount_approved: number | null;
+          status: string;
+          profiles: { full_name: string } | null;
+          fund_types: { name: string } | null;
+        }[];
+
+        if (!rows.length) return { text: 'There are no applications yet.', facts: { applications: [] } };
+
+        const top = rows[0];
+        return {
+          text: `The largest application on record is ${top.reference} — ${withFx(Number(top.amount_requested))} for ${top.fund_types?.name ?? 'a fund'}, from ${top.profiles?.full_name ?? 'a member'}, currently ${top.status}.`,
+          figures: rows.map((r) => ({
+            label: `${r.profiles?.full_name ?? 'Member'} · ${r.reference}`,
+            value: pkr(Number(r.amount_requested)),
+            pkr: Number(r.amount_requested),
+          })),
+          link: { href: '/admin/requests', label: 'Open applications' },
+          facts: {
+            largest_applications: rows.map((r) => ({
+              reference: r.reference,
+              member: r.profiles?.full_name ?? null,
+              fund: r.fund_types?.name ?? null,
+              amount_requested_pkr: Number(r.amount_requested),
+              amount_approved_pkr: r.amount_approved === null ? null : Number(r.amount_approved),
+              status: r.status,
+            })),
+          },
         };
       }
 
@@ -250,6 +468,118 @@ export async function POST(request: Request) {
             : 'There are no applications yet.',
           figures: counts,
           link: { href: '/admin/requests', label: 'Open applications' },
+          facts: {
+            total_applications: total,
+            by_status: Object.fromEntries(counts.map((c) => [c.label.toLowerCase(), Number(c.value)])),
+          },
+        };
+      }
+
+      case 'fund_breakdown': {
+        const { data: funds } = await supabase
+          .from('fund_types')
+          .select('id, name, min_amount, max_amount, is_active')
+          .order('sort_order');
+        const list = (funds ?? []) as {
+          id: string;
+          name: string;
+          min_amount: number;
+          max_amount: number | null;
+          is_active: boolean;
+        }[];
+
+        const scope = fundId ? list.filter((f) => f.id === fundId) : list;
+
+        const { data: reqs } = await supabase
+          .from('fund_requests')
+          .select('fund_type_id, status, amount_requested, amount_approved');
+        const rows = (reqs ?? []) as {
+          fund_type_id: string;
+          status: string;
+          amount_requested: number;
+          amount_approved: number | null;
+        }[];
+
+        const per = scope.map((f) => {
+          const mine = rows.filter((r) => r.fund_type_id === f.id);
+          const paid = mine
+            .filter((r) => r.status === 'transferred')
+            .reduce((s, r) => s + Number(r.amount_approved ?? r.amount_requested), 0);
+          return { fund: f.name, applications: mine.length, transferred_pkr: paid, active: f.is_active };
+        });
+
+        return {
+          text: fundId
+            ? `${fundName}: ${per[0]?.applications ?? 0} application${per[0]?.applications === 1 ? '' : 's'} in total, ${withFx(per[0]?.transferred_pkr ?? 0)} transferred against it.`
+            : `Applications and money paid out, by fund:`,
+          figures: per.map((p) => ({
+            label: `${p.fund} · ${p.applications} application${p.applications === 1 ? '' : 's'}`,
+            value: pkr(p.transferred_pkr),
+            pkr: p.transferred_pkr,
+          })),
+          link: { href: '/admin/funds', label: 'Open the funds' },
+          facts: { funds: per },
+        };
+      }
+
+      case 'missing_bank': {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('full_name, email, bank_account_number')
+          .eq('role', 'member');
+
+        if (error)
+          return { text: 'Bank details need migration 0007. Run supabase/SETUP.sql and ask me again.' };
+
+        const rows = (data ?? []) as { full_name: string; email: string; bank_account_number: string | null }[];
+        const missing = rows.filter((r) => !r.bank_account_number);
+
+        return {
+          text: missing.length
+            ? `${missing.length} of ${rows.length} member${rows.length === 1 ? '' : 's'} have no bank details on file, so nothing can be transferred to them until they add some.`
+            : `Every one of your ${rows.length} member${rows.length === 1 ? ' has' : 's have'} bank details on file.`,
+          figures: missing.slice(0, 8).map((m) => ({ label: m.full_name, value: 'No bank' })),
+          link: { href: '/admin/members', label: 'See the members' },
+          facts: {
+            members_total: rows.length,
+            members_without_bank_details: missing.length,
+            names: missing.slice(0, 20).map((m) => m.full_name),
+          },
+        };
+      }
+
+      case 'missing_cnic': {
+        const { data } = await supabase.from('profiles').select('full_name, nic_path').eq('role', 'member');
+        const rows = (data ?? []) as { full_name: string; nic_path: string | null }[];
+        const missing = rows.filter((r) => !r.nic_path);
+
+        return {
+          text: missing.length
+            ? `${missing.length} of ${rows.length} member${rows.length === 1 ? '' : 's'} have not uploaded a CNIC.`
+            : `All ${rows.length} member${rows.length === 1 ? ' has' : 's have'} a CNIC on file.`,
+          figures: missing.slice(0, 8).map((m) => ({ label: m.full_name, value: 'No CNIC' })),
+          link: { href: '/admin/members', label: 'See the members' },
+          facts: {
+            members_total: rows.length,
+            members_without_cnic: missing.length,
+            names: missing.slice(0, 20).map((m) => m.full_name),
+          },
+        };
+      }
+
+      case 'blocked_members': {
+        const { data } = await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('is_blocked', true);
+        const rows = (data ?? []) as { full_name: string; email: string }[];
+        return {
+          text: rows.length
+            ? `${rows.length} account${rows.length === 1 ? ' is' : 's are'} blocked. They cannot sign in or apply.`
+            : 'No account is blocked.',
+          figures: rows.slice(0, 8).map((r) => ({ label: r.full_name, value: 'Blocked' })),
+          link: { href: '/admin/members', label: 'See the members' },
+          facts: { blocked_accounts: rows.length, names: rows.map((r) => r.full_name) },
         };
       }
 
@@ -259,23 +589,19 @@ export async function POST(request: Request) {
           .select('amount_approved, amount_requested')
           .eq('status', 'transferred');
         const rows = (data ?? []) as { amount_approved: number | null; amount_requested: number }[];
-        const total = rows.reduce(
-          (s, r) => s + Number(r.amount_approved ?? r.amount_requested),
-          0
-        );
+        const total = rows.reduce((s, r) => s + Number(r.amount_approved ?? r.amount_requested), 0);
         return {
           text: total
             ? `${withFx(total)} has been transferred to members since the foundation started, across ${rows.length} transfer${rows.length === 1 ? '' : 's'}.`
             : 'Nothing has been transferred yet.',
           figures: [{ label: 'Transferred to date', value: pkr(total), pkr: total }],
           link: { href: '/admin/requests?status=transferred', label: 'See the transfers' },
+          facts: { transferred_all_time_pkr: total, number_of_transfers: rows.length },
         };
       }
 
       case 'recurring': {
-        const { data, error } = await supabase
-          .from('recurring_grants')
-          .select('amount, is_active');
+        const { data, error } = await supabase.from('recurring_grants').select('amount, is_active');
         if (error)
           return {
             text: 'Standing monthly arrangements need migration 0009. Run supabase/SETUP.sql and ask me again.',
@@ -291,15 +617,205 @@ export async function POST(request: Request) {
             { label: 'Active arrangements', value: String(active.length) },
             { label: 'Committed monthly', value: pkr(monthly), pkr: monthly },
           ],
+          facts: { active_arrangements: active.length, committed_each_month_pkr: monthly },
+        };
+      }
+
+      case 'fx_rate': {
+        if (!rates)
+          return {
+            text: 'The exchange-rate service did not answer just now, so I can only give you rupees. Ask again in a minute.',
+          };
+        return {
+          text: `One rupee is worth ${rates.eur.toFixed(5)} euro and ${rates.usd.toFixed(5)} dollars today, so PKR 100,000 is about ${(100000 * rates.eur).toFixed(0)} euro. Rates come from open.er-api.com and are refreshed hourly.`,
+          figures: [
+            { label: 'PKR 1 in EUR', value: rates.eur.toFixed(5) },
+            { label: 'PKR 1 in USD', value: rates.usd.toFixed(5) },
+          ],
+          facts: { pkr_to_eur: rates.eur, pkr_to_usd: rates.usd },
+        };
+      }
+
+      case 'request_lookup': {
+        const { data } = await supabase
+          .from('fund_requests')
+          .select(
+            'reference, status, amount_requested, amount_approved, purpose, created_at, transferred_at, transfer_ref, admin_note, profiles!fund_requests_user_id_fkey(full_name, email), fund_types(name)'
+          )
+          .eq('reference', reference!)
+          .maybeSingle();
+
+        const r = data as unknown as {
+          reference: string;
+          status: string;
+          amount_requested: number;
+          amount_approved: number | null;
+          purpose: string | null;
+          created_at: string;
+          transferred_at: string | null;
+          transfer_ref: string | null;
+          admin_note: string | null;
+          profiles: { full_name: string; email: string } | null;
+          fund_types: { name: string } | null;
+        } | null;
+
+        if (!r)
+          return {
+            text: `There is no application with reference ${reference}. Check the number on the application itself.`,
+            link: { href: '/admin/requests', label: 'Open applications' },
+          };
+
+        const amount = Number(r.amount_approved ?? r.amount_requested);
+        return {
+          text: `${r.reference} is ${r.status} — ${r.profiles?.full_name ?? 'a member'} applied for ${withFx(Number(r.amount_requested))} from ${r.fund_types?.name ?? 'a fund'} on ${r.created_at.slice(0, 10)}${r.amount_approved != null ? `, approved at ${pkr(Number(r.amount_approved))}` : ''}${r.transferred_at ? `, transferred on ${r.transferred_at.slice(0, 10)}` : ''}.`,
+          figures: [
+            { label: 'Requested', value: pkr(Number(r.amount_requested)) },
+            { label: 'Approved', value: r.amount_approved == null ? '—' : pkr(Number(r.amount_approved)) },
+            { label: 'Status', value: r.status },
+          ],
+          link: { href: `/admin/requests?q=${r.reference}`, label: 'Open the application' },
+          facts: {
+            reference: r.reference,
+            member: r.profiles?.full_name ?? null,
+            fund: r.fund_types?.name ?? null,
+            status: r.status,
+            amount_requested_pkr: Number(r.amount_requested),
+            amount_approved_pkr: r.amount_approved === null ? null : Number(r.amount_approved),
+            amount_in_play_pkr: amount,
+            applied_on: r.created_at.slice(0, 10),
+            transferred_on: r.transferred_at?.slice(0, 10) ?? null,
+            transfer_reference: r.transfer_ref,
+            purpose: r.purpose,
+            admin_note: r.admin_note,
+          },
+        };
+      }
+
+      case 'member_lookup': {
+        const p = person!;
+        const { data: full } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', p.id)
+          .single();
+
+        const m = (full ?? {}) as Record<string, unknown>;
+
+        const { data: reqs } = await supabase
+          .from('fund_requests')
+          .select('reference, status, amount_requested, amount_approved, created_at, fund_types(name)')
+          .eq('user_id', p.id)
+          .order('created_at', { ascending: false });
+
+        const rows = (reqs ?? []) as unknown as {
+          reference: string;
+          status: string;
+          amount_requested: number;
+          amount_approved: number | null;
+          created_at: string;
+          fund_types: { name: string } | null;
+        }[];
+
+        const received = rows
+          .filter((r) => r.status === 'transferred')
+          .reduce((s, r) => s + Number(r.amount_approved ?? r.amount_requested), 0);
+        const open = rows.filter((r) => r.status === 'requested' || r.status === 'review').length;
+
+        // Donations made, where this member is also on the donor list.
+        const { data: donorRow } = await supabase
+          .from('donors')
+          .select('id')
+          .eq('user_id', p.id)
+          .maybeSingle();
+        let given = 0;
+        if (donorRow) {
+          const { data: dons } = await supabase
+            .from('donations')
+            .select('amount')
+            .eq('donor_id', (donorRow as { id: string }).id);
+          given = ((dons ?? []) as { amount: number }[]).reduce((s, d) => s + Number(d.amount), 0);
+        }
+
+        const { data: fam } = await supabase
+          .from('family_details')
+          .select('total_members, monthly_income, fund_reason')
+          .eq('user_id', p.id)
+          .maybeSingle();
+        const family = fam as { total_members: number | null; monthly_income: number | null; fund_reason: string | null } | null;
+
+        // One sentence about them, then only the things worth flagging.
+        const opening = [
+          `${p.full_name} joined on ${String(m.created_at ?? '').slice(0, 10)}`,
+          rows.length
+            ? `has made ${rows.length} application${rows.length === 1 ? '' : 's'}${open ? ` (${open} still open)` : ''}`
+            : 'has never applied',
+          received ? `and has received ${withFx(received)}` : 'and has received nothing yet',
+        ].join(', ');
+
+        const notes: string[] = [];
+        if (given) notes.push(`They have also donated ${pkr(given)}.`);
+        if (m.is_blocked) notes.push('This account is blocked.');
+        if (!m.bank_account_number)
+          notes.push('No bank details are on file, so nothing can be transferred to them.');
+        if (!m.nic_path) notes.push('No CNIC has been uploaded.');
+
+        return {
+          text: `${[`${opening}.`, ...notes].join(' ')}${alsoMatched.length ? ` (I also matched ${alsoMatched.join(' and ')} — ask again with a fuller name if you meant one of them.)` : ''}`,
+          figures: [
+            { label: 'Applications', value: String(rows.length) },
+            { label: 'Received', value: pkr(received), pkr: received },
+            ...(given ? [{ label: 'Donated', value: pkr(given), pkr: given }] : []),
+            { label: 'Bank details', value: m.bank_account_number ? 'On file' : 'Missing' },
+            { label: 'CNIC', value: m.nic_path ? 'On file' : 'Missing' },
+          ],
+          link: { href: `/admin/members/${p.id}`, label: `Open ${p.full_name}` },
+          facts: {
+            member: {
+              name: p.full_name,
+              email: p.email,
+              city: m.city,
+              age: m.age,
+              gender: m.gender,
+              role: m.role,
+              blocked: m.is_blocked,
+              registered_on: String(m.created_at ?? '').slice(0, 10),
+              bank_details_on_file: Boolean(m.bank_account_number),
+              bank_name: m.bank_name ?? null,
+              cnic_on_file: Boolean(m.nic_path),
+            },
+            applications: rows.map((r) => ({
+              reference: r.reference,
+              fund: r.fund_types?.name ?? null,
+              status: r.status,
+              amount_requested_pkr: Number(r.amount_requested),
+              amount_approved_pkr: r.amount_approved === null ? null : Number(r.amount_approved),
+              applied_on: r.created_at.slice(0, 10),
+            })),
+            total_received_pkr: received,
+            total_donated_pkr: given,
+            family: family
+              ? {
+                  household_size: family.total_members,
+                  monthly_income_pkr: family.monthly_income,
+                  why_the_fund_is_needed: family.fund_reason,
+                }
+              : null,
+            other_people_matching_that_name: alsoMatched,
+          },
         };
       }
 
       case 'help':
-      default:
+      default: {
+        const words = keywords(question);
+        const picked = words.slice(0, 3).join(', ');
         return {
-          text: "I can answer questions about this foundation's own figures — money in, money out, members and applications. I read them straight from the database, so I will never make a number up; if I do not understand, I will say so rather than guess. Try one of these:",
+          text: words.length
+            ? `I picked out “${picked}” from that, but it does not match anything I hold — no member, fund or application by that name. Here is what I can answer: ${CAPABILITIES.join('; ')}.`
+            : "I can answer questions about this foundation's own figures — money in, money out, members and applications. I read them straight from the database, so I will never make a number up; if I do not understand, I will say so rather than guess. Try one of these:",
           suggestions: SUGGESTIONS,
         };
+      }
     }
   }
 }
