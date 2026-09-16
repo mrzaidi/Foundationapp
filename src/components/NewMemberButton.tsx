@@ -88,9 +88,10 @@ export default function NewMemberButton() {
   const field = (
     name: keyof typeof BLANK,
     label: string,
-    props: React.InputHTMLAttributes<HTMLInputElement> = {}
+    props: React.InputHTMLAttributes<HTMLInputElement> = {},
+    wide = false
   ) => (
-    <div className="field">
+    <div className={wide ? 'field span-2' : 'field'}>
       <label htmlFor={`nm-${name}`}>{label}</label>
       <input
         id={`nm-${name}`}
@@ -111,14 +112,14 @@ export default function NewMemberButton() {
       </button>
 
       {open && (
-        <Modal busy={busy} onClose={close} label="Add a member">
+        <Modal busy={busy} onClose={close} className="roomy" label="Add a member">
           <h3>Add someone to the foundation</h3>
           <p className="sub">
             For people who cannot register themselves. You set the password and give it to them.
           </p>
 
-          <form onSubmit={submit}>
-            <div className="field">
+          <form onSubmit={submit} className="form-grid">
+            <div className="field span-2">
               <label>What are they?</label>
               <div className="paychoice">
                 {(
@@ -146,7 +147,7 @@ export default function NewMemberButton() {
               )}
             </div>
 
-            {field('full_name', 'Full name', { autoComplete: 'off', required: true })}
+            {field('full_name', 'Full name', { autoComplete: 'off', required: true }, true)}
 
             <div className="field">
               <label htmlFor="nm-gender">Gender</label>
@@ -176,7 +177,7 @@ export default function NewMemberButton() {
             })}
             {field('mobile', 'Mobile number', { dir: 'ltr', required: true, placeholder: '03xx…' })}
 
-            <div className="field">
+            <div className="field span-2">
               <label htmlFor="nm-password">
                 Password <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>(give this to them)</span>
               </label>
@@ -203,12 +204,12 @@ export default function NewMemberButton() {
               {errors.password && <p className="err-msg">{errors.password}</p>}
             </div>
 
-            <p className="note" style={{ marginTop: 4 }}>
+            <p className="note span-2" style={{ marginTop: 4 }}>
               Bank details are not needed yet. They cannot apply for a fund until those are added,
               which you or they can do from their profile.
             </p>
 
-            <div className="btn-row mt-8">
+            <div className="btn-row mt-8 span-2">
               <button
                 className="admin-btn ghost"
                 style={{ flex: 1, justifyContent: 'center' }}

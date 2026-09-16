@@ -3021,6 +3021,42 @@ table.grid .rowlink:hover {
   overflow-y: auto;
 }
 
+/* A dialog full of short fields — a name, an age, a city — is tall for no
+   reason in one column, and on a laptop it runs past the bottom of the screen
+   while half the width sits empty. Two columns trade width nobody was using
+   for height everybody was scrolling. */
+.amodal.roomy {
+  width: min(800px, 100%);
+  max-height: min(88vh, 900px);
+  overflow-y: auto;
+}
+.amodal.roomy .form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 18px;
+}
+/* Anything that reads as one thing — a choice, a note, the buttons — keeps
+   the full width rather than being cut in half. */
+.amodal.roomy .form-grid > .span-2 {
+  grid-column: 1 / -1;
+}
+.amodal.roomy .field {
+  margin-bottom: 13px;
+}
+.amodal.roomy h3 {
+  font-size: 19px;
+}
+.amodal.roomy p.sub {
+  margin-bottom: 14px;
+}
+/* Narrow screens get the single column back: two columns of 150px is worse
+   than a scroll. */
+@media (max-width: 760px) {
+  .amodal.roomy .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Colour and icon pickers. A fund's look is a choice from a fixed set, so it
    is shown rather than typed — the old advice was to memorise class names. */
 .swatches {

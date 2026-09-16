@@ -245,9 +245,17 @@ export default function RequestActions({ request }: { request: FundRequest }) {
       </div>
 
       {open && (
-        <Modal busy={busy} onClose={close} label={ACTION_COPY[open].title}>
+        <Modal
+          busy={busy}
+          onClose={close}
+          /* Only the transfer dialog carries enough fields to need the room. */
+          className={open === 'transferred' ? 'roomy' : ''}
+          label={ACTION_COPY[open].title}
+        >
           <h3>{ACTION_COPY[open].title}</h3>
           <p className="sub">{ACTION_COPY[open].sub}</p>
+
+          <div className="form-grid">
 
           {(open === 'accepted' || open === 'transferred') && (
             <div className="field">
@@ -315,7 +323,7 @@ export default function RequestActions({ request }: { request: FundRequest }) {
                 </div>
               )}
 
-              <div className="field">
+              <div className="field span-2">
                 <label htmlFor="receipt">
                   Transfer receipt{' '}
                   <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>(optional)</span>
@@ -379,7 +387,7 @@ export default function RequestActions({ request }: { request: FundRequest }) {
             </>
           )}
 
-          <div className="field">
+          <div className="field span-2">
             <label htmlFor="note">
               Note to the member {open === 'rejected' && <span className="req-star">*</span>}
             </label>
@@ -396,7 +404,7 @@ export default function RequestActions({ request }: { request: FundRequest }) {
             />
           </div>
 
-          <div className="btn-row mt-8">
+          <div className="btn-row mt-8 span-2">
             <button
               className="admin-btn ghost"
               style={{ flex: 1, justifyContent: 'center' }}
@@ -416,6 +424,7 @@ export default function RequestActions({ request }: { request: FundRequest }) {
               {busy ? <span className="spin" /> : <Icon name={ACTION_COPY[open].icon} />}
               {busy ? 'Saving…' : overFund ? 'Fund is short' : ACTION_COPY[open].cta}
             </button>
+          </div>
           </div>
         </Modal>
       )}
