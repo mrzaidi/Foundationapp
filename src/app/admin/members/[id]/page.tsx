@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation';
 import DocumentGallery from '@/components/DocumentGallery';
 import FamilyDetails from '@/components/FamilyDetails';
 import Icon from '@/components/Icon';
-import MemberActions from '@/components/MemberActions';
 import RecurringControl from '@/components/RecurringControl';
 import StatusBadge from '@/components/StatusBadge';
 import { createClient } from '@/lib/supabase/server';
@@ -57,7 +56,6 @@ export default async function AdminMemberDetail({ params }: { params: Promise<{ 
             </div>
           </div>
         </div>
-        <MemberActions member={m} />
       </div>
 
       <div className="kpis">

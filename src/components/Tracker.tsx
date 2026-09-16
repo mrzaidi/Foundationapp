@@ -53,7 +53,14 @@ export default function Tracker({
   return (
     <div className="track">
       {PIPELINE.map((s, i) => {
-        const state = i < current ? 'done' : i === current ? 'current' : '';
+        /*
+         * Gold means "here, and waiting on somebody". Transferred is the end
+         * of the pipeline, not a waiting room, so it reads as done — the same
+         * green the status badge uses everywhere else.
+         */
+        const settled = status === 'transferred';
+        const state =
+          i < current || (i === current && settled) ? 'done' : i === current ? 'current' : '';
         const ev = events.find((e) => e.status === s);
         return (
           <div className={`step ${state}`} key={s}>
