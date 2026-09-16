@@ -3678,3 +3678,34 @@ table.grid .rowlink:hover {
 .trend-row.one-up {
   grid-template-columns: minmax(0, 1fr);
 }
+
+/* Correcting the requested amount, in place on the application record. */
+.amt-edit {
+  border: none;
+  background: none;
+  padding: 2px;
+  cursor: pointer;
+  color: var(--text-faint);
+  display: inline-grid;
+  place-items: center;
+}
+.amt-edit:hover {
+  color: var(--brand-2);
+}
+.amt-edit svg {
+  width: 14px;
+  height: 14px;
+}
+.amt-editing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.amt-editing .input {
+  width: 130px;
+  padding: 6px 9px;
+  font-size: 13px;
+}
+.amt-editing .admin-btn {
+  padding: 7px 10px;
+}

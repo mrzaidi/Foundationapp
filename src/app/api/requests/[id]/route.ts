@@ -61,6 +61,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   let body: {
     status?: string;
+    amount_requested?: number;
     amount_approved?: number | null;
     admin_note?: string | null;
     transfer_ref?: string | null;
@@ -78,6 +79,35 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!STATUSES.includes(body.status as RequestStatus))
       return NextResponse.json({ error: 'Unknown status.' }, { status: 422 });
     patch.status = body.status;
+  }
+
+  /*
+   * Correcting what was asked for.
+   *
+   * Applications are often filled in at the office on somebody's behalf, so a
+   * mistyped figure is the committee's mistake to fix rather than the member's
+   * to live with. It is still their stated request, so it can only be changed
+   * while the application is undecided — once money has moved, the record has
+   * to match the receipt that went out with it.
+   */
+  if (body.amount_requested !== undefined) {
+    const n = Number(body.amount_requested);
+    if (!Number.isFinite(n) || n <= 0)
+      return NextResponse.json({ error: 'Enter a valid amount.' }, { status: 422 });
+
+    const { data: current } = await supabase
+      .from('fund_requests')
+      .select('status')
+      .eq('id', id)
+      .single();
+
+    if (current?.status === 'transferred')
+      return NextResponse.json(
+        { error: 'This has already been transferred — the amount cannot be changed now.' },
+        { status: 409 }
+      );
+
+    patch.amount_requested = n;
   }
 
   if (body.amount_approved !== undefined) {

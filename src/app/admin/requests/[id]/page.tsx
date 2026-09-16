@@ -5,6 +5,7 @@ import DocumentGallery from '@/components/DocumentGallery';
 import Icon from '@/components/Icon';
 import RecurringControl from '@/components/RecurringControl';
 import RequestActions from '@/components/RequestActions';
+import RequestedAmount from '@/components/RequestedAmount';
 import StatusBadge from '@/components/StatusBadge';
 import Tracker from '@/components/Tracker';
 import { createClient } from '@/lib/supabase/server';
@@ -117,7 +118,13 @@ export default async function AdminRequestDetail({
               </div>
               <div className="kv">
                 <span className="k">Requested amount</span>
-                <span className="v">{money(Number(r.amount_requested))}</span>
+                <RequestedAmount
+                  id={r.id}
+                  amount={Number(r.amount_requested)}
+                  /* A correction, not a decision — so only before it is paid,
+                     and only for a level that may decide applications. */
+                  editable={can(level, 'decide_requests') && r.status !== 'transferred'}
+                />
               </div>
               <div className="kv">
                 <span className="k">Approved amount</span>
