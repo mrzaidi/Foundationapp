@@ -149,7 +149,9 @@ preview/                       design review & clickable prototype (build script
 | `GET` | `/api/admin/stats` | Dashboard aggregates |
 | `GET/PATCH` | `/api/admin/members` | List members; change role / block |
 | `GET` | `/api/admin/analytics` | Rows behind the dashboard charts |
-| `GET/PUT` | `/api/admin/budget` | Read / set the monthly budget |
+| `GET` | `/api/admin/budget` | The month's fund, spend and history |
+| `GET` | `/api/admin/export?month=` | The month as one CSV statement |
+| `POST` | `/api/admin/import` | Preview, then apply, a month of donations |
 
 ### Security model
 
@@ -244,6 +246,24 @@ anything else that reaches the database.
 
 Admins see the account on both the application and the member record, which is
 what they need in hand to make the transfer.
+
+### Import and export
+
+A month leaves as one CSV in three blocks — donations received, transfers
+made, and a summary ending in what is left. One sheet the committee can print
+or email, rather than three downloads to reconcile by hand. It carries a BOM,
+because without one Excel renders Urdu names as mojibake.
+
+That same file is the import template: fill the Amount column and send it
+back. Donors are matched on email, falling back to name, both
+case-insensitively; a row matching nothing is reported rather than guessed at.
+
+Import always previews. Nothing is written until the admin confirms the
+row-by-row outcome — these are money figures, and an import that silently
+half-applies is worse than one that refuses. An empty Amount cell clears a
+donation; a cell containing text that is not a number is a typo and is
+skipped, because clearing a recorded donation over one would be a silent loss
+of money.
 
 ### The month's fund
 

@@ -1,5 +1,6 @@
 import BudgetPanel from '@/components/BudgetPanel';
 import DonorPanel from '@/components/DonorPanel';
+import MonthlyStatement from '@/components/MonthlyStatement';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +19,8 @@ export default function AdminBudgetPage() {
       <BudgetPanel />
 
       <DonorPanel />
+
+      <MonthlyStatement />
 
       <div className="panel mt-24">
         <div className="panel-head">
