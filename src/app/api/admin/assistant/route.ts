@@ -19,6 +19,14 @@ import {
   statusFrom,
   type Action,
 } from '@/lib/assistant-actions';
+import {
+  FLOWS,
+  flowFrom,
+  nextField,
+  statusFromAnswer,
+  suggestPassword,
+  type FlowKind,
+} from '@/lib/assistant-flows';
 import { requireCapability } from '@/lib/admin-guard';
 import { can, type Capability } from '@/lib/permissions';
 import { geminiReady, phrase } from '@/lib/gemini';
@@ -37,6 +45,8 @@ interface Answer {
   /** Where to go for the detail behind the answer. */
   link?: { href: string; label: string };
   suggestions?: string[];
+  /** Fixed answers for the question just asked, shown as buttons. */
+  options?: { value: string; label: string }[];
   /** A change waiting on the administrator to confirm it. Nothing runs until they do. */
   action?: Action;
   /**
@@ -68,7 +78,11 @@ export async function POST(request: Request) {
   if (me?.role !== 'admin')
     return NextResponse.json({ error: 'Administrators only.' }, { status: 403 });
 
-  let body: { question?: string };
+  let body: {
+    question?: string;
+    /** A guided instruction already under way. */
+    pending?: { kind: FlowKind; collected: Record<string, string> };
+  };
   try {
     body = await request.json();
   } catch {
@@ -77,6 +91,31 @@ export async function POST(request: Request) {
 
   const question = (body.question ?? '').trim();
   if (!question) return NextResponse.json({ error: 'Ask me something.' }, { status: 422 });
+
+  /* ------------------------------------------------------------------ *
+   * Instructions that take more than one sentence.                      *
+   *                                                                     *
+   * "Add a new member" cannot be answered in one step, so the assistant  *
+   * asks for each detail in turn. The answers travel in the conversation *
+   * rather than being stored here, and nothing reaches the database      *
+   * until the last one is in and the administrator confirms.            *
+   * ------------------------------------------------------------------ */
+  const started = body.pending ?? (flowFrom(question) ? { kind: flowFrom(question)!, collected: {} } : null);
+
+  if (started) {
+    const writeGate = await requireCapability('use_assistant_writes');
+    if ('refusal' in writeGate)
+      return NextResponse.json({
+        intent: 'help',
+        month: monthFrom(question).month,
+        answer: {
+          text: 'Your administrator account can ask me about the figures, but cannot change anything.',
+          suggestions: SUGGESTIONS.slice(0, 3),
+        },
+      });
+
+    return NextResponse.json(await step(started, body.pending ? question : null));
+  }
 
   /*
    * Say hello back, by name. It costs one branch and no query, and a box that
@@ -474,6 +513,150 @@ export async function POST(request: Request) {
         amount: p.amount,
         month: monthStart,
         subject: person.full_name,
+      },
+    };
+  }
+
+  /**
+   * One turn of a guided instruction: take the answer just given, complain if
+   * it is no good, and ask for the next thing — or, when everything is in,
+   * hand back the same confirm-first proposal a one-line instruction produces.
+   */
+  async function step(
+    state: { kind: FlowKind; collected: Record<string, string> },
+    answer: string | null
+  ) {
+    const flow = FLOWS[state.kind];
+    const collected = { ...state.collected };
+
+    if (answer !== null) {
+      const field = nextField(flow, collected);
+      if (field) {
+        const given = answer.trim();
+
+        // An escape hatch, so nobody is trapped halfway through.
+        if (/^(cancel|stop|never mind|nevermind|forget it)$/i.test(given))
+          return {
+            intent: 'flow',
+            month: monthStart,
+            answer: { text: 'Cancelled — nothing was changed.', suggestions: SUGGESTIONS.slice(0, 3) },
+          };
+
+        const value =
+          field.key === 'password' && /^suggest/i.test(given) ? suggestPassword() : given;
+
+        const complaint = field.check?.(value);
+        if (complaint)
+          return {
+            intent: 'flow',
+            month: monthStart,
+            answer: { text: `${complaint} ${field.ask}`, options: field.options },
+            pending: state,
+          };
+
+        collected[field.key] = value;
+      }
+    }
+
+    const next = nextField(flow, collected);
+    if (next)
+      return {
+        intent: 'flow',
+        month: monthStart,
+        answer: {
+          text: answer === null ? `${flow.opening} ${next.ask}` : next.ask,
+          options: next.options,
+        },
+        pending: { kind: state.kind, collected },
+      };
+
+    /* ---- everything is in; describe what will happen ---- */
+    if (state.kind === 'create_member')
+      return {
+        intent: 'action',
+        month: monthStart,
+        answer: {
+          text: `Create a member account for ${collected.full_name}? They can sign in with ${collected.email} using the password ${collected.password}, which you will need to give them.`,
+          figures: [
+            { label: 'Name', value: collected.full_name },
+            { label: 'City', value: collected.city },
+            { label: 'Mobile', value: collected.mobile },
+            { label: 'Password', value: collected.password },
+          ],
+          action: {
+            kind: 'create_member',
+            subject: collected.full_name,
+            member: {
+              full_name: collected.full_name,
+              gender: collected.gender.toLowerCase(),
+              age: Number(collected.age.replace(/\D/g, '')),
+              city: collected.city,
+              country: 'Pakistan',
+              email: collected.email.toLowerCase(),
+              mobile: collected.mobile,
+              password: collected.password,
+            },
+          },
+        },
+      };
+
+    /* ---- a status change, resolved against the real application ---- */
+    const ref = referenceFrom(collected.reference)!;
+    const status = statusFromAnswer(collected.status)!;
+
+    const { data } = await supabase
+      .from('fund_requests')
+      .select('id, reference, status, amount_requested, profiles!fund_requests_user_id_fkey(full_name)')
+      .eq('reference', ref)
+      .maybeSingle();
+
+    const r = data as unknown as {
+      id: string;
+      reference: string;
+      status: string;
+      amount_requested: number;
+      profiles: { full_name: string } | null;
+    } | null;
+
+    if (!r)
+      return {
+        intent: 'flow',
+        month: monthStart,
+        answer: { text: `There is no application with reference ${ref}.`, suggestions: SUGGESTIONS.slice(0, 3) },
+      };
+
+    const asked = Number(r.amount_requested);
+    const approved =
+      status === 'accepted'
+        ? /as requested|same|yes/i.test(collected.amount ?? '')
+          ? asked
+          : (Number((collected.amount ?? '').replace(/[^\d.]/g, '')) || asked)
+        : null;
+
+    const who = r.profiles?.full_name ?? 'the member';
+
+    return {
+      intent: 'action',
+      month: monthStart,
+      answer: {
+        text:
+          status === 'accepted'
+            ? `Approve ${r.reference} for ${who} at ${pkr(approved!)}?`
+            : status === 'rejected'
+              ? `Reject ${r.reference} for ${who}, telling them: “${collected.note}”?`
+              : `Move ${r.reference} for ${who} to review?`,
+        figures: [
+          { label: 'Requested', value: pkr(asked) },
+          { label: 'Currently', value: r.status },
+        ],
+        action: {
+          kind: 'set_status',
+          requestId: r.id,
+          status,
+          note: collected.note,
+          amount: approved ?? undefined,
+          subject: r.reference,
+        },
       },
     };
   }

@@ -24,7 +24,8 @@ export type ActionKind =
   | 'set_pledge'
   | 'set_status'
   | 'block_member'
-  | 'unblock_member';
+  | 'unblock_member'
+  | 'create_member';
 
 export interface Action {
   kind: ActionKind;
@@ -39,6 +40,17 @@ export interface Action {
   note?: string;
   /** For showing the administrator what they are about to change. */
   subject?: string;
+  /** Collected over several turns by a guided instruction — see assistant-flows. */
+  member?: {
+    full_name: string;
+    gender: string;
+    age: number;
+    city: string;
+    country: string;
+    email: string;
+    mobile: string;
+    password: string;
+  };
 }
 
 /** What the parser found, and what it still needs before it can propose. */

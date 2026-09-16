@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { monthLabel } from '@/lib/assistant';
 import type { Action } from '@/lib/assistant-actions';
 import { requireCapability } from '@/lib/admin-guard';
+import { welcomeEmail } from '@/lib/emails';
+import { mailReady, sendInBackground } from '@/lib/mailer';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
@@ -116,6 +119,61 @@ export async function POST(request: Request) {
       return NextResponse.json({
         done: `Recorded ${pkr(amount)} from ${person.full_name} for ${monthLabel(action.month!)}. ${pkr(left)} is now available.`,
         link: { href: '/admin/budget', label: 'Open the budget' },
+      });
+    }
+
+    /* ---------------------------------------------------------------- */
+    case 'create_member': {
+      const m = action.member;
+      if (!m?.email || !m.full_name)
+        return NextResponse.json({ error: 'Some details are missing.' }, { status: 422 });
+
+      // Making a member is a different permission from asking questions.
+      const canCreate = await requireCapability('create_members');
+      if ('refusal' in canCreate) return canCreate.refusal;
+
+      const admin = createAdminClient();
+
+      const { data: created, error: authError } = await admin.auth.admin.createUser({
+        email: m.email,
+        password: m.password,
+        // No inbox round-trip: these accounts are made at the office, in person.
+        email_confirm: true,
+        user_metadata: { full_name: m.full_name },
+      });
+
+      if (authError || !created?.user) {
+        const msg = authError?.message ?? 'Could not create the account.';
+        const duplicate = /already|registered|exists/i.test(msg);
+        return NextResponse.json(
+          { error: duplicate ? 'Someone is already registered with that email address.' : msg },
+          { status: duplicate ? 409 : 400 }
+        );
+      }
+
+      const { error: profileError } = await admin.from('profiles').insert({
+        id: created.user.id,
+        full_name: m.full_name,
+        gender: m.gender,
+        age: m.age,
+        country: m.country,
+        city: m.city,
+        email: m.email,
+        mobile: m.mobile,
+        role: 'member',
+      });
+
+      if (profileError) {
+        // Never leave an auth user behind with no profile to go with it.
+        await admin.auth.admin.deleteUser(created.user.id);
+        return NextResponse.json({ error: profileError.message }, { status: 400 });
+      }
+
+      if (mailReady()) sendInBackground(welcomeEmail(m.email, m.full_name));
+
+      return NextResponse.json({
+        done: `${m.full_name} can now sign in with ${m.email}. Give them the password. Add their bank details before they apply for a fund.`,
+        link: { href: `/admin/members/${created.user.id}`, label: `Open ${m.full_name}` },
       });
     }
 

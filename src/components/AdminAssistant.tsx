@@ -20,6 +20,8 @@ interface Answer {
   action?: Record<string, unknown>;
   /** Show the words that make a sentence an instruction. */
   vocabulary?: boolean;
+  /** Fixed answers to the question just asked. */
+  options?: { value: string; label: string }[];
 }
 
 interface Turn {
@@ -55,6 +57,9 @@ export default function AdminAssistant() {
   const [turns, setTurns] = useState<Turn[]>([OPENING]);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
+  /* A guided instruction part-way through. Held here rather than on the server
+     so nothing is half-written while somebody is still answering. */
+  const [pending, setPending] = useState<{ kind: string; collected: Record<string, string> } | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -86,10 +91,11 @@ export default function AdminAssistant() {
       const res = await fetch('/api/admin/assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q }),
+        body: JSON.stringify({ question: q, ...(pending ? { pending } : {}) }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Something went wrong.');
+      setPending(json.pending ?? null);
       setTurns((t) => [...t, { from: 'bot', text: '', answer: json.answer }]);
     } catch (e) {
       setTurns((t) => [
@@ -110,6 +116,7 @@ export default function AdminAssistant() {
   async function confirm(index: number, action: Record<string, unknown>) {
     if (busy) return;
     setTurns((t) => t.map((turn, i) => (i === index ? { ...turn, settled: 'done' } : turn)));
+    setPending(null);
     setBusy(true);
 
     try {
@@ -209,6 +216,24 @@ export default function AdminAssistant() {
                               {v.example}
                             </button>
                           </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Answers to the question just asked. Only on the last
+                        turn — an older question's buttons would send the
+                        answer into a conversation that has moved on. */}
+                    {turn.answer?.options && i === turns.length - 1 && (
+                      <div className="bot-chips">
+                        {turn.answer.options.map((o) => (
+                          <button
+                            key={o.value}
+                            type="button"
+                            onClick={() => ask(o.label)}
+                            disabled={busy}
+                          >
+                            {o.label}
+                          </button>
                         ))}
                       </div>
                     )}
