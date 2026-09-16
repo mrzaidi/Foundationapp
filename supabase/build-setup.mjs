@@ -23,6 +23,7 @@ const FILES = [
   'migrations/0008_transfer_receipts.sql',
   'migrations/0009_recurring_monthly.sql',
   'migrations/0010_donors.sql',
+  'migrations/0011_family_details.sql',
 ];
 
 const header = `-- =====================================================================

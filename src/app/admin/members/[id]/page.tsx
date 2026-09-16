@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import DocumentGallery from '@/components/DocumentGallery';
+import FamilyDetails from '@/components/FamilyDetails';
 import Icon from '@/components/Icon';
 import MemberActions from '@/components/MemberActions';
 import RecurringControl from '@/components/RecurringControl';
@@ -154,7 +155,7 @@ export default async function AdminMemberDetail({ params }: { params: Promise<{ 
           <div className="panel">
             <div className="panel-head">
               <div>
-                <h2>Registration</h2>
+                <h2>Member details</h2>
                 <div className="ph-sub">Details supplied at sign-up</div>
               </div>
             </div>
@@ -301,6 +302,8 @@ export default async function AdminMemberDetail({ params }: { params: Promise<{ 
           </div>
         </div>
       </div>
+
+      <FamilyDetails userId={m.id} memberName={m.full_name} />
     </>
   );
 }

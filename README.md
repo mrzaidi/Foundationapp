@@ -35,6 +35,8 @@ idempotent — safe to re-run after any change:
 8. `0007_bank_details.sql` — payout account on the profile + the apply guard
 9. `0008_transfer_receipts.sql` — lets an admin file a receipt into a member's case
 10. `0009_recurring_monthly.sql` — standing monthly arrangements + the nightly job
+11. `0010_donors.sql` — donors, donations, and the month's fund
+12. `0011_family_details.sql` — the household behind an application
 
 Edit those sources, never `SETUP.sql`. Regenerate it with:
 
@@ -172,6 +174,23 @@ Authorisation lives in Postgres, not just in the API:
 `requested → review → accepted → transferred`, plus a terminal `rejected`.
 Every change is written to `request_events` by a trigger, so the member's
 progress history and the admin's audit trail are the same rows and cannot drift.
+
+### Family details
+
+Registration captures the person; family details capture the circumstances the
+committee is actually deciding on — who depends on the member, what comes in,
+what goes out, and why the fund is needed. Staff fill it in, usually at the
+office with the family in front of them.
+
+Admin-only in both directions: a member can neither read nor write their own
+row. These are caseworker notes about a household, including whether a father
+is alive, and the foundation should be able to record them frankly.
+
+The household roll is a JSONB array rather than a table. It is edited as one
+form — the member count drives how many rows appear and the whole household
+saves in a single write — so keeping it in one column keeps that atomic: no
+orphan rows when a count shrinks, no half-saved family. Lowering the count
+never discards a row someone has already filled in; only trailing blanks go.
 
 ### Standing monthly support
 
