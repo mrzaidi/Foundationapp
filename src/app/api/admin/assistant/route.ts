@@ -19,7 +19,7 @@ import {
   type Action,
 } from '@/lib/assistant-actions';
 import { geminiReady, phrase } from '@/lib/gemini';
-import { getRates } from '@/lib/rates';
+import { getRates, type Rates } from '@/lib/rates';
 import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
@@ -75,7 +75,16 @@ export async function POST(request: Request) {
   const label = monthLabel(month);
   const when = explicit ? `in ${label}` : `this month (${label})`;
 
-  const rates = await getRates();
+  /*
+   * Started now, awaited only once the answer actually needs it. The rate
+   * provider is a third party over the public internet — measured at 1.4s on a
+   * cold instance — and none of the database work depends on it, so waiting
+   * here used to add that to every single question. A write proposal never
+   * touches it at all and now never waits for it.
+   */
+  const ratesPromise = getRates();
+  let rates: Rates | null = null;
+
   const pkr = (n: number) => `PKR ${Math.round(n).toLocaleString('en-GB')}`;
   const withFx = (n: number) => {
     if (!rates || n === 0) return pkr(n);
@@ -188,6 +197,9 @@ export async function POST(request: Request) {
       }
     }
   }
+
+  // Overlapped with everything above rather than waited for at the start.
+  rates = await ratesPromise;
 
   const answer = await build(intent);
 
@@ -440,16 +452,20 @@ export async function POST(request: Request) {
       }
 
       case 'month_summary': {
-        const b = await budget();
-        const { count: joined } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', `${monthStart}T00:00:00.000${PK}`)
-          .lt('created_at', `${monthEnd}T00:00:00.000${PK}`);
-        const { count: waiting } = await supabase
-          .from('fund_requests')
-          .select('*', { count: 'exact', head: true })
-          .in('status', ['requested', 'review']);
+        // Three independent questions; asking them one after another cost a
+        // round trip each for no reason.
+        const [b, { count: joined }, { count: waiting }] = await Promise.all([
+          budget(),
+          supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .gte('created_at', `${monthStart}T00:00:00.000${PK}`)
+            .lt('created_at', `${monthEnd}T00:00:00.000${PK}`),
+          supabase
+            .from('fund_requests')
+            .select('*', { count: 'exact', head: true })
+            .in('status', ['requested', 'review']),
+        ]);
 
         const left = Number(b.remaining ?? 0);
         return {
@@ -509,8 +525,10 @@ export async function POST(request: Request) {
       }
 
       case 'donor_count': {
-        const b = await budget();
-        const { data: all } = await supabase.rpc('donor_month', { p_month: monthStart });
+        const [b, { data: all }] = await Promise.all([
+          budget(),
+          supabase.rpc('donor_month', { p_month: monthStart }),
+        ]);
         const list = (all ?? []) as { given: number | null }[];
         const gave = Number(b.donors ?? 0);
         return {
@@ -679,10 +697,15 @@ export async function POST(request: Request) {
       }
 
       case 'fund_breakdown': {
-        const { data: funds } = await supabase
-          .from('fund_types')
-          .select('id, name, min_amount, max_amount, is_active')
-          .order('sort_order');
+        const [{ data: funds }, { data: reqs }] = await Promise.all([
+          supabase
+            .from('fund_types')
+            .select('id, name, min_amount, max_amount, is_active')
+            .order('sort_order'),
+          supabase
+            .from('fund_requests')
+            .select('fund_type_id, status, amount_requested, amount_approved'),
+        ]);
         const list = (funds ?? []) as {
           id: string;
           name: string;
@@ -693,9 +716,6 @@ export async function POST(request: Request) {
 
         const scope = fundId ? list.filter((f) => f.id === fundId) : list;
 
-        const { data: reqs } = await supabase
-          .from('fund_requests')
-          .select('fund_type_id, status, amount_requested, amount_approved');
         const rows = (reqs ?? []) as {
           fund_type_id: string;
           status: string;
@@ -896,19 +916,30 @@ export async function POST(request: Request) {
 
       case 'member_lookup': {
         const p = person!;
-        const { data: full } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', p.id)
-          .single();
+
+        /*
+         * Four independent questions about one person. Asked in series this
+         * was four round trips before a word could be written; the donations
+         * below are the only part that genuinely has to wait, because it needs
+         * the donor row's id.
+         */
+        const [{ data: full }, { data: reqs }, { data: donorRow }, { data: fam }] =
+          await Promise.all([
+            supabase.from('profiles').select('*').eq('id', p.id).single(),
+            supabase
+              .from('fund_requests')
+              .select('reference, status, amount_requested, amount_approved, created_at, fund_types(name)')
+              .eq('user_id', p.id)
+              .order('created_at', { ascending: false }),
+            supabase.from('donors').select('id').eq('user_id', p.id).maybeSingle(),
+            supabase
+              .from('family_details')
+              .select('total_members, monthly_income, fund_reason')
+              .eq('user_id', p.id)
+              .maybeSingle(),
+          ]);
 
         const m = (full ?? {}) as Record<string, unknown>;
-
-        const { data: reqs } = await supabase
-          .from('fund_requests')
-          .select('reference, status, amount_requested, amount_approved, created_at, fund_types(name)')
-          .eq('user_id', p.id)
-          .order('created_at', { ascending: false });
 
         const rows = (reqs ?? []) as unknown as {
           reference: string;
@@ -925,11 +956,6 @@ export async function POST(request: Request) {
         const open = rows.filter((r) => r.status === 'requested' || r.status === 'review').length;
 
         // Donations made, where this member is also on the donor list.
-        const { data: donorRow } = await supabase
-          .from('donors')
-          .select('id')
-          .eq('user_id', p.id)
-          .maybeSingle();
         let given = 0;
         if (donorRow) {
           const { data: dons } = await supabase
@@ -939,11 +965,6 @@ export async function POST(request: Request) {
           given = ((dons ?? []) as { amount: number }[]).reduce((s, d) => s + Number(d.amount), 0);
         }
 
-        const { data: fam } = await supabase
-          .from('family_details')
-          .select('total_members, monthly_income, fund_reason')
-          .eq('user_id', p.id)
-          .maybeSingle();
         const family = fam as { total_members: number | null; monthly_income: number | null; fund_reason: string | null } | null;
 
         // One sentence about them, then only the things worth flagging.

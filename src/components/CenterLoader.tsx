@@ -1,32 +1,23 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { useI18n } from './LocaleProvider';
-import animation from '@/lib/loading-animation.json';
 
 /**
- * The loading state for a whole screen: one Lottie mark, dead centre.
+ * The loading state for a whole screen: the foundation's mark, drawing itself.
  *
- * `LottieSvg` rather than the full `Lottie` — this animation is shapes and
- * strokes, so the svg-only build is all it needs and carries a smaller copy of
- * the engine. It loads client-side only because lottie-web reaches for
- * `document` as it initialises, and the animation is bundled rather than
- * fetched: a loader that waits on the network shows nothing for exactly as
- * long as it matters.
+ * This was a Lottie animation until it was measured. The animation file is
+ * 3 KB; the engine that plays it is 242 KB of JavaScript, in a separate chunk
+ * that has to arrive before anything moves — so the loader was the slowest
+ * thing on a slow connection, which is exactly backwards. It is now inline SVG
+ * and CSS: nothing to download, nothing to parse, and it paints on the first
+ * frame of the page that needs it.
  *
- * Reduced motion needs no handling here — lottie-react declines to autoplay on
- * a device that asks for it, and the mark still renders on its first frame.
+ * `prefers-reduced-motion` is honoured in the stylesheet, where the strokes
+ * simply hold still rather than pulsing.
  */
-const LottieSvg = dynamic(() => import('lottie-react').then((m) => m.LottieSvg), {
-  ssr: false,
-  // The engine is a separate chunk, so the very first loader on a cold visit
-  // would otherwise be an empty box. A plain CSS ring covers that gap.
-  loading: () => <span className="cl-fallback" aria-hidden="true" />,
-});
-
 export default function CenterLoader({
   label,
-  size = 132,
+  size = 108,
 }: {
   /** Overrides the dictionary's wording — the admin portal names the section. */
   label?: string;
@@ -38,7 +29,20 @@ export default function CenterLoader({
     <div className="center-loader" role="status" aria-live="polite">
       <div className="cl-inner">
         <div className="cl-art" style={{ width: size, height: size }}>
-          <LottieSvg src={animation} loop autoplay className="cl-anim" />
+          <svg className="cl-mark" viewBox="0 0 120 120" aria-hidden="true">
+            {/* The ring: a single dashed circle, rotating. */}
+            <circle className="cl-track" cx="60" cy="60" r="50" />
+            <circle className="cl-sweep" cx="60" cy="60" r="50" />
+
+            {/* Two hands holding a figure — the mark, reduced to what still
+                reads at this size. */}
+            <g className="cl-hands">
+              <path d="M60 86c-9-1-17-6-22-14" />
+              <path d="M60 86c9-1 17-6 22-14" />
+              <circle cx="60" cy="44" r="7" />
+              <path d="M49 70v-4c0-6 5-11 11-11s11 5 11 11v4" />
+            </g>
+          </svg>
         </div>
         <p className="cl-text">{label ?? d.common.loading}</p>
       </div>
