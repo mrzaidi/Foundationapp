@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Icon from './Icon';
 import { SUGGESTIONS } from '@/lib/assistant';
@@ -15,12 +16,16 @@ interface Answer {
   figures?: Figure[];
   link?: { href: string; label: string };
   suggestions?: string[];
+  /** A change the assistant is offering to make. Nothing happens until confirmed. */
+  action?: Record<string, unknown>;
 }
 
 interface Turn {
   from: 'you' | 'bot';
   text: string;
   answer?: Answer;
+  /** Set once a proposal has been confirmed or dismissed, so it cannot be run twice. */
+  settled?: 'done' | 'cancelled';
 }
 
 const OPENING: Turn = {
@@ -42,6 +47,7 @@ const OPENING: Turn = {
  * can answer, which is the one behaviour a guessing model cannot give you.
  */
 export default function AdminAssistant() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([OPENING]);
   const [draft, setDraft] = useState('');
@@ -85,6 +91,39 @@ export default function AdminAssistant() {
     } catch (e) {
       setTurns((t) => [
         ...t,
+        { from: 'bot', text: '', answer: { text: (e as Error).message } },
+      ]);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /**
+   * Carry out a proposal the administrator has just confirmed.
+   *
+   * The turn is settled first, so a second click cannot record the same
+   * donation twice — the one mistake this whole flow exists to prevent.
+   */
+  async function confirm(index: number, action: Record<string, unknown>) {
+    if (busy) return;
+    setTurns((t) => t.map((turn, i) => (i === index ? { ...turn, settled: 'done' } : turn)));
+    setBusy(true);
+
+    try {
+      const res = await fetch('/api/admin/assistant/act', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'That did not go through.');
+
+      setTurns((t) => [...t, { from: 'bot', text: '', answer: { text: json.done, link: json.link } }]);
+      // The screen behind is now out of date with what was just changed.
+      router.refresh();
+    } catch (e) {
+      setTurns((t) => [
+        ...t.map((turn, i) => (i === index ? { ...turn, settled: undefined } : turn)),
         { from: 'bot', text: '', answer: { text: (e as Error).message } },
       ]);
     } finally {
@@ -150,6 +189,43 @@ export default function AdminAssistant() {
                         {turn.answer.link.label}
                         <Icon name="chevronRight" />
                       </Link>
+                    )}
+
+                    {/* A change is never carried out by asking for it — only
+                        by confirming it here. */}
+                    {turn.answer?.action && (
+                      <div className="bot-confirm">
+                        {turn.settled ? (
+                          <span className="bc-settled">
+                            <Icon name={turn.settled === 'done' ? 'checkCircle' : 'x'} />
+                            {turn.settled === 'done' ? 'Confirmed' : 'Cancelled'}
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              className="bc-no"
+                              disabled={busy}
+                              onClick={() =>
+                                setTurns((t) =>
+                                  t.map((x, j) => (j === i ? { ...x, settled: 'cancelled' } : x))
+                                )
+                              }
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              className="bc-yes"
+                              disabled={busy}
+                              onClick={() => confirm(i, turn.answer!.action!)}
+                            >
+                              <Icon name="check" />
+                              Confirm
+                            </button>
+                          </>
+                        )}
+                      </div>
                     )}
 
                     {turn.answer?.suggestions && (

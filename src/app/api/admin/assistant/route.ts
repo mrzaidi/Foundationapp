@@ -10,6 +10,13 @@ import {
   referenceFrom,
   type Intent,
 } from '@/lib/assistant';
+import {
+  WRITE_EXAMPLES,
+  isWrite,
+  parse,
+  statusFrom,
+  type Action,
+} from '@/lib/assistant-actions';
 import { geminiReady, phrase } from '@/lib/gemini';
 import { getRates } from '@/lib/rates';
 import { createClient } from '@/lib/supabase/server';
@@ -26,6 +33,8 @@ interface Answer {
   /** Where to go for the detail behind the answer. */
   link?: { href: string; label: string };
   suggestions?: string[];
+  /** A change waiting on the administrator to confirm it. Nothing runs until they do. */
+  action?: Action;
   /**
    * The figures this answer rests on, in machine form. Handed to the language
    * model when one is configured so it can word the reply without ever being
@@ -108,6 +117,17 @@ export async function POST(request: Request) {
    * ------------------------------------------------------------------ */
 
   const reference = referenceFrom(question);
+
+  /*
+   * An instruction to change something is answered with a proposal, never with
+   * a change. Nothing below this line writes; the administrator is shown what
+   * would happen and confirms it, which is the only thing that calls /act.
+   */
+  if (isWrite(question)) {
+    const proposal = await propose(question);
+    return NextResponse.json({ intent: 'action', month, answer: proposal });
+  }
+
   let intent: Intent = classify(question);
 
   type Person = { id: string; full_name: string; email: string };
@@ -182,6 +202,158 @@ export async function POST(request: Request) {
 
   delete answer.facts;
   return NextResponse.json({ intent, month, answer });
+
+  /**
+   * Work out what the administrator is asking to change, and describe it back
+   * to them. Every value comes from their own sentence or from a row already
+   * in the database — nothing here is inferred, and nothing here is written.
+   */
+  async function propose(text: string): Promise<Answer> {
+    const p = parse(text);
+    const ref = referenceFrom(text);
+
+    const ask = (why: string): Answer => ({ text: why, suggestions: WRITE_EXAMPLES });
+
+    /* ---- an application, named by its reference ---- */
+    if (p.kind === 'set_status') {
+      if (!ref)
+        return ask(
+          'Which application? Give me its reference — for example "approve SHF-26-01001 at 5000".'
+        );
+
+      const { data } = await supabase
+        .from('fund_requests')
+        .select('id, reference, status, amount_requested, profiles!fund_requests_user_id_fkey(full_name)')
+        .eq('reference', ref)
+        .maybeSingle();
+
+      const r = data as unknown as {
+        id: string;
+        reference: string;
+        status: string;
+        amount_requested: number;
+        profiles: { full_name: string } | null;
+      } | null;
+      if (!r) return ask(`There is no application with reference ${ref}.`);
+
+      const status = statusFrom(text);
+      if (!status) return ask('Approve, reject, or move to review?');
+      if (status === 'rejected' && !p.note)
+        return ask(
+          'A rejection needs a reason — the member is shown it. Try "reject SHF-26-01001 because the documents are incomplete".'
+        );
+
+      const amount = status === 'accepted' ? (p.amount ?? Number(r.amount_requested)) : null;
+      const who = r.profiles?.full_name ?? 'the member';
+
+      return {
+        text:
+          status === 'accepted'
+            ? `Approve ${r.reference} for ${who} at ${pkr(Number(amount))}?`
+            : status === 'rejected'
+              ? `Reject ${r.reference} for ${who}, telling them: “${p.note}”?`
+              : `Move ${r.reference} for ${who} to review?`,
+        figures: [
+          { label: 'Requested', value: pkr(Number(r.amount_requested)) },
+          { label: 'Currently', value: r.status },
+        ],
+        action: {
+          kind: 'set_status',
+          requestId: r.id,
+          status,
+          note: p.note ?? undefined,
+          amount: amount ?? undefined,
+          subject: r.reference,
+        },
+      };
+    }
+
+    /* ---- everything else is about a person ---- */
+    const { data: people } = await supabase.from('profiles').select('id, full_name, email, is_blocked');
+    type P = { id: string; full_name: string; email: string; is_blocked: boolean };
+
+    const hits = rank(
+      text,
+      ((people ?? []) as P[]).map((x) => ({
+        id: x.id,
+        name: x.full_name,
+        aliases: [x.email.split('@')[0].replace(/[._-]/g, ' ')],
+        row: x,
+      }))
+    );
+
+    if (!hits.length) return ask('Which member? Give me their name as it is registered.');
+
+    const tied = hits.filter((h) => h.score === hits[0].score);
+    if (tied.length > 1)
+      return ask(
+        `That could be ${tied.map((t) => t.item.row.full_name).join(' or ')}. Which one — use their full name.`
+      );
+
+    const person = hits[0].item.row;
+
+    if (p.kind === 'block_member' || p.kind === 'unblock_member') {
+      const blocking = p.kind === 'block_member';
+      if (person.is_blocked === blocking)
+        return ask(`${person.full_name} is already ${blocking ? 'blocked' : 'not blocked'}.`);
+      return {
+        text: blocking
+          ? `Block ${person.full_name}? They will not be able to sign in or apply.`
+          : `Unblock ${person.full_name}, so they can sign in and apply again?`,
+        action: { kind: p.kind, memberId: person.id, subject: person.full_name },
+      };
+    }
+
+    if (p.kind === 'set_pledge') {
+      if (p.amount === null) return ask(`How much is ${person.full_name} pledging each month?`);
+      return {
+        text: `Set ${person.full_name}'s monthly pledge to ${pkr(p.amount)}? A pledge is what they said; only a recorded donation adds to the fund.`,
+        action: { kind: 'set_pledge', memberId: person.id, amount: p.amount, subject: person.full_name },
+      };
+    }
+
+    if (p.kind === 'clear_donation') {
+      return {
+        text: `Remove ${person.full_name}'s donation for ${label}? The month's fund drops by that amount.`,
+        action: {
+          kind: 'clear_donation',
+          memberId: person.id,
+          month: monthStart,
+          subject: person.full_name,
+        },
+      };
+    }
+
+    /* ---- record a donation ---- */
+    if (p.amount === null)
+      return ask(`How much did ${person.full_name} give? For example "${person.full_name.split(' ')[0]} donated 5000".`);
+
+    const b = await budget();
+    const already = (
+      ((await supabase.rpc('donor_month', { p_month: monthStart })).data ?? []) as {
+        name: string;
+        given: number | null;
+      }[]
+    ).find((d) => d.name === person.full_name)?.given;
+
+    return {
+      text:
+        already != null
+          ? `${person.full_name} already has ${pkr(Number(already))} recorded for ${label}. Replace it with ${pkr(p.amount)}?`
+          : `Record ${pkr(p.amount)} from ${person.full_name} for ${label}?`,
+      figures: [
+        { label: `Fund now`, value: pkr(Number(b.donated ?? 0)) },
+        { label: 'After this', value: pkr(Number(b.donated ?? 0) - Number(already ?? 0) + p.amount) },
+      ],
+      action: {
+        kind: 'record_donation',
+        memberId: person.id,
+        amount: p.amount,
+        month: monthStart,
+        subject: person.full_name,
+      },
+    };
+  }
 
   async function build(kind: Intent): Promise<Answer> {
     switch (kind) {

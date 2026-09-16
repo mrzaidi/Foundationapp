@@ -3445,3 +3445,53 @@ table.grid .rowlink:hover {
   border-color: var(--brand-2);
   color: var(--brand-3);
 }
+
+/* A change the assistant is offering to make. Deliberately not styled like the
+   suggestion chips next to it: one of these writes to the database. */
+.bot-confirm {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.bot-confirm button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.bot-confirm button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.bot-confirm .bc-yes {
+  background: var(--brand-2);
+  color: #fff;
+}
+.bot-confirm .bc-yes svg {
+  width: 15px;
+  height: 15px;
+}
+.bot-confirm .bc-no {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--text-dim);
+}
+.bc-settled {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-faint);
+}
+.bc-settled svg {
+  width: 14px;
+  height: 14px;
+}
