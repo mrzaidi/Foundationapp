@@ -16,6 +16,7 @@
   --grad-blue: linear-gradient(135deg, #5aa9ff 0%, #2f6fe0 100%);
   --grad-rose: linear-gradient(135deg, #ff9a8b 0%, #e0525f 100%);
   --grad-plum: linear-gradient(135deg, #b28bff 0%, #6d4ad6 100%);
+  --grad-deep: linear-gradient(135deg, #0e9d63 0%, #076b42 100%);
   --grad-amber: linear-gradient(135deg, #ffc86b 0%, #f08a24 100%);
 
   /* surfaces */
@@ -34,7 +35,7 @@
   --st-requested: #2f80ed;
   --st-review: #f0a323;
   --st-accepted: #12b886;
-  --st-transfer: #6d4ad6;
+  --st-transfer: #0b7a4e;
   --danger: #e0525f;
 
   --r-xl: 28px;
@@ -472,6 +473,7 @@ a {
 .g-blue  { background: var(--grad-blue); }
 .g-amber { background: var(--grad-amber); }
 .g-plum  { background: var(--grad-plum); }
+.g-deep  { background: var(--grad-deep); }
 .g-gold  { background: var(--grad-gold); color: #6b4a06; }
 
 /* ---- request list ---- */
@@ -564,7 +566,7 @@ a {
 .b-requested   { background: rgba(47, 128, 237, 0.12); color: #2069cc; }
 .b-review      { background: rgba(240, 163, 35, 0.15); color: #b57506; }
 .b-accepted    { background: rgba(18, 184, 134, 0.14); color: #0b8c65; }
-.b-transferred { background: rgba(109, 74, 214, 0.13); color: #5a3cc0; }
+.b-transferred { background: rgba(11, 122, 78, 0.14); color: #076b42; }
 .b-rejected    { background: rgba(224, 82, 95, 0.12); color: #c43a47; }
 
 .chips {
@@ -3494,4 +3496,52 @@ table.grid .rowlink:hover {
 .bc-settled svg {
   width: 14px;
   height: 14px;
+}
+
+/* The words that turn a sentence into an instruction. Listed rather than
+   hidden, because guessing at phrasing until something works is a miserable
+   way to use a chat box. */
+.bot-vocab {
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+.bot-vocab .bv-head {
+  margin: 0 0 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.bv-row {
+  margin-bottom: 9px;
+}
+.bv-does {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+.bv-words {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin: 1px 0 4px;
+  line-height: 1.5;
+}
+.bv-row button {
+  border: 1px solid var(--line);
+  background: var(--card-soft, #f4f7f5);
+  color: var(--text-dim);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-style: italic;
+}
+.bv-row button:hover:not(:disabled) {
+  border-color: var(--brand-2);
+  color: var(--text);
+}
+.bv-row button:disabled {
+  opacity: 0.55;
+  cursor: default;
 }

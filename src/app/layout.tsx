@@ -9,9 +9,9 @@ import './globals.css';
 import './portal.css';
 
 export const metadata: Metadata = {
-  title: 'Subaidar Hasnain Foundation',
+  title: 'Mohammad Husnain Foundation',
   description:
-    'Apply for monthly, accidental, grocery and electricity bill assistance from the Subaidar Hasnain Foundation.',
+    'Apply for monthly, accidental, grocery and electricity bill assistance from the Mohammad Husnain Foundation.',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,

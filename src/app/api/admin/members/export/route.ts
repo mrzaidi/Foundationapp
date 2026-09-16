@@ -154,7 +154,7 @@ export async function GET(request: Request) {
   ];
 
   const rows: unknown[][] = [
-    [`Subaidar Hasnain Foundation — members`],
+    [`Mohammad Husnain Foundation — members`],
     [
       `Generated ${new Date().toISOString().slice(0, 10)}`,
       q ? `Search: ${q}` : '',

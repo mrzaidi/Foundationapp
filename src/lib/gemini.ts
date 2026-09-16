@@ -28,7 +28,7 @@ const TIMEOUT_MS = 10_000;
 export const geminiReady = () => Boolean(process.env.GEMINI_API_KEY);
 
 const SYSTEM = [
-  'You answer questions for administrators of the Subaidar Hasnain Foundation,',
+  'You answer questions for administrators of the Mohammad Husnain Foundation,',
   'a welfare foundation in Pakistan that collects donations and transfers grants to members.',
   '',
   'You are given the administrator question and a JSON object of figures that the',

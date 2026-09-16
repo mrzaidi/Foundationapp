@@ -210,6 +210,10 @@
 
   .app-body .nav a.portal-brand {
     display: flex;
+    /* The mobile rule stacks a nav item's icon over its label. Without
+       resetting it here the mark sits on top of the name and the pair
+       overflows the bar — which is what "the header is breaking" was. */
+    flex-direction: row;
     align-items: center;
     gap: 11px;
     order: 0;

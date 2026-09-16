@@ -48,45 +48,18 @@ export interface Parsed {
   note: string | null;
 }
 
-const WRITE_VERBS: { kind: ActionKind; any: string[] }[] = [
-  {
-    kind: 'clear_donation',
-    any: ['remove the donation', 'delete the donation', 'clear the donation', 'undo the donation'],
-  },
-  {
-    kind: 'record_donation',
-    any: [
-      'add a donation',
-      'add donation',
-      'record a donation',
-      'record donation',
-      'donated',
-      'has given',
-      'gave us',
-      'received from',
-      'add payment from',
-      'log a donation',
-      'put in',
-    ],
-  },
-  { kind: 'set_pledge', any: ['pledge', 'pledged', 'commits to', 'promises'] },
-  // Before block, and matched with a leading space: "unblock" contains "block".
-  { kind: 'unblock_member', any: [' unblock', ' unsuspend', ' reinstate', ' restore access'] },
-  { kind: 'block_member', any: [' block ', ' suspend ', ' bar '] },
-  {
-    kind: 'set_status',
-    any: [
-      'approve',
-      'accept',
-      'reject',
-      'decline',
-      'turn down',
-      'to review',
-      'under review',
-      'start reviewing',
-    ],
-  },
-];
+/*
+ * Matched as separate words, not as fixed phrases. "Add 5000 donation for
+ * Aiman" and "record a donation of 5000 from Aiman" are the same instruction,
+ * and an administrator should not have to learn which wording the software
+ * happens to know.
+ */
+const ADD = /\b(add|added|adding|record|recorded|log|logged|enter|entered|put|receiv\w*|collect\w*|got|take|taken)\b/;
+const EDIT = /\b(update|updated|change|changed|set|edit|correct|amend|revise|make)\b/;
+const REMOVE = /\b(remove|removed|delete|deleted|clear|cleared|cancel|cancelled|undo|reverse)\b/;
+
+const GIVING = /\b(donation|donations|donated|donate|donor|gave|given|giving|contribution|contributed|payment|paid in|amount)\b/;
+const PLEDGE = /\b(pledge|pledged|pledges|commits?|committed|promise[sd]?)\b/;
 
 /** Does this sentence ask for a change at all? */
 export function isWrite(question: string): boolean {
@@ -100,9 +73,28 @@ function detectKind(question: string): ActionKind | null {
   // be read as "record a donation from Ali".
   if (/^\s*(how|what|who|when|which|why|is|are|do|does|did|can|show|list|tell)\b/.test(q.trim()))
     return null;
-  if (q.includes('?')) return null;
+  if (question.includes('?')) return null;
 
-  for (const v of WRITE_VERBS) if (v.any.some((w) => q.includes(w))) return v.kind;
+  // Checked before blocking: "unblock" contains "block".
+  if (/\b(unblock|unsuspend|reinstate)\b|\brestore access\b/.test(q)) return 'unblock_member';
+  if (/\b(block|suspend|bar)\b/.test(q)) return 'block_member';
+
+  if (/\b(approve|approved|accept|accepted|reject|rejected|decline|declined)\b|\bturn(ed)? down\b|\bto review\b|\bunder review\b/.test(q))
+    return 'set_status';
+
+  if (PLEDGE.test(q)) return 'set_pledge';
+
+  if (REMOVE.test(q) && GIVING.test(q)) return 'clear_donation';
+  if ((ADD.test(q) || EDIT.test(q)) && GIVING.test(q)) return 'record_donation';
+
+  // "Aiman donated 5000" — the verb alone is the instruction.
+  if (/\b(donated|gave|contributed)\b/.test(q)) return 'record_donation';
+
+  // "Record 2 lakh from Zaidi" never says the word donation, and money coming
+  // in is the only thing it could mean. Without a name it asks for one rather
+  // than assuming, so a loose reading costs a question, not a wrong write.
+  if (ADD.test(q) && amountFrom(question) !== null) return 'record_donation';
+
   return null;
 }
 

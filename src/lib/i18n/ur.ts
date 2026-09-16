@@ -5,7 +5,7 @@ const ur: typeof en = {
   meta: { name: 'Urdu', native: 'اردو', short: 'اردو', dir: 'rtl' as const },
 
   common: {
-    appName: 'صوبیدار حسنین فاؤنڈیشن',
+    appName: 'محمد حسنین فاؤنڈیشن',
     tagline: 'فلاح • امداد • عزتِ نفس',
     continue: 'آگے بڑھیں',
     cancel: 'منسوخ کریں',

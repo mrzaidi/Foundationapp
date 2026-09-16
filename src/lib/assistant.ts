@@ -427,3 +427,39 @@ export const CAPABILITIES = [
   'A person by name — everything on file for them',
   'An application by its reference, e.g. SHF-26-00001',
 ];
+
+/**
+ * The words that turn a sentence into an instruction rather than a question.
+ *
+ * Listed for the administrator because a chat box gives no clue what it
+ * understands, and guessing at phrasing until something works is a miserable
+ * way to use software. Any of these verbs, with a name and an amount, is
+ * enough — the exact wording around them does not matter.
+ */
+export const WRITE_VOCABULARY: { does: string; words: string; example: string }[] = [
+  {
+    does: 'Record or change a donation',
+    words: 'add · record · log · enter · received · update · change · set · donated · gave',
+    example: 'Add 5000 donation for Aiman',
+  },
+  {
+    does: 'Remove a donation',
+    words: 'remove · delete · clear · cancel · undo',
+    example: 'Remove Aiman donation',
+  },
+  {
+    does: 'Set a monthly pledge',
+    words: 'pledge · pledged · commits · promises',
+    example: 'Set Aiman pledge to 2000',
+  },
+  {
+    does: 'Decide an application',
+    words: 'approve · accept · reject · decline · move to review',
+    example: 'Approve SHF-26-00001 at 5000',
+  },
+  {
+    does: 'Block or restore a member',
+    words: 'block · suspend · unblock · reinstate',
+    example: 'Block Zaidi',
+  },
+];

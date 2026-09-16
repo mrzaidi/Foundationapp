@@ -13,7 +13,7 @@ const KPIS = [
   { key: 'requested', label: 'Awaiting first look', icon: 'send', grad: 'g-blue' },
   { key: 'review', label: 'Under review', icon: 'search', grad: 'g-amber' },
   { key: 'accepted', label: 'Approved, awaiting transfer', icon: 'checkCircle', grad: 'g-brand' },
-  { key: 'transferred', label: 'Transferred', icon: 'wallet', grad: 'g-plum' },
+  { key: 'transferred', label: 'Transferred', icon: 'wallet', grad: 'g-deep' },
 ] as const;
 
 const FUND_GRAD: Record<string, string> = {

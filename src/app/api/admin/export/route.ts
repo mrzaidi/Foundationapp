@@ -87,7 +87,7 @@ export async function GET(request: Request) {
   const day = (iso: string | null) => (iso ? iso.slice(0, 10) : '');
 
   const rows: unknown[][] = [
-    [`Subaidar Hasnain Foundation — ${monthName(start)}`],
+    [`Mohammad Husnain Foundation — ${monthName(start)}`],
     [`Generated ${new Date().toISOString().slice(0, 10)}`],
     [],
 

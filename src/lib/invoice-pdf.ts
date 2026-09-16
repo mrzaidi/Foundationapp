@@ -11,7 +11,7 @@ import { LOGO_PNG_BASE64 } from './invoice-logo';
  */
 
 /** The name the foundation issues receipts under. */
-export const FOUNDATION = 'Muhammad Hasnain Foundation';
+export const FOUNDATION = 'Mohammad Husnain Foundation';
 
 /* House colours, matched to the portal so a printed receipt looks like the app. */
 const GREEN = rgb(0.043, 0.502, 0.357);

@@ -3,7 +3,7 @@ const en = {
   meta: { name: 'English', native: 'English', short: 'EN', dir: 'ltr' as 'ltr' | 'rtl' },
 
   common: {
-    appName: 'Subaidar Hasnain Foundation',
+    appName: 'Mohammad Husnain Foundation',
     tagline: 'WELFARE • RELIEF • DIGNITY',
     continue: 'Continue',
     cancel: 'Cancel',
@@ -129,7 +129,7 @@ const en = {
     privateTitle: 'Your documents are private',
     privateBody:
       'Reports, bills and your CNIC are stored securely and are only opened by foundation administrators reviewing your application.',
-    footer: (amount: string) => `Subaidar Hasnain Foundation · ${amount} PKR received to date`,
+    footer: (amount: string) => `Mohammad Husnain Foundation · ${amount} PKR received to date`,
   },
 
   apply: {

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Icon from './Icon';
-import { SUGGESTIONS } from '@/lib/assistant';
+import { SUGGESTIONS, WRITE_VOCABULARY } from '@/lib/assistant';
 
 interface Figure {
   label: string;
@@ -18,6 +18,8 @@ interface Answer {
   suggestions?: string[];
   /** A change the assistant is offering to make. Nothing happens until confirmed. */
   action?: Record<string, unknown>;
+  /** Show the words that make a sentence an instruction. */
+  vocabulary?: boolean;
 }
 
 interface Turn {
@@ -32,8 +34,9 @@ const OPENING: Turn = {
   from: 'bot',
   text: '',
   answer: {
-    text: "Ask me anything about the foundation — money in and out, what is left, a member by name, a fund, or an application by its reference. Ask it however you like; I read the figures live from the database.",
-    suggestions: SUGGESTIONS.slice(0, 4),
+    text: "Ask me anything about the foundation — money in and out, what is left, a member by name, a fund, or an application by its reference. I can also change things: say it as an instruction and I will show you exactly what I am about to do before anything is saved.",
+    suggestions: SUGGESTIONS.slice(0, 3),
+    vocabulary: true,
   },
 };
 
@@ -189,6 +192,25 @@ export default function AdminAssistant() {
                         {turn.answer.link.label}
                         <Icon name="chevronRight" />
                       </Link>
+                    )}
+
+                    {/* A chat box gives no clue what it understands. Rather
+                        than let anyone guess at phrasing until something
+                        works, the words that make a sentence an instruction
+                        are simply listed. */}
+                    {turn.answer?.vocabulary && (
+                      <div className="bot-vocab">
+                        <p className="bv-head">To change something, start with one of these:</p>
+                        {WRITE_VOCABULARY.map((v) => (
+                          <div className="bv-row" key={v.does}>
+                            <div className="bv-does">{v.does}</div>
+                            <div className="bv-words">{v.words}</div>
+                            <button type="button" onClick={() => ask(v.example)} disabled={busy}>
+                              {v.example}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     )}
 
                     {/* A change is never carried out by asking for it — only

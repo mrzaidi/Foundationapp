@@ -31,7 +31,7 @@ export default function AdminSidebar({ name, email, pending }: Props) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/img/logo.svg" alt="" />
         <div>
-          <div className="bt">Subaidar Hasnain</div>
+          <div className="bt">Mohammad Husnain</div>
           <div className="bs">Admin portal</div>
         </div>
       </div>
