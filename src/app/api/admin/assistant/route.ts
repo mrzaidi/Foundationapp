@@ -12,6 +12,7 @@ import {
 } from '@/lib/assistant';
 import {
   WRITE_EXAMPLES,
+  donorActiveFrom,
   isWrite,
   parse,
   statusFrom,
@@ -301,6 +302,36 @@ export async function POST(request: Request) {
           ? `Block ${person.full_name}? They will not be able to sign in or apply.`
           : `Unblock ${person.full_name}, so they can sign in and apply again?`,
         action: { kind: p.kind, memberId: person.id, subject: person.full_name },
+      };
+    }
+
+    if (p.kind === 'set_donor_active') {
+      const active = donorActiveFrom(text);
+
+      const { data: row } = await supabase
+        .from('donors')
+        .select('id, is_active')
+        .eq('user_id', person.id)
+        .maybeSingle();
+      const donor = row as { id: string; is_active: boolean } | null;
+
+      if (!donor)
+        return ask(
+          `${person.full_name} is not on the donor list, so there is nothing to ${active ? 'activate' : 'deactivate'}. Recording a donation from them adds them to it.`
+        );
+      if (donor.is_active === active)
+        return ask(`${person.full_name} is already ${active ? 'active' : 'inactive'} as a donor.`);
+
+      return {
+        text: active
+          ? `Put ${person.full_name} back on the donor list?`
+          : `Take ${person.full_name} off the donor list? Everything they have already given stays recorded, so no month's fund changes — they simply stop appearing as someone to collect from.`,
+        action: {
+          kind: 'set_donor_active',
+          memberId: person.id,
+          active,
+          subject: person.full_name,
+        },
       };
     }
 

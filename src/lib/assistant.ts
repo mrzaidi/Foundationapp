@@ -453,6 +453,11 @@ export const WRITE_VOCABULARY: { does: string; words: string; example: string }[
     example: 'Set Aiman pledge to 2000',
   },
   {
+    does: 'Take someone off the donor list (or put them back)',
+    words: 'deactivate · disable · remove as donor · activate · reactivate',
+    example: 'Deactivate Aiman as a donor',
+  },
+  {
     does: 'Decide an application',
     words: 'approve · accept · reject · decline · move to review',
     example: 'Approve SHF-26-00001 at 5000',

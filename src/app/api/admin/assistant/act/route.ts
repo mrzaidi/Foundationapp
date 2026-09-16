@@ -116,6 +116,44 @@ export async function POST(request: Request) {
     }
 
     /* ---------------------------------------------------------------- */
+    case 'set_donor_active': {
+      if (!action.memberId) return NextResponse.json({ error: 'Which member?' }, { status: 422 });
+
+      const { data: person } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('id', action.memberId)
+        .single();
+      if (!person)
+        return NextResponse.json({ error: 'That member no longer exists.' }, { status: 404 });
+
+      const { data: row } = await supabase
+        .from('donors')
+        .select('id')
+        .eq('user_id', action.memberId)
+        .maybeSingle();
+      if (!row)
+        return NextResponse.json(
+          { error: `${person.full_name} is not on the donor list.` },
+          { status: 404 }
+        );
+
+      const active = Boolean(action.active);
+      const { error } = await supabase
+        .from('donors')
+        .update({ is_active: active })
+        .eq('id', (row as { id: string }).id);
+      if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+      return NextResponse.json({
+        done: active
+          ? `${person.full_name} is back on the donor list.`
+          : `${person.full_name} is off the donor list. Their past donations are untouched, so no month's fund has changed.`,
+        link: { href: '/admin/budget', label: 'Open the donors' },
+      });
+    }
+
+    /* ---------------------------------------------------------------- */
     case 'set_pledge': {
       if (!action.memberId) return NextResponse.json({ error: 'Which member?' }, { status: 422 });
       const amount = Number(action.amount);

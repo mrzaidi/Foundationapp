@@ -20,6 +20,7 @@ import { normalise, rank, type Candidate } from './assistant';
 export type ActionKind =
   | 'record_donation'
   | 'clear_donation'
+  | 'set_donor_active'
   | 'set_pledge'
   | 'set_status'
   | 'block_member'
@@ -33,6 +34,8 @@ export interface Action {
   amount?: number;
   month?: string;
   status?: 'review' | 'accepted' | 'rejected';
+  /** For set_donor_active: whether they stay on the donor list. */
+  active?: boolean;
   note?: string;
   /** For showing the administrator what they are about to change. */
   subject?: string;
@@ -61,6 +64,12 @@ const REMOVE = /\b(remove|removed|delete|deleted|clear|cleared|cancel|cancelled|
 const GIVING = /\b(donation|donations|donated|donate|donor|gave|given|giving|contribution|contributed|payment|paid in|amount)\b/;
 const PLEDGE = /\b(pledge|pledged|pledges|commits?|committed|promise[sd]?)\b/;
 
+/* Taking somebody off the donor list, or putting them back on it. One pair of
+   patterns, used both to recognise the instruction and to read its direction,
+   so the two can never disagree about what a sentence meant. */
+const DONOR_OFF = /\b(deactivate|disable|inactive|retire|drop|stop|suspend|off)\b|\bno longer\b|\bremove\b/;
+const DONOR_ON = /\b(activate|reactivate|enable|restore)\b|\badd back\b|\bput back\b|\bback on\b/;
+
 /** Does this sentence ask for a change at all? */
 export function isWrite(question: string): boolean {
   return detectKind(question) !== null;
@@ -74,6 +83,14 @@ function detectKind(question: string): ActionKind | null {
   if (/^\s*(how|what|who|when|which|why|is|are|do|does|did|can|show|list|tell)\b/.test(q.trim()))
     return null;
   if (question.includes('?')) return null;
+
+  /*
+   * Anything naming the donor list is about the donor list, and is settled
+   * first. "Deactivate X as a donor" and "block X" are different enough that
+   * the word donor has to win before the blocking rule sees "suspend", and
+   * before "remove" is read as removing a donation.
+   */
+  if (/\bdonors?\b/.test(q) && (DONOR_ON.test(q) || DONOR_OFF.test(q))) return 'set_donor_active';
 
   // Checked before blocking: "unblock" contains "block".
   if (/\b(unblock|unsuspend|reinstate)\b|\brestore access\b/.test(q)) return 'unblock_member';
@@ -148,6 +165,19 @@ export function statusFrom(question: string): 'review' | 'accepted' | 'rejected'
 export function noteFrom(question: string): string | null {
   const m = question.match(/\b(?:because|reason|since|as)\b[:,\s]+(.{3,200})$/i);
   return m ? m[1].trim().replace(/[.\s]+$/, '') : null;
+}
+
+/**
+ * Whether a donor instruction is switching them on or off. Deactivating is the
+ * default reading: "as a donor" on its own is almost always somebody being
+ * taken off the list, and the confirmation says which way it is going anyway.
+ */
+export function donorActiveFrom(question: string): boolean {
+  const q = normalise(question);
+  // Activation is read first: "reactivate" carries no off-word, while
+  // "deactivate" contains "activate" and would otherwise read as switching on.
+  if (DONOR_ON.test(q) && !DONOR_OFF.test(q)) return true;
+  return false;
 }
 
 export function parse(question: string): Parsed {
