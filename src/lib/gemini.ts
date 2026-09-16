@@ -83,7 +83,12 @@ export async function phrase(question: string, facts: unknown): Promise<string |
       }),
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // Falling back silently is right for the admin, but leaves nothing to
+      // debug a rejected key with. The body names the cause; it holds no secret.
+      console.warn(`[assistant] Gemini ${res.status}: ${(await res.text()).slice(0, 300)}`);
+      return null;
+    }
 
     const json = (await res.json()) as {
       candidates?: { content?: { parts?: Part[] }; finishReason?: string }[];
@@ -98,7 +103,8 @@ export async function phrase(question: string, facts: unknown): Promise<string |
     if (!text || json.candidates?.[0]?.finishReason === 'MAX_TOKENS') return null;
 
     return text.replace(/\*\*/g, '').replace(/\s+\n/g, '\n').trim();
-  } catch {
+  } catch (e) {
+    console.warn(`[assistant] Gemini unreachable: ${(e as Error).message}`);
     return null;
   } finally {
     clearTimeout(timer);
