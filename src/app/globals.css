@@ -4437,3 +4437,24 @@ table.grid .rowlink:hover {
 :root[lang='ur'] .new-request .nr-chev svg {
   transform: scaleX(-1);
 }
+
+/*
+ * One panel in front at a time.
+ *
+ * The assistant and the apply sheet are both full-screen on a phone, and with
+ * both open the chat's message box was drawn across the middle of the
+ * application form — over the very questions it was asking. While an
+ * application is being made the assistant steps out of the way; it is still
+ * there, with its conversation intact, the moment the sheet is closed.
+ */
+[data-apply-open] .mbot-fab,
+[data-apply-open] .mbot,
+[data-apply-open] .mbot-backdrop {
+  display: none;
+}
+
+/* The chat button sits over the end of a scrolling list, so the list needs
+   room to scroll past it — otherwise the last card's amount is under it. */
+.app-body .screen {
+  padding-bottom: calc(var(--nav-h) + 78px + env(safe-area-inset-bottom, 0px));
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import ApplySheet from './ApplySheet';
 import FundPicker from './FundPicker';
 import { hasBankDetails } from '@/lib/banks';
@@ -62,6 +62,24 @@ export default function ApplyProvider({
   }, []);
 
   const api = useMemo<ApplyApi>(() => ({ openPicker, startFund }), [openPicker, startFund]);
+
+  /*
+   * Mark the document while the apply flow is open.
+   *
+   * The assistant is a floating panel and the apply sheet is a floating panel,
+   * and nothing stopped both being open at once — the chat's message box ended
+   * up drawn across the middle of the application form, over the questions it
+   * was asking. They are both full-screen on a phone, so only one can be the
+   * thing in front: CSS takes this and puts the assistant away while an
+   * application is being made.
+   */
+  const applyOpen = picking || active !== null;
+  useEffect(() => {
+    const root = document.documentElement;
+    if (applyOpen) root.setAttribute('data-apply-open', '1');
+    else root.removeAttribute('data-apply-open');
+    return () => root.removeAttribute('data-apply-open');
+  }, [applyOpen]);
 
   return (
     <Ctx.Provider value={api}>
