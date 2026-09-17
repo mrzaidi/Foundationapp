@@ -4301,3 +4301,139 @@ table.grid .rowlink:hover {
 .acct-table tbody tr.acct-current td:first-child {
   box-shadow: inset 3px 0 0 var(--brand-2);
 }
+
+/* ---- describing the need, so the right fund can be offered ---- */
+.need-box {
+  padding: 4px 2px 14px;
+}
+.need-box label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 7px;
+}
+.need-box .input {
+  margin: 0;
+}
+.need-eg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 9px;
+}
+.need-eg button {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-dim);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.need-eg button:hover {
+  border-color: var(--brand-2);
+  color: var(--brand-2);
+}
+.need-none {
+  margin: 2px 2px 14px;
+  padding: 11px 13px;
+  border-radius: 11px;
+  background: var(--card-soft);
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.picker-group + .picker-group {
+  margin-top: 14px;
+}
+.pg-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--brand-2);
+  margin: 2px 2px 8px;
+}
+.pg-head.plain {
+  color: var(--text-faint);
+}
+.pg-head svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* The suggested fund is marked, not moved out of reach of the others. */
+.picker-item.suggested {
+  border-color: var(--brand-2);
+  box-shadow: 0 0 0 1px var(--brand-2) inset;
+  background: rgba(27, 175, 122, 0.05);
+}
+
+/* ---- starting an application, spelled out ---- */
+.new-request {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: start;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(16, 40, 32, 0.05));
+}
+.new-request:active {
+  transform: scale(0.995);
+}
+.new-request .nr-ico {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  background: var(--grad-brand);
+  color: #fff;
+}
+.new-request .nr-ico svg {
+  width: 21px;
+  height: 21px;
+}
+.new-request .nr-text {
+  flex: 1;
+  min-width: 0;
+}
+.new-request .nr-action {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.new-request .nr-hint {
+  display: block;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+.new-request .nr-chev {
+  flex: none;
+  color: var(--text-faint);
+  display: grid;
+  place-items: center;
+}
+.new-request .nr-chev svg {
+  width: 18px;
+  height: 18px;
+}
+:root[lang='ur'] .new-request .nr-chev svg {
+  transform: scaleX(-1);
+}

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import Icon from '@/components/Icon';
+import NewRequestButton from '@/components/NewRequestButton';
 import StatusBadge from '@/components/StatusBadge';
 import { createClient } from '@/lib/supabase/server';
 import { money, progressPercent, timeAgo } from '@/lib/format';
@@ -51,6 +52,10 @@ export default async function RequestsPage({
             <div className="sub">{d.requests.subtitle}</div>
           </div>
         </div>
+      </div>
+
+      <div className="pad mt-16">
+        <NewRequestButton />
       </div>
 
       <div className="pad mt-16">
