@@ -126,6 +126,8 @@ export async function PATCH(request: Request) {
     month?: string;
     amount?: number | null;
     received_on?: string;
+    /* removing one gift rather than the whole month */
+    donation_id?: string;
   };
   try {
     body = await request.json();
@@ -136,14 +138,32 @@ export async function PATCH(request: Request) {
   const id = (body.id ?? '').trim();
   if (!id) return NextResponse.json({ error: 'Which donor?' }, { status: 422 });
 
+  /* ---- removing one gift ---- */
+  // Scoped to the donor as well as the row: an id is enough to identify a
+  // donation, but checking both means a stale id from another donor's row
+  // cannot delete somebody else's gift.
+  if (body.donation_id) {
+    const { data, error } = await supabase
+      .from('donations')
+      .delete()
+      .eq('id', body.donation_id)
+      .eq('donor_id', id)
+      .select('id');
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (!data?.length)
+      return NextResponse.json({ error: 'That donation is no longer there.' }, { status: 404 });
+    return NextResponse.json({ ok: true, removed: body.donation_id });
+  }
+
   /* ---- recording (or clearing) a month's donation ---- */
   if (body.month !== undefined) {
     if (!isMonth(body.month))
       return NextResponse.json({ error: 'Invalid month.' }, { status: 422 });
 
-    // An amount of null or 0 means "they did not give this month" — the row is
-    // removed rather than stored as a zero, so a missing donation stays visibly
-    // missing instead of looking like a recorded gift of nothing.
+    // An amount of null or 0 means "they did not give this month" — every row
+    // for the month goes, rather than a zero being stored, so a missing
+    // donation stays visibly missing instead of looking like a gift of nothing.
     if (body.amount === null || body.amount === undefined || Number(body.amount) === 0) {
       const { error } = await supabase
         .from('donations')
@@ -158,20 +178,19 @@ export async function PATCH(request: Request) {
     if (!Number.isFinite(amount) || amount <= 0)
       return NextResponse.json({ error: 'Enter a valid amount.' }, { status: 422 });
 
+    // Inserted, not upserted. A donor can give more than once in a month, and
+    // overwriting was how a second gift used to erase the first.
     const { data, error } = await supabase
       .from('donations')
-      .upsert(
-        {
-          donor_id: id,
-          month: body.month,
-          amount,
-          received_on: isMonth(body.received_on)
-            ? body.received_on
-            : new Date().toISOString().slice(0, 10),
-          recorded_by: gate.userId,
-        },
-        { onConflict: 'donor_id,month' }
-      )
+      .insert({
+        donor_id: id,
+        month: body.month,
+        amount,
+        received_on: isMonth(body.received_on)
+          ? body.received_on
+          : new Date().toISOString().slice(0, 10),
+        recorded_by: gate.userId,
+      })
       .select()
       .single();
 

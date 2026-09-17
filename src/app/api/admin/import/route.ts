@@ -151,16 +151,36 @@ export async function POST(request: Request) {
   const toUpsert = writes.filter((w) => w.amount !== null);
   const toDelete = writes.filter((w) => w.amount === null).map((w) => w.donor.id);
 
+  /*
+   * A spreadsheet states what a donor gave in the month, as one figure. Now
+   * that a donor can have several gifts, appending would make a second import
+   * of the same sheet count everything twice — so the month is replaced
+   * rather than added to: the existing rows go, and the sheet's figure
+   * becomes the single row for that donor.
+   *
+   * Rows whose total already matches the sheet never reach here — they are
+   * marked unchanged above — so a month recorded gift by gift in the portal
+   * is not flattened by an import that agrees with it.
+   */
   if (toUpsert.length) {
-    const { error } = await supabase.from('donations').upsert(
+    const { error: clearErr } = await supabase
+      .from('donations')
+      .delete()
+      .eq('month', month)
+      .in(
+        'donor_id',
+        toUpsert.map((w) => w.donor.id)
+      );
+    if (clearErr) return NextResponse.json({ error: clearErr.message }, { status: 400 });
+
+    const { error } = await supabase.from('donations').insert(
       toUpsert.map((w) => ({
         donor_id: w.donor.id,
         month,
         amount: w.amount as number,
         received_on: new Date().toISOString().slice(0, 10),
         recorded_by: user.id,
-      })),
-      { onConflict: 'donor_id,month' }
+      }))
     );
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   }

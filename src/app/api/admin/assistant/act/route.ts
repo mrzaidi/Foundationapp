@@ -101,16 +101,15 @@ export async function POST(request: Request) {
       if (!Number.isFinite(amount) || amount <= 0)
         return NextResponse.json({ error: 'That is not a valid amount.' }, { status: 422 });
 
-      const { error } = await supabase.from('donations').upsert(
-        {
-          donor_id: donorId,
-          month: action.month,
-          amount,
-          received_on: new Date().toISOString().slice(0, 10),
-          recorded_by: user.id,
-        },
-        { onConflict: 'donor_id,month' }
-      );
+      // Added alongside anything already recorded, not over it: a donor who
+      // gives twice in a month has given twice.
+      const { error } = await supabase.from('donations').insert({
+        donor_id: donorId,
+        month: action.month,
+        amount,
+        received_on: new Date().toISOString().slice(0, 10),
+        recorded_by: user.id,
+      });
       if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
       const { data: fund } = await supabase.rpc('budget_status', { p_month: action.month });
@@ -218,16 +217,13 @@ export async function POST(request: Request) {
 
       // A pledge is a promise; only this moves the month's fund.
       if (given > 0 && isMonth(action.month)) {
-        const { error } = await supabase.from('donations').upsert(
-          {
-            donor_id: donorId,
-            month: action.month,
-            amount: given,
-            received_on: new Date().toISOString().slice(0, 10),
-            recorded_by: user.id,
-          },
-          { onConflict: 'donor_id,month' }
-        );
+        const { error } = await supabase.from('donations').insert({
+          donor_id: donorId,
+          month: action.month,
+          amount: given,
+          received_on: new Date().toISOString().slice(0, 10),
+          recorded_by: user.id,
+        });
         if (error) return NextResponse.json({ error: error.message }, { status: 400 });
       }
 

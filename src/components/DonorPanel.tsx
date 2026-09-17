@@ -6,6 +6,14 @@ import MemberPicker, { type Candidate } from './MemberPicker';
 import { useToast } from './Toast';
 import { money } from '@/lib/format';
 
+/** One gift. A donor may make several in the same month. */
+interface Entry {
+  id: string;
+  amount: number;
+  received_on: string;
+  note: string | null;
+}
+
 interface DonorRow {
   id: string;
   name: string;
@@ -13,13 +21,19 @@ interface DonorRow {
   monthly_pledge: number;
   is_active: boolean;
   note: string | null;
-  donation_id: string | null;
+  /** The month's total across every gift — null when nothing was given. */
   given: number | null;
+  entry_count: number;
+  /** The most recent gift's date. */
   received_on: string | null;
+  entries: Entry[];
 }
 
 const monthLabel = (iso: string) =>
   new Date(iso).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+const dayLabel = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
 const thisMonth = () => {
   const n = new Date();
@@ -29,10 +43,15 @@ const thisMonth = () => {
 /**
  * Who gives, and what arrived this month.
  *
- * The pledge is what a donor said they would give; the donation is what came
- * in. Only the donation counts toward the month's fund — a month must never be
- * spent against a promise. A donor with nothing recorded stays in the list with
- * an empty box, so a missing gift is visible rather than absent.
+ * The pledge is what a donor said they would give; the donations are what came
+ * in. Only those count toward the month's fund — a month must never be spent
+ * against a promise. A donor with nothing recorded stays in the list with an
+ * empty box, so a missing gift is visible rather than absent.
+ *
+ * A donor may give more than once in a month. The column shows the total,
+ * because the total is what the fund is made of; the gifts behind it are
+ * listed underneath, and fold away once there are several so that a donor who
+ * gives every payday does not push the rest of the table off the screen.
  */
 export default function DonorPanel() {
   const toast = useToast();
@@ -46,6 +65,9 @@ export default function DonorPanel() {
   const [available, setAvailable] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  /* Which donors have their gifts expanded. Kept across a reload so recording
+     a second gift does not fold the list you were just looking at. */
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
 
   const [adding, setAdding] = useState(false);
   const [picked, setPicked] = useState<Candidate | null>(null);
@@ -57,11 +79,7 @@ export default function DonorPanel() {
       const res = await fetch(`/api/admin/donors?month=${month}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-      const list = (json.donors ?? []) as DonorRow[];
-      setRows(list);
-      setDrafts(
-        Object.fromEntries(list.map((r) => [r.id, r.given == null ? '' : String(Number(r.given))]))
-      );
+      setRows((json.donors ?? []) as DonorRow[]);
       setError('');
       setAvailable(true);
     } catch (e) {
@@ -77,11 +95,18 @@ export default function DonorPanel() {
     void load();
   }, [load]);
 
-  async function record(row: DonorRow) {
+  /**
+   * Record a gift.
+   *
+   * It is added to the month rather than replacing it. This used to overwrite,
+   * which meant a donor's second gift silently erased their first and the fund
+   * reported less money than had arrived.
+   */
+  async function addGift(row: DonorRow) {
     const raw = (drafts[row.id] ?? '').trim();
-    const amount = raw === '' ? null : Number(raw);
-    if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
-      toast('Enter a valid amount.', 'bad');
+    const amount = Number(raw);
+    if (raw === '' || !Number.isFinite(amount) || amount <= 0) {
+      toast('Enter an amount to record.', 'bad');
       return;
     }
 
@@ -94,7 +119,30 @@ export default function DonorPanel() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-      toast(amount ? `${row.name}: ${money(amount)} recorded` : `${row.name}'s donation cleared`);
+      toast(`${row.name}: ${money(amount)} recorded`);
+      setDrafts((d) => ({ ...d, [row.id]: '' }));
+      // A second gift is worth seeing next to the first.
+      setOpenIds((s) => new Set(s).add(row.id));
+      await load();
+    } catch (e) {
+      toast((e as Error).message, 'bad');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  /** Take one gift back out, leaving the donor's other gifts alone. */
+  async function removeGift(row: DonorRow, entry: Entry) {
+    setBusyId(row.id);
+    try {
+      const res = await fetch('/api/admin/donors', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: row.id, donation_id: entry.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      toast(`${money(Number(entry.amount))} removed from ${row.name}`);
       await load();
     } catch (e) {
       toast((e as Error).message, 'bad');
@@ -153,7 +201,8 @@ export default function DonorPanel() {
 
   const total = rows.reduce((s, r) => s + Number(r.given ?? 0), 0);
   const pledged = rows.filter((r) => r.is_active).reduce((s, r) => s + Number(r.monthly_pledge), 0);
-  const givenCount = rows.filter((r) => r.given != null).length;
+  const givenCount = rows.filter((r) => Number(r.given ?? 0) > 0).length;
+  const giftCount = rows.reduce((s, r) => s + (r.entry_count ?? 0), 0);
 
   if (!available) return null;
 
@@ -254,64 +303,126 @@ export default function DonorPanel() {
                   <th>Contact</th>
                   <th>Pledged</th>
                   <th>Given this month</th>
-                  <th>Received</th>
+                  <th>Last received</th>
                   <th />
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
-                  <tr key={r.id} className={r.is_active ? '' : 'row-off'}>
-                    <td>
-                      <div className="wn">{r.name}</div>
-                      {!r.is_active && <div className="we">inactive</div>}
-                    </td>
-                    <td style={{ color: 'var(--text-faint)', fontSize: 12.5 }} dir="ltr">
-                      {r.contact || '—'}
-                    </td>
-                    <td className="num">{money(Number(r.monthly_pledge), false)}</td>
-                    <td>
-                      <div className="donor-amount">
-                        <input
-                          className="input"
-                          type="number"
-                          min={0}
-                          inputMode="numeric"
-                          value={drafts[r.id] ?? ''}
-                          placeholder={String(Number(r.monthly_pledge) || 0)}
-                          onChange={(e) => setDrafts({ ...drafts, [r.id]: e.target.value })}
-                          aria-label={`Amount given by ${r.name}`}
-                        />
+                {rows.map((r) => {
+                  const entries = r.entries ?? [];
+                  const open = openIds.has(r.id);
+                  return (
+                    <tr key={r.id} className={r.is_active ? '' : 'row-off'}>
+                      <td>
+                        <div className="wn">{r.name}</div>
+                        {!r.is_active && <div className="we">inactive</div>}
+                      </td>
+                      <td style={{ color: 'var(--text-faint)', fontSize: 12.5 }} dir="ltr">
+                        {r.contact || '—'}
+                      </td>
+                      <td className="num">{money(Number(r.monthly_pledge), false)}</td>
+                      <td>
+                        {/* The total first: it is the figure that becomes the
+                            fund, and the one a committee reads across the row. */}
+                        {Number(r.given ?? 0) > 0 && (
+                          <div className="gift-total num">{money(Number(r.given), false)}</div>
+                        )}
+
+                        <div className="donor-amount">
+                          <input
+                            className="input"
+                            type="number"
+                            min={0}
+                            inputMode="numeric"
+                            value={drafts[r.id] ?? ''}
+                            placeholder={entries.length ? 'Add another' : 'Amount'}
+                            onChange={(e) => setDrafts({ ...drafts, [r.id]: e.target.value })}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                void addGift(r);
+                              }
+                            }}
+                            aria-label={`Amount given by ${r.name}`}
+                          />
+                          <button
+                            className="admin-btn ghost"
+                            type="button"
+                            onClick={() => addGift(r)}
+                            disabled={busyId === r.id}
+                          >
+                            {busyId === r.id ? (
+                              <span className="spin dark" />
+                            ) : (
+                              <Icon name="plus" />
+                            )}
+                            Add
+                          </button>
+                        </div>
+
+                        {/* One gift reads fine on its own line. Several fold
+                            away, so a donor who gives every week does not
+                            stretch the row down the page. */}
+                        {entries.length === 1 && (
+                          <GiftLine
+                            entry={entries[0]}
+                            busy={busyId === r.id}
+                            onRemove={() => removeGift(r, entries[0])}
+                          />
+                        )}
+
+                        {entries.length > 1 && (
+                          <div className="gift-fold">
+                            <button
+                              type="button"
+                              className={`gift-toggle ${open ? 'on' : ''}`}
+                              aria-expanded={open}
+                              onClick={() =>
+                                setOpenIds((s) => {
+                                  const next = new Set(s);
+                                  if (next.has(r.id)) next.delete(r.id);
+                                  else next.add(r.id);
+                                  return next;
+                                })
+                              }
+                            >
+                              <Icon name="chevronDown" />
+                              {entries.length} gifts
+                            </button>
+
+                            {open && (
+                              <div className="gift-lines">
+                                {entries.map((en) => (
+                                  <GiftLine
+                                    key={en.id}
+                                    entry={en}
+                                    busy={busyId === r.id}
+                                    onRemove={() => removeGift(r, en)}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td
+                        style={{ color: 'var(--text-faint)', fontSize: 12.5, whiteSpace: 'nowrap' }}
+                      >
+                        {r.received_on ? dayLabel(r.received_on) : '—'}
+                      </td>
+                      <td>
                         <button
-                          className="admin-btn ghost"
+                          className="rowlink"
                           type="button"
-                          onClick={() => record(r)}
+                          onClick={() => toggle(r)}
                           disabled={busyId === r.id}
                         >
-                          {busyId === r.id ? <span className="spin dark" /> : <Icon name="check" />}
-                          Save
+                          {r.is_active ? 'Deactivate' : 'Reactivate'}
                         </button>
-                      </div>
-                    </td>
-                    <td style={{ color: 'var(--text-faint)', fontSize: 12.5, whiteSpace: 'nowrap' }}>
-                      {r.received_on
-                        ? new Date(r.received_on).toLocaleDateString('en-GB', {
-                            day: 'numeric',
-                            month: 'short',
-                          })
-                        : '—'}
-                    </td>
-                    <td>
-                      <button
-                        className="rowlink"
-                        type="button"
-                        onClick={() => toggle(r)}
-                        disabled={busyId === r.id}
-                      >
-                        {r.is_active ? 'Deactivate' : 'Reactivate'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -319,8 +430,14 @@ export default function DonorPanel() {
           <div className="pager">
             <span>
               <strong className="num">{givenCount}</strong> of{' '}
-              <strong className="num">{rows.length}</strong> donors gave this month ·{' '}
-              <strong className="num">{money(pledged)}</strong> pledged
+              <strong className="num">{rows.length}</strong> donors gave this month
+              {giftCount > givenCount && (
+                <>
+                  {' '}
+                  in <strong className="num">{giftCount}</strong> gifts
+                </>
+              )}{' '}
+              · <strong className="num">{money(pledged)}</strong> pledged
             </span>
             <span style={{ fontWeight: 700, color: 'var(--brand-2)' }}>
               {money(total)} added to {monthLabel(month)}
@@ -328,6 +445,35 @@ export default function DonorPanel() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/** One recorded gift: what arrived, when, and a way to take it back out. */
+function GiftLine({
+  entry,
+  busy,
+  onRemove,
+}: {
+  entry: Entry;
+  busy: boolean;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="gift-line">
+      <strong className="num">{money(Number(entry.amount), false)}</strong>
+      <span className="gl-when">{dayLabel(entry.received_on)}</span>
+      {entry.note && <span className="gl-note">{entry.note}</span>}
+      <button
+        type="button"
+        className="gl-x"
+        onClick={onRemove}
+        disabled={busy}
+        aria-label={`Remove ${money(Number(entry.amount))} received ${dayLabel(entry.received_on)}`}
+        title="Remove this gift"
+      >
+        <Icon name="x" />
+      </button>
     </div>
   );
 }

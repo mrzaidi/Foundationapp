@@ -2865,6 +2865,104 @@ table.grid .rowlink:hover {
   font-size: 13px;
   margin: 0;
 }
+
+/* ---- a donor's gifts within one month ----
+   The total is what the fund is made of, so it leads. The gifts behind it sit
+   underneath in a quieter weight, and fold away once there are several. */
+.gift-total {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--brand-2);
+  margin-bottom: 6px;
+}
+.gift-fold {
+  margin-top: 6px;
+}
+.gift-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.gift-toggle:hover {
+  color: var(--text);
+}
+.gift-toggle svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.15s ease;
+}
+.gift-toggle.on svg {
+  transform: rotate(180deg);
+}
+.gift-lines {
+  margin-top: 4px;
+}
+.gift-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12.5px;
+  border-top: 1px dashed var(--border);
+}
+.gift-line:first-child {
+  border-top: 0;
+}
+/* A single gift sits on its own under the box, with no fold around it. */
+.donor-amount + .gift-line {
+  margin-top: 6px;
+  border-top: 0;
+}
+.gift-line .num {
+  font-weight: 600;
+  min-width: 62px;
+}
+.gl-when {
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+.gl-note {
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+.gl-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline-start: auto;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+.gl-x:hover:not(:disabled) {
+  background: rgba(208, 59, 59, 0.1);
+  color: var(--danger);
+}
+.gl-x:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.gl-x svg {
+  width: 13px;
+  height: 13px;
+}
+
 /* An inactive donor stays in the list, quietly. */
 .grid tr.row-off {
   opacity: 0.55;

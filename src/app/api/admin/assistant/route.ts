@@ -613,11 +613,11 @@ export async function POST(request: Request) {
     return {
       text:
         already != null
-          ? `${person.full_name} already has ${pkr(Number(already))} recorded for ${label}. Replace it with ${pkr(p.amount)}?`
+          ? `${person.full_name} already has ${pkr(Number(already))} recorded for ${label}. Add ${pkr(p.amount)} as a second gift, taking them to ${pkr(Number(already) + p.amount)}?`
           : `Record ${pkr(p.amount)} from ${person.full_name} for ${label}?`,
       figures: [
         { label: `Fund now`, value: pkr(Number(b.donated ?? 0)) },
-        { label: 'After this', value: pkr(Number(b.donated ?? 0) - Number(already ?? 0) + p.amount) },
+        { label: 'After this', value: pkr(Number(b.donated ?? 0) + p.amount) },
       ],
       action: {
         kind: 'record_donation',
