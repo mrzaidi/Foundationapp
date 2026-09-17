@@ -322,10 +322,36 @@ export default function DonorPanel() {
                       </td>
                       <td className="num">{money(Number(r.monthly_pledge), false)}</td>
                       <td>
-                        {/* The total first: it is the figure that becomes the
-                            fund, and the one a committee reads across the row. */}
-                        {Number(r.given ?? 0) > 0 && (
-                          <div className="gift-total num">{money(Number(r.given), false)}</div>
+                        {/* The total and the count share a line. They used to
+                            stack, and with the box and the list under them
+                            every row stood four items tall — a table of six
+                            donors that would not fit on a screen. */}
+                        {(Number(r.given ?? 0) > 0 || entries.length > 1) && (
+                          <div className="gift-top">
+                            {Number(r.given ?? 0) > 0 && (
+                              <strong className="gift-total num">
+                                {money(Number(r.given), false)}
+                              </strong>
+                            )}
+                            {entries.length > 1 && (
+                              <button
+                                type="button"
+                                className={`gift-toggle ${open ? 'on' : ''}`}
+                                aria-expanded={open}
+                                onClick={() =>
+                                  setOpenIds((s) => {
+                                    const next = new Set(s);
+                                    if (next.has(r.id)) next.delete(r.id);
+                                    else next.add(r.id);
+                                    return next;
+                                  })
+                                }
+                              >
+                                {entries.length} gifts
+                                <Icon name="chevronDown" />
+                              </button>
+                            )}
+                          </div>
                         )}
 
                         <div className="donor-amount">
@@ -371,37 +397,16 @@ export default function DonorPanel() {
                           />
                         )}
 
-                        {entries.length > 1 && (
-                          <div className="gift-fold">
-                            <button
-                              type="button"
-                              className={`gift-toggle ${open ? 'on' : ''}`}
-                              aria-expanded={open}
-                              onClick={() =>
-                                setOpenIds((s) => {
-                                  const next = new Set(s);
-                                  if (next.has(r.id)) next.delete(r.id);
-                                  else next.add(r.id);
-                                  return next;
-                                })
-                              }
-                            >
-                              <Icon name="chevronDown" />
-                              {entries.length} gifts
-                            </button>
-
-                            {open && (
-                              <div className="gift-lines">
-                                {entries.map((en) => (
-                                  <GiftLine
-                                    key={en.id}
-                                    entry={en}
-                                    busy={busyId === r.id}
-                                    onRemove={() => removeGift(r, en)}
-                                  />
-                                ))}
-                              </div>
-                            )}
+                        {entries.length > 1 && open && (
+                          <div className="gift-lines">
+                            {entries.map((en) => (
+                              <GiftLine
+                                key={en.id}
+                                entry={en}
+                                busy={busyId === r.id}
+                                onRemove={() => removeGift(r, en)}
+                              />
+                            ))}
                           </div>
                         )}
                       </td>

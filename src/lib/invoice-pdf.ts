@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
 import { LOGO_PNG_BASE64 } from './invoice-logo';
 
 /**
@@ -190,7 +190,65 @@ export async function buildReceipt(d: ReceiptData): Promise<Uint8Array> {
 
   y -= boxH + 46;
 
-  /* ---- signature, because a paper receipt gets signed ---- */
+  /* ---- the stamp, and the space the office stamps into ---- */
+
+  /*
+   * A rubber stamp, drawn as one.
+   *
+   * A receipt for money that has actually left the foundation should say so at
+   * a glance, the way a paid invoice does — the figures above are the record,
+   * but this is what somebody sees first when the paper is handed to them.
+   * Tilted, because a stamp pressed by hand never lands square.
+   *
+   * Everything inside is positioned in the stamp's own rotated frame, so the
+   * box and its text tilt together instead of drifting apart.
+   */
+  const TILT = -11;
+  const stampX = MARGIN + 6;
+  const stampY = y - 4;
+  const stampW = 176;
+  const stampH = 50;
+
+  /** A point inside the stamp, expressed on the page. */
+  const inStamp = (dx: number, dy: number) => {
+    const t = (TILT * Math.PI) / 180;
+    return {
+      x: stampX + dx * Math.cos(t) - dy * Math.sin(t),
+      y: stampY + dx * Math.sin(t) + dy * Math.cos(t),
+    };
+  };
+
+  page.drawRectangle({
+    x: stampX,
+    y: stampY,
+    width: stampW,
+    height: stampH,
+    borderColor: GREEN,
+    borderWidth: 2,
+    rotate: degrees(TILT),
+  });
+
+  const stampLabel = inStamp(15, 27);
+  page.drawText('TRANSFERRED', {
+    x: stampLabel.x,
+    y: stampLabel.y,
+    size: 16,
+    font: bold,
+    color: GREEN,
+    rotate: degrees(TILT),
+  });
+
+  const stampDate = inStamp(15, 12);
+  page.drawText(pkDate(d.paidAt), {
+    x: stampDate.x,
+    y: stampDate.y,
+    size: 8.5,
+    font: body,
+    color: GREEN,
+    rotate: degrees(TILT),
+  });
+
+  /* The office's own stamp goes here — the line is the space left for it. */
   const sigW = 190;
   page.drawLine({
     start: { x: A4.w - MARGIN - sigW, y },
@@ -198,7 +256,7 @@ export async function buildReceipt(d: ReceiptData): Promise<Uint8Array> {
     thickness: 0.75,
     color: DIM,
   });
-  page.drawText('Authorised signature', {
+  page.drawText('STAMP', {
     x: A4.w - MARGIN - sigW,
     y: y - 13,
     size: 9,

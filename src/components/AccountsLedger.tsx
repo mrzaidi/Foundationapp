@@ -151,6 +151,21 @@ export default function AccountsLedger() {
           aria-label="Month"
         />
         <span className="acct-caption">{monthLabel(month)}</span>
+
+        {/*
+          A plain link, not a fetch: the browser downloads it, names it and
+          puts it where downloads go, which is what somebody expects from a
+          download. Amounts arrive as numbers Excel will add up rather than as
+          formatted text it treats as words.
+        */}
+        <a
+          className="admin-btn ghost acct-download"
+          href={`/api/admin/accounts/export?month=${month}`}
+          download
+        >
+          <Icon name="download" />
+          Download for Excel
+        </a>
       </div>
 
       {error && (
