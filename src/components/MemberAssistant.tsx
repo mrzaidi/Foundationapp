@@ -48,13 +48,16 @@ const UI = {
       `Hello ${name}. I can explain how anything here works, tell you where your applications have got to, or take you through a new one — I will ask one question at a time, and you can send me a photograph of a bill right here in the chat.`,
     /* Applying first, and worded as the thing itself rather than as a
        question about it — it is what most members open the chat to do. */
-    /* label shown, value sent. Applying comes first — it is what most
-       members open the chat to do. */
+    /*
+     * The four things a member comes here to do, labelled as the things
+     * themselves rather than as questions about them. The label is what they
+     * read; the value is the sentence the matcher is given.
+     */
     suggestions: [
-      { label: 'Apply for a fund', value: 'Apply for a fund' },
-      { label: 'Where is my application?', value: 'What is the status of my application?' },
-      { label: 'What documents do I need?', value: 'What documents do I need?' },
-      { label: 'How much can I apply for?', value: 'How much can I apply for?' },
+      { label: 'Apply for Fund', value: 'apply for a fund' },
+      { label: 'My Applications', value: 'show my applications' },
+      { label: 'Fund Details', value: 'what funds are there' },
+      { label: 'Application Status', value: 'what is the status of my application' },
     ],
   },
   ur: {
@@ -85,14 +88,14 @@ const UI = {
      *
      * The matcher reads English and Roman Urdu, not Urdu script — so a button
      * sends the question it MEANS rather than the words on it, and the answer
-     * comes back translated. A member tapping an Urdu chip gets an Urdu reply
-     * and never finds out that the machinery underneath is in English.
+     * comes back translated. A member tapping an Urdu button gets an Urdu
+     * reply and never finds out that the machinery underneath is in English.
      */
     suggestions: [
-      { label: 'فنڈ کے لیے درخواست دیں', value: 'Apply for a fund' },
-      { label: 'میری درخواست کہاں تک پہنچی؟', value: 'What is the status of my application?' },
-      { label: 'کون سی دستاویز چاہیے؟', value: 'What documents do I need?' },
-      { label: 'کتنی رقم مل سکتی ہے؟', value: 'How much can I apply for?' },
+      { label: 'فنڈ کے لیے درخواست', value: 'apply for a fund' },
+      { label: 'میری درخواستیں', value: 'show my applications' },
+      { label: 'فنڈز کی تفصیل', value: 'what funds are there' },
+      { label: 'درخواست کی حیثیت', value: 'what is the status of my application' },
     ],
   },
 } as const;
