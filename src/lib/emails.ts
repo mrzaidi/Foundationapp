@@ -145,8 +145,11 @@ If the money has not reached you within a few days, contact the foundation offic
       `${money(opts.amount)} has been sent to you`,
       `<p style="margin:0 0 12px">The foundation has sent you <strong>${money(opts.amount)}</strong>${how} for your ${opts.fund} application (<strong>${opts.reference}</strong>).</p>
        <p style="margin:0 0 12px">Your receipt is attached. Please keep it for your records.</p>
-       <p style="margin:0">If the money has not reached you within a few days, contact the foundation office and quote ${opts.reference}.</p>`,
-      { href: `${SITE}/requests`, label: 'See your application' }
+       <p style="margin:0">If the money has not reached you within a few days, contact the foundation office and quote ${opts.reference}.</p>`
+      // No button. This email is the end of the matter: the money has gone and
+      // the receipt is attached to the message itself. Sending somebody to the
+      // portal to look at an application that is finished asks them to sign in
+      // for nothing.
     ),
     ...(receipt ? { attachments: [receipt] } : {}),
   };
