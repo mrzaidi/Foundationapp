@@ -1,5 +1,6 @@
 import { requirePage } from '@/lib/admin-guard';
 import AccountsLedger from '@/components/AccountsLedger';
+import CategoryBalances from '@/components/CategoryBalances';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,8 @@ export default async function AdminAccountsPage() {
       </div>
 
       <AccountsLedger />
+
+      <CategoryBalances />
     </>
   );
 }

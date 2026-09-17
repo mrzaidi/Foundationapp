@@ -1,4 +1,10 @@
 'use client';
+import {
+  DEFAULT_DONATION_TYPE,
+  DONATION_LABEL,
+  DONATION_TYPES,
+  type DonationType,
+} from '@/lib/donation-types';
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -60,6 +66,9 @@ export default function RequestActions({ request }: { request: FundRequest }) {
   const [note, setNote] = useState(request.admin_note ?? '');
   const [transferRef, setTransferRef] = useState(request.transfer_ref ?? '');
   const [payment, setPayment] = useState<'cash' | 'bank'>(request.payment_method ?? 'bank');
+  /* Which kind of giving this grant comes out of, and what is left of each. */
+  const [fundedFrom, setFundedFrom] = useState<DonationType>(DEFAULT_DONATION_TYPE);
+  const [balances, setBalances] = useState<Record<string, number> | null>(null);
   const [receipts, setReceipts] = useState<File[]>([]);
   // What is left in this month's fund. Null until it loads, so the button is
   // never disabled on a figure nobody has yet.
@@ -75,9 +84,24 @@ export default function RequestActions({ request }: { request: FundRequest }) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/api/admin/budget');
-        const json = await res.json();
-        if (!cancelled && res.ok) setRemaining(Number(json.status?.remaining ?? 0));
+        const [b, c] = await Promise.all([
+          fetch('/api/admin/budget'),
+          fetch('/api/admin/categories'),
+        ]);
+        const json = await b.json();
+        if (!cancelled && b.ok) setRemaining(Number(json.status?.remaining ?? 0));
+        if (c.ok) {
+          const cats = await c.json();
+          if (!cancelled)
+            setBalances(
+              Object.fromEntries(
+                (cats.categories ?? []).map((x: { kind: string; available: number }) => [
+                  x.kind,
+                  Number(x.available),
+                ])
+              )
+            );
+        }
       } catch {
         // leave it unknown; the server still refuses an overspend
       }
@@ -161,6 +185,7 @@ export default function RequestActions({ request }: { request: FundRequest }) {
       if (action === 'transferred') {
         body.transfer_ref = transferRef.trim() || null;
         body.payment_method = payment;
+        body.funded_from = fundedFrom;
       }
 
       const res = await fetch(`/api/requests/${request.id}`, {
@@ -283,6 +308,47 @@ export default function RequestActions({ request }: { request: FundRequest }) {
 
           {open === 'transferred' && (
             <>
+              {/*
+                Which pot the money comes out of.
+              
+                A foundation holding Zakat and Khums does not hold one sum it
+                can spend on anything — each kind of giving is spent under its
+                own rules. Asking here, once, is the only moment anybody knows
+                the answer; afterwards the money has gone and nothing records
+                where it came from.
+              */}
+              <div className="field">
+                <label htmlFor="funded_from">Paid out of which fund?</label>
+                <select
+                  id="funded_from"
+                  className="input"
+                  value={fundedFrom}
+                  onChange={(e) => setFundedFrom(e.target.value as DonationType)}
+                >
+                  {DONATION_TYPES.map((k) => (
+                    <option key={k} value={k}>
+                      {DONATION_LABEL[k]}
+                      {balances ? ` — ${money(balances[k] ?? 0)} available` : ''}
+                    </option>
+                  ))}
+                </select>
+                {balances && (
+                  <p
+                    className="field-hint"
+                    style={{
+                      color:
+                        (balances[fundedFrom] ?? 0) < Number(amount)
+                          ? 'var(--danger)'
+                          : undefined,
+                    }}
+                  >
+                    {(balances[fundedFrom] ?? 0) < Number(amount)
+                      ? `Only ${money(balances[fundedFrom] ?? 0)} of ${DONATION_LABEL[fundedFrom]} is left — this would take it below zero.`
+                      : `${money(balances[fundedFrom] ?? 0)} of ${DONATION_LABEL[fundedFrom]} is available.`}
+                  </p>
+                )}
+              </div>
+
               <div className="field">
                 <label>How was it paid?</label>
                 <div className="paychoice">

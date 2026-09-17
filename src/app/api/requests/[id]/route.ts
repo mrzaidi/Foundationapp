@@ -66,6 +66,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     admin_note?: string | null;
     transfer_ref?: string | null;
     payment_method?: string | null;
+    funded_from?: string | null;
   };
   try {
     body = await request.json();
@@ -130,6 +131,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
    * the whole thing — the receipt then prints "Not recorded" instead of a
    * guess, and the transfer itself is never held up.
    */
+  // Which kind of giving the grant comes out of. Unrecognised values are
+  // refused rather than defaulted: paying a Zakat grant out of Khums because
+  // a typo fell through would be a real accounting error, and the transfer
+  // dialog only ever sends one of the eight.
+  if (body.funded_from !== undefined) {
+    const KINDS = [
+      'khums', 'zakat', 'zakat_al_fitr', 'sadaqah',
+      'fidyah', 'kaffarah', 'nadhr', 'general',
+    ];
+    if (body.funded_from !== null && !KINDS.includes(body.funded_from))
+      return NextResponse.json({ error: 'Unknown donation category.' }, { status: 422 });
+    if (await columnReady(supabase, 'fund_requests', 'funded_from'))
+      patch.funded_from = body.funded_from;
+  }
+
   if (body.payment_method !== undefined) {
     if (body.payment_method !== null && !['cash', 'bank'].includes(body.payment_method))
       return NextResponse.json({ error: 'Unknown payment method.' }, { status: 422 });
@@ -207,6 +223,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       transferred_at: string | null;
       transfer_ref: string | null;
       payment_method?: string | null;
+    funded_from?: string | null;
       fund_types: { name: string } | null;
       profiles: { full_name: string; email: string; mobile: string } | null;
     };
