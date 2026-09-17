@@ -188,35 +188,63 @@ export async function buildReceipt(d: ReceiptData): Promise<Uint8Array> {
     color: GREEN,
   });
 
-  y -= boxH + 46;
+  // Room for the stamp to stand in, above the line it stands on.
+  y -= boxH + 118;
 
-  /* ---- the stamp, and the space the office stamps into ---- */
+  /* ---- the stamp section ---- */
+
+  /* The line the stamp sits on, and what that space is for. */
+  const sigW = 190;
+  const sigLeft = A4.w - MARGIN - sigW;
+  page.drawLine({
+    start: { x: sigLeft, y },
+    end: { x: A4.w - MARGIN, y },
+    thickness: 0.75,
+    color: DIM,
+  });
+  page.drawText('STAMP', {
+    x: sigLeft,
+    y: y - 13,
+    size: 9,
+    font: body,
+    color: DIM,
+  });
 
   /*
-   * A rubber stamp, drawn as one.
+   * A rubber stamp, drawn as one, standing in the stamp's own space.
    *
    * A receipt for money that has actually left the foundation should say so at
-   * a glance, the way a paid invoice does — the figures above are the record,
-   * but this is what somebody sees first when the paper is handed to them.
-   * Tilted, because a stamp pressed by hand never lands square.
+   * a glance, the way a paid invoice does. It belongs here rather than off on
+   * the far side of the page: this is the part of a receipt somebody's eye
+   * goes to for a mark of authority, so an empty box beside a stamp printed
+   * somewhere else reads as a receipt that was never stamped at all.
    *
-   * Everything inside is positioned in the stamp's own rotated frame, so the
-   * box and its text tilt together instead of drifting apart.
+   * Tilted, because a stamp pressed by hand never lands square. Everything
+   * inside is positioned in the stamp's own rotated frame, so the box and its
+   * text tilt together instead of drifting apart.
    */
   const TILT = -11;
-  const stampX = MARGIN + 6;
-  const stampY = y - 4;
   const stampW = 176;
   const stampH = 50;
+  const t = (TILT * Math.PI) / 180;
+
+  /*
+   * Rotation is about the bottom-left corner, so a tilted box is wider than it
+   * is and hangs below where it starts. Both are measured rather than guessed
+   * at, which is what keeps the stamp centred on its line and clear of the
+   * amount above it however the tilt is changed.
+   */
+  const spanW = stampW * Math.cos(t) + stampH * Math.abs(Math.sin(t));
+  const dropBelow = stampW * Math.abs(Math.sin(t));
+
+  const stampX = sigLeft + (sigW - spanW) / 2;
+  const stampY = y + dropBelow + 8;
 
   /** A point inside the stamp, expressed on the page. */
-  const inStamp = (dx: number, dy: number) => {
-    const t = (TILT * Math.PI) / 180;
-    return {
-      x: stampX + dx * Math.cos(t) - dy * Math.sin(t),
-      y: stampY + dx * Math.sin(t) + dy * Math.cos(t),
-    };
-  };
+  const inStamp = (dx: number, dy: number) => ({
+    x: stampX + dx * Math.cos(t) - dy * Math.sin(t),
+    y: stampY + dx * Math.sin(t) + dy * Math.cos(t),
+  });
 
   page.drawRectangle({
     x: stampX,
@@ -246,22 +274,6 @@ export async function buildReceipt(d: ReceiptData): Promise<Uint8Array> {
     font: body,
     color: GREEN,
     rotate: degrees(TILT),
-  });
-
-  /* The office's own stamp goes here — the line is the space left for it. */
-  const sigW = 190;
-  page.drawLine({
-    start: { x: A4.w - MARGIN - sigW, y },
-    end: { x: A4.w - MARGIN, y },
-    thickness: 0.75,
-    color: DIM,
-  });
-  page.drawText('STAMP', {
-    x: A4.w - MARGIN - sigW,
-    y: y - 13,
-    size: 9,
-    font: body,
-    color: DIM,
   });
 
   /* ---- footer ---- */
