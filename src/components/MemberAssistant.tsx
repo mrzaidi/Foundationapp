@@ -310,8 +310,11 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
         <Icon name="chat" />
       </button>
 
+      {/* Its own class as well as the shared one: on a phone this dims the
+          screen behind a full-height sheet, but the desktop portal shows the
+          chat as a corner panel, where dimming the whole page would be absurd. */}
       <div
-        className={`backdrop ${open ? 'open' : ''}`}
+        className={`backdrop mbot-backdrop ${open ? 'open' : ''}`}
         onClick={busy ? undefined : () => setOpen(false)}
       />
 

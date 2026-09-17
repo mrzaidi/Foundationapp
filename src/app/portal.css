@@ -156,6 +156,58 @@
     --gutter: 32px;
   }
 
+  /* ---- the assistant, as a corner panel ----
+     On a phone the chat is a sheet that rises out of the bottom of the device
+     frame, positioned against `.phone`. Up here `.phone` stops being a frame —
+     it is `height: auto; overflow: visible`, the whole scrolling page — so
+     anything positioned against it lands at the foot of the document and
+     scrolls away with it. Fixed to the viewport instead, sized as a panel. */
+  .app-body .mbot-fab {
+    position: fixed;
+    inset-inline-end: 24px;
+    inset-block-end: 24px;
+    bottom: 24px;
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+    z-index: 60;
+  }
+  .app-body .mbot-fab svg {
+    width: 23px;
+    height: 23px;
+  }
+
+  .app-body .mbot {
+    position: fixed;
+    inset-inline-end: 24px;
+    inset-inline-start: auto;
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+    width: 396px;
+    height: min(640px, calc(100vh - 48px));
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    z-index: 70;
+    /* A panel that is already in the corner should fade and lift, not slide a
+       screen's height to get there. */
+    transform: translateY(14px) scale(0.99);
+    opacity: 0;
+    transition:
+      transform 0.18s ease,
+      opacity 0.18s ease;
+  }
+  .app-body .mbot.open {
+    transform: none;
+    opacity: 1;
+  }
+
+  /* Dimming the whole page for a corner panel would be absurd; the sheet on a
+     phone genuinely covers the screen, so it keeps its backdrop. */
+  .app-body .mbot-backdrop {
+    display: none;
+  }
+
   /* full-bleed page under a fixed top bar — no centred container */
   .app-body {
     display: block;

@@ -162,14 +162,27 @@ const T: Record<Exclude<MemberTopic, 'unknown' | 'greeting' | 'thanks'>, string[
     'kab mile',
     'kab milay',
   ],
+  /*
+   * Asked as "what does X mean", where X is any of the five words — and the
+   * word may be wrapped, as in "what does UNDER REVIEW mean". Matching the
+   * question frame and the word separately catches every arrangement of them
+   * instead of the handful somebody thought to list.
+   */
   statuses: [
-    'what does requested mean',
-    'what does review mean',
-    'what does approved mean',
-    'what does transferred mean',
-    'what does rejected mean',
+    'does requested mean',
+    'does review mean',
+    'does under review mean',
+    'does approved mean',
+    'does transferred mean',
+    'does rejected mean',
+    'mean by requested',
+    'mean by review',
+    'mean by approved',
+    'mean by transferred',
+    'mean by rejected',
     'what do the status',
     'what does the status mean',
+    'what are the status',
     'meaning of status',
     'status ka matlab',
   ],
@@ -225,9 +238,16 @@ const T: Record<Exclude<MemberTopic, 'unknown' | 'greeting' | 'thanks'>, string[
   privacy: [
     'can others see',
     'who can see',
+    'who else can',
     'is it private',
+    'private',
+    'confidential',
     'can anyone see',
-    'see other member',
+    'anyone else',
+    // Singular stem, so "can other members see my application" is caught. It
+    // is a question about privacy that happens to contain "my application",
+    // which would otherwise list their applications back at them.
+    'other member',
     'see the budget',
     'who donate',
   ],
@@ -317,12 +337,19 @@ const T: Record<Exclude<MemberTopic, 'unknown' | 'greeting' | 'thanks'>, string[
 const ORDER: (keyof typeof T)[] = [
   // Acting beats explaining: "I want to apply" is not a request for the manual.
   'attach_document',
+  /*
+   * "How much can I apply for?" contains "apply for", and used to be answered
+   * with the four steps of applying rather than with the fund's limits. It is
+   * a question about money, so the money question is asked first — and an
+   * instruction to act still reaches apply_now, because an instruction does
+   * not carry "how much".
+   */
+  'fund_limits',
   'apply_now',
   // Specific questions before the general ones they contain.
   'why_rejected',
   'how_long',
   'documents_needed',
-  'fund_limits',
   'statuses',
   'monthly_funds',
   'login_help',
