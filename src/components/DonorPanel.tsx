@@ -7,7 +7,6 @@ import Modal from './Modal';
 import { useToast } from './Toast';
 import { money } from '@/lib/format';
 import {
-  DEFAULT_DONATION_TYPE,
   DONATION_LABEL,
   DONATION_TYPES,
   donationLabel,
@@ -81,7 +80,7 @@ export default function DonorPanel() {
      form open on six rows at once is what made this table unreadable. */
   const [recording, setRecording] = useState<DonorRow | null>(null);
   const [amount, setAmount] = useState('');
-  const [kind, setKind] = useState<DonationType>(DEFAULT_DONATION_TYPE);
+  const [kind, setKind] = useState<DonationType | ''>('');
   /* Which donors have their gifts expanded. Kept across a reload so recording
      a second gift does not fold the list you were just looking at. */
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
@@ -135,6 +134,10 @@ export default function DonorPanel() {
       toast('Enter an amount to record.', 'bad');
       return;
     }
+    if (!kind) {
+      toast('Choose which kind of donation this is.', 'bad');
+      return;
+    }
 
     setBusyId(row.id);
     try {
@@ -148,7 +151,7 @@ export default function DonorPanel() {
       toast(row.name + ': ' + money(value) + ' ' + donationLabel(kind) + ' recorded');
       setRecording(null);
       setAmount('');
-      setKind(DEFAULT_DONATION_TYPE);
+      setKind('');
       // A second gift is worth seeing next to the first.
       setOpenIds((x) => new Set(x).add(row.id));
       await load();
@@ -374,6 +377,9 @@ export default function DonorPanel() {
               value={kind}
               onChange={(e) => setKind(e.target.value as DonationType)}
             >
+              <option value="" disabled>
+                Choose a kind…
+              </option>
               {DONATION_TYPES.map((k) => (
                 <option key={k} value={k}>
                   {DONATION_LABEL[k]}
@@ -511,7 +517,7 @@ export default function DonorPanel() {
                             onClick={() => {
                               setRecording(r);
                               setAmount('');
-                              setKind(DEFAULT_DONATION_TYPE);
+                              setKind('');
                             }}
                             disabled={busyId === r.id}
                           >

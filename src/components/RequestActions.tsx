@@ -1,6 +1,5 @@
 'use client';
 import {
-  DEFAULT_DONATION_TYPE,
   DONATION_LABEL,
   DONATION_TYPES,
   type DonationType,
@@ -67,7 +66,7 @@ export default function RequestActions({ request }: { request: FundRequest }) {
   const [transferRef, setTransferRef] = useState(request.transfer_ref ?? '');
   const [payment, setPayment] = useState<'cash' | 'bank'>(request.payment_method ?? 'bank');
   /* Which kind of giving this grant comes out of, and what is left of each. */
-  const [fundedFrom, setFundedFrom] = useState<DonationType>(DEFAULT_DONATION_TYPE);
+  const [fundedFrom, setFundedFrom] = useState<DonationType | ''>('');
   const [balances, setBalances] = useState<Record<string, number> | null>(null);
   const [receipts, setReceipts] = useState<File[]>([]);
   // What is left in this month's fund. Null until it loads, so the button is
@@ -173,6 +172,14 @@ export default function RequestActions({ request }: { request: FundRequest }) {
   }
 
   async function apply(action: Action) {
+    // Checked before anything is uploaded or written: a receipt filed against
+    // a transfer that is then refused leaves evidence of a payment that did
+    // not happen.
+    if (action === 'transferred' && !fundedFrom) {
+      toast('Choose which fund this is paid out of.', 'bad');
+      return;
+    }
+
     setBusy(true);
     try {
       if (action === 'transferred' && !(await uploadReceipts())) {
@@ -325,6 +332,9 @@ export default function RequestActions({ request }: { request: FundRequest }) {
                   value={fundedFrom}
                   onChange={(e) => setFundedFrom(e.target.value as DonationType)}
                 >
+                  <option value="" disabled>
+                    Choose a fund…
+                  </option>
                   {DONATION_TYPES.map((k) => (
                     <option key={k} value={k}>
                       {DONATION_LABEL[k]}
@@ -332,7 +342,13 @@ export default function RequestActions({ request }: { request: FundRequest }) {
                     </option>
                   ))}
                 </select>
-                {balances && (
+                {!fundedFrom && (
+                  <p className="field-hint">
+                    Required. Khums, Zakat and the rest are spent under different
+                    rules, so the foundation records which one a grant came out of.
+                  </p>
+                )}
+                {balances && fundedFrom && (
                   <p
                     className="field-hint"
                     style={{

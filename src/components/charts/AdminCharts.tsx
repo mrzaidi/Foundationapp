@@ -112,19 +112,6 @@ export default function AdminCharts() {
     return { counts, amounts };
   }, [rows, buckets]);
 
-  const totals = useMemo(() => {
-    const byStage: Record<string, number> = {};
-    const byFund: Record<string, { count: number; amount: number }> = {};
-
-    for (const r of rows ?? []) {
-      byStage[r.status] = (byStage[r.status] ?? 0) + 1;
-      const f = (byFund[r.fund_type_id] ??= { count: 0, amount: 0 });
-      f.count += 1;
-      f.amount += num(r.amount_requested);
-    }
-    return { byStage, byFund };
-  }, [rows]);
-
   if (error) {
     return (
       <div className="panel">
@@ -150,8 +137,6 @@ export default function AdminCharts() {
       </div>
     );
   }
-
-  const grandTotal = rows.length;
 
   return (
     <div className="vz-root">
@@ -192,8 +177,6 @@ export default function AdminCharts() {
           table={table}
         />
         <MoneyOverTime buckets={buckets} amounts={series.amounts} table={table} />
-        <FundDemand funds={funds} byFund={totals.byFund} table={table} />
-        <Pipeline byStage={totals.byStage} total={grandTotal} table={table} />
       </div>
     </div>
   );
@@ -468,153 +451,6 @@ function MoneyOverTime({
   );
 }
 
-/* ===========================================================================
-   3. Fund demand — ranked horizontal bars, one measure so one hue
-   =========================================================================== */
-function FundDemand({
-  funds,
-  byFund,
-  table,
-}: {
-  funds: FundRow[];
-  byFund: Record<string, { count: number; amount: number }>;
-  table: boolean;
-}) {
-  const data = funds
-    .map((f) => ({ ...f, ...(byFund[f.id] ?? { count: 0, amount: 0 }) }))
-    .sort((a, b) => b.count - a.count);
-
-  const max = Math.max(...data.map((d) => d.count), 1);
-  const rowH = 38;
-  const barH = 18;
-  const W = 480;
-  const labelW = 150;
-  const valueW = 44;
-  const plotW = W - labelW - valueW;
-  const H = data.length * rowH + 4;
-
-  return (
-    <figure className="vz-card">
-      <figcaption>
-        <h3>Demand by fund</h3>
-        <p>Applications received per fund, most-requested first</p>
-      </figcaption>
-
-      {data.every((d) => d.count === 0) ? (
-        <p className="vz-empty">No applications yet.</p>
-      ) : (
-        <>
-          <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Applications per fund">
-            {data.map((d, i) => {
-              const y = i * rowH + 8;
-              const w = (d.count / max) * plotW;
-              return (
-                <g key={d.id}>
-                  <text x={0} y={y + barH / 2 + 4} className="vz-rowlabel">
-                    {d.name}
-                  </text>
-                  <rect
-                    x={labelW}
-                    y={y}
-                    width={plotW}
-                    height={barH}
-                    rx={4}
-                    className="vz-track"
-                  />
-                  <path d={barPathH(labelW, y, w, barH)} fill={MAGNITUDE} />
-                  <text x={labelW + plotW + 8} y={y + barH / 2 + 4} className="vz-rowvalue num">
-                    {d.count}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
-
-          {table && (
-            <TableView
-              head={['Fund', 'Applications', 'Requested (PKR)']}
-              rows={data.map((d) => [d.name, String(d.count), money(d.amount, false)])}
-            />
-          )}
-        </>
-      )}
-    </figure>
-  );
-}
-
-/* ===========================================================================
-   4. Pipeline — where every application currently stands
-   =========================================================================== */
-function Pipeline({
-  byStage,
-  total,
-  table,
-}: {
-  byStage: Record<string, number>;
-  total: number;
-  table: boolean;
-}) {
-  const all = [...STAGES.map((s) => ({ ...s })), { key: 'rejected' as StageKey, color: REJECTED }];
-  const max = Math.max(...all.map((s) => byStage[s.key] ?? 0), 1);
-
-  const rowH = 38;
-  const barH = 18;
-  const W = 480;
-  const labelW = 120;
-  const valueW = 70;
-  const plotW = W - labelW - valueW;
-  const H = all.length * rowH + 4;
-
-  return (
-    <figure className="vz-card">
-      <figcaption>
-        <h3>Where applications stand</h3>
-        <p>Every application in the period by its current stage</p>
-      </figcaption>
-
-      {total === 0 ? (
-        <p className="vz-empty">No applications yet.</p>
-      ) : (
-        <>
-          <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Applications by current stage">
-            {all.map((s, i) => {
-              const v = byStage[s.key] ?? 0;
-              const y = i * rowH + 8;
-              const w = (v / max) * plotW;
-              const pct = total === 0 ? 0 : Math.round((v / total) * 100);
-              return (
-                <g key={s.key}>
-                  <text x={0} y={y + barH / 2 + 4} className="vz-rowlabel">
-                    {STAGE_LABEL[s.key]}
-                  </text>
-                  <rect x={labelW} y={y} width={plotW} height={barH} rx={4} className="vz-track" />
-                  <path d={barPathH(labelW, y, w, barH)} fill={s.color} />
-                  <text x={labelW + plotW + 8} y={y + barH / 2 + 4} className="vz-rowvalue num">
-                    {v}
-                    <tspan className="vz-rowpct"> · {pct}%</tspan>
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
-
-          {table && (
-            <TableView
-              head={['Stage', 'Applications', 'Share']}
-              rows={all.map((s) => [
-                STAGE_LABEL[s.key],
-                String(byStage[s.key] ?? 0),
-                `${total === 0 ? 0 : Math.round(((byStage[s.key] ?? 0) / total) * 100)}%`,
-              ])}
-            />
-          )}
-        </>
-      )}
-    </figure>
-  );
-}
-
-/* ---- the table view every chart can fall back to ---- */
 function TableView({ head, rows }: { head: string[]; rows: string[][] }) {
   return (
     <div className="vz-table">
