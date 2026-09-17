@@ -4694,3 +4694,51 @@ table.grid td {
   width: 17px;
   height: 17px;
 }
+
+/* =====================================================================
+   Donors table: reading only.
+
+   The recording controls have moved into a form. What is left is a table
+   of figures, one line per donor, which is what a table is for.
+   ===================================================================== */
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: flex-end;
+}
+.admin-btn.small {
+  padding: 5px 11px;
+  font-size: 12.5px;
+  gap: 5px;
+}
+.admin-btn.small svg {
+  width: 14px;
+  height: 14px;
+}
+.gift-none {
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+/* A gift line is now the only thing under the figure, so it can sit close
+   to it and keep its remove button beside it rather than a column away. */
+.gift-lines,
+.gift-top + .gift-line {
+  max-width: 300px;
+}
+.gift-top + .gift-line {
+  margin-top: 4px;
+}
+.gift-top {
+  margin-bottom: 0;
+}
+
+/* Cancel on the left, the action on the right, both at the foot. */
+.amodal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}

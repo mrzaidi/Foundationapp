@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Icon from './Icon';
 import MemberPicker, { type Candidate } from './MemberPicker';
+import Modal from './Modal';
 import { useToast } from './Toast';
 import { money } from '@/lib/format';
 import {
@@ -73,11 +74,14 @@ export default function DonorPanel() {
   // itself rather than showing a Postgres error on the budget screen.
   const [available, setAvailable] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
   /* Which kind of giving each row is about to record. Per row rather than one
      for the panel: an administrator working down a list is entering a Zakat
      for one donor and a Khums for the next. */
-  const [kinds, setKinds] = useState<Record<string, DonationType>>({});
+  /* The donor a gift is being recorded against, or null. One at a time: a
+     form open on six rows at once is what made this table unreadable. */
+  const [recording, setRecording] = useState<DonorRow | null>(null);
+  const [amount, setAmount] = useState('');
+  const [kind, setKind] = useState<DonationType>(DEFAULT_DONATION_TYPE);
   /* Which donors have their gifts expanded. Kept across a reload so recording
      a second gift does not fold the list you were just looking at. */
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
@@ -115,10 +119,19 @@ export default function DonorPanel() {
    * which meant a donor's second gift silently erased their first and the fund
    * reported less money than had arrived.
    */
-  async function addGift(row: DonorRow) {
-    const raw = (drafts[row.id] ?? '').trim();
-    const amount = Number(raw);
-    if (raw === '' || !Number.isFinite(amount) || amount <= 0) {
+  /**
+   * Record a gift.
+   *
+   * It is added to the month rather than replacing it. This used to
+   * overwrite, which meant a donor's second gift silently erased their first
+   * and the fund reported less money than had arrived.
+   */
+  async function saveGift() {
+    const row = recording;
+    if (!row) return;
+
+    const value = Number(amount);
+    if (amount.trim() === '' || !Number.isFinite(value) || value <= 0) {
       toast('Enter an amount to record.', 'bad');
       return;
     }
@@ -128,19 +141,16 @@ export default function DonorPanel() {
       const res = await fetch('/api/admin/donors', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: row.id,
-          month,
-          amount,
-          donation_type: kinds[row.id] ?? DEFAULT_DONATION_TYPE,
-        }),
+        body: JSON.stringify({ id: row.id, month, amount: value, donation_type: kind }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-      toast(`${row.name}: ${money(amount)} ${donationLabel(kinds[row.id])} recorded`);
-      setDrafts((d) => ({ ...d, [row.id]: '' }));
+      toast(row.name + ': ' + money(value) + ' ' + donationLabel(kind) + ' recorded');
+      setRecording(null);
+      setAmount('');
+      setKind(DEFAULT_DONATION_TYPE);
       // A second gift is worth seeing next to the first.
-      setOpenIds((s) => new Set(s).add(row.id));
+      setOpenIds((x) => new Set(x).add(row.id));
       await load();
     } catch (e) {
       toast((e as Error).message, 'bad');
@@ -148,7 +158,6 @@ export default function DonorPanel() {
       setBusyId(null);
     }
   }
-
   /** Take one gift back out, leaving the donor's other gifts alone. */
   async function removeGift(row: DonorRow, entry: Entry) {
     setBusyId(row.id);
@@ -311,6 +320,93 @@ export default function DonorPanel() {
         </div>
       )}
 
+      {/*
+        Recording a gift, as its own act.
+
+        This was three controls wedged into every row of the table — a select
+        whose label did not fit, an input whose placeholder did not fit, and a
+        button — repeated down the page beside the figures they were competing
+        with. A table is for reading. Recording is a decision, and a decision
+        gets a form with room to say what it is asking for.
+      */}
+      {recording && (
+        <Modal
+          busy={busyId === recording.id}
+          onClose={() => setRecording(null)}
+          label={'Record a donation from ' + recording.name}
+        >
+          <h3>Record a donation</h3>
+          <p className="sub">
+            From <strong>{recording.name}</strong>, counted toward {monthLabel(month)}.
+          </p>
+
+          <div className="field">
+            <label htmlFor="gift_amount">Amount (PKR)</label>
+            <input
+              id="gift_amount"
+              className="input"
+              type="number"
+              min={0}
+              inputMode="numeric"
+              autoFocus
+              value={amount}
+              placeholder={String(Number(recording.monthly_pledge) || 0)}
+              onChange={(e) => setAmount(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  void saveGift();
+                }
+              }}
+            />
+            {Number(recording.monthly_pledge) > 0 && (
+              <p className="field-hint">
+                They pledge {money(Number(recording.monthly_pledge))} a month.
+              </p>
+            )}
+          </div>
+
+          <div className="field">
+            <label htmlFor="gift_kind">Kind of donation</label>
+            <select
+              id="gift_kind"
+              className="input"
+              value={kind}
+              onChange={(e) => setKind(e.target.value as DonationType)}
+            >
+              {DONATION_TYPES.map((k) => (
+                <option key={k} value={k}>
+                  {DONATION_LABEL[k]}
+                </option>
+              ))}
+            </select>
+            <p className="field-hint">
+              Khums, Zakat and the rest are spent under different rules, so the
+              foundation records which one arrived.
+            </p>
+          </div>
+
+          <div className="amodal-foot">
+            <button
+              className="admin-btn ghost"
+              type="button"
+              onClick={() => setRecording(null)}
+              disabled={busyId === recording.id}
+            >
+              Cancel
+            </button>
+            <button
+              className="admin-btn"
+              type="button"
+              onClick={saveGift}
+              disabled={busyId === recording.id}
+            >
+              {busyId === recording.id ? <span className="spin" /> : <Icon name="check" />}
+              Record it
+            </button>
+          </div>
+        </Modal>
+      )}
       {!error && !loading && rows.length > 0 && (
         <>
           <div style={{ overflowX: 'auto' }}>
@@ -372,52 +468,12 @@ export default function DonorPanel() {
                           </div>
                         )}
 
-                        <div className="donor-amount">
-                          <select
-                            className="input gift-kind"
-                            value={kinds[r.id] ?? DEFAULT_DONATION_TYPE}
-                            onChange={(e) =>
-                              setKinds({ ...kinds, [r.id]: e.target.value as DonationType })
-                            }
-                            aria-label={"Kind of donation from " + r.name}
-                          >
-                            {DONATION_TYPES.map((k) => (
-                              <option key={k} value={k}>
-                                {DONATION_LABEL[k]}
-                              </option>
-                            ))}
-                          </select>
-                          <input
-                            className="input"
-                            type="number"
-                            min={0}
-                            inputMode="numeric"
-                            value={drafts[r.id] ?? ''}
-                            placeholder={entries.length ? 'Add another' : 'Amount'}
-                            onChange={(e) => setDrafts({ ...drafts, [r.id]: e.target.value })}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                void addGift(r);
-                              }
-                            }}
-                            aria-label={`Amount given by ${r.name}`}
-                          />
-                          <button
-                            className="admin-btn ghost"
-                            type="button"
-                            onClick={() => addGift(r)}
-                            disabled={busyId === r.id}
-                          >
-                            {busyId === r.id ? (
-                              <span className="spin dark" />
-                            ) : (
-                              <Icon name="plus" />
-                            )}
-                            Add
-                          </button>
-                        </div>
-
+                        {/* Reading only. Recording a gift opens a form: three
+                            controls wedged into every row made the table
+                            unreadable and clipped their own labels. */}
+                        {Number(r.given ?? 0) === 0 && (
+                          <span className="gift-none">Nothing yet</span>
+                        )}
                         {/* One gift reads fine on its own line. Several fold
                             away, so a donor who gives every week does not
                             stretch the row down the page. */}
@@ -448,14 +504,29 @@ export default function DonorPanel() {
                         {r.received_on ? dayLabel(r.received_on) : '—'}
                       </td>
                       <td>
-                        <button
-                          className="rowlink"
-                          type="button"
-                          onClick={() => toggle(r)}
-                          disabled={busyId === r.id}
-                        >
-                          {r.is_active ? 'Deactivate' : 'Reactivate'}
-                        </button>
+                        <div className="row-actions">
+                          <button
+                            className="admin-btn ghost small"
+                            type="button"
+                            onClick={() => {
+                              setRecording(r);
+                              setAmount('');
+                              setKind(DEFAULT_DONATION_TYPE);
+                            }}
+                            disabled={busyId === r.id}
+                          >
+                            <Icon name="plus" />
+                            Record
+                          </button>
+                          <button
+                            className="rowlink"
+                            type="button"
+                            onClick={() => toggle(r)}
+                            disabled={busyId === r.id}
+                          >
+                            {r.is_active ? 'Deactivate' : 'Reactivate'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
