@@ -4742,3 +4742,158 @@ table.grid td {
   gap: 10px;
   margin-top: 22px;
 }
+
+/* =====================================================================
+   Tabs, and a ledger that reads like a ledger.
+   ===================================================================== */
+
+/* A segmented control rather than underlined links: there are two of them,
+   they are equals, and one is always chosen. */
+.tabs {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--card-soft);
+  border: 1px solid var(--border);
+  gap: 2px;
+}
+.tabs button {
+  border: 0;
+  background: none;
+  padding: 7px 16px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text-dim);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.14s, color 0.14s;
+}
+.tabs button:hover {
+  color: var(--text);
+}
+.tabs button.on {
+  background: #fff;
+  color: var(--brand-2);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(16, 40, 32, 0.1));
+}
+
+/* ---- the ledger table ----
+   Figures are read down a column, so the columns are what the design serves:
+   money in and money out get room and colour, the balance gets the weight,
+   and the detail beside them stays quiet enough not to compete. */
+.acct-table thead th {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+.acct-table tbody td {
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+.acct-table .num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+}
+/* The balance is the column the eye tracks down; it carries the most weight
+   and a hairline to separate it from the two that produced it. */
+.acct-table td:last-child,
+.acct-table th:last-child {
+  font-weight: 750;
+  color: var(--text);
+  border-inline-start: 1px solid var(--border);
+  padding-inline-start: 18px;
+}
+.acct-table tbody tr:hover {
+  background: var(--card-soft);
+}
+/* The opening line is a statement of fact, not a movement — quieter, and
+   sitting on its own tint so the movements below it read as a group. */
+.acct-table tbody tr.acct-opening td {
+  background: var(--card-soft);
+  font-size: 12.5px;
+}
+.acct-table tfoot td {
+  background: var(--card-soft);
+  font-weight: 700;
+}
+/* Month rows are a list you pick from, so they say so on hover. */
+.acct-table tbody tr.acct-current td {
+  background: rgba(27, 175, 122, 0.07);
+}
+
+/* ---- how a month's grants were paid ---- */
+.paysplit-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--card-soft);
+  margin-bottom: 18px;
+}
+.paysplit-bar span {
+  height: 100%;
+}
+.ps-bank {
+  background: #2a78d6;
+}
+.ps-cash {
+  background: #1baf7a;
+}
+.ps-none {
+  background: #c6cfcb;
+}
+
+.paysplit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+}
+.payfig {
+  padding: 13px 15px;
+  border-radius: 13px;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+.payfig .pf-key {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.payfig .pf-key i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex: none;
+}
+.payfig.bank .pf-key i {
+  background: #2a78d6;
+}
+.payfig.cash .pf-key i {
+  background: #1baf7a;
+}
+.payfig.none .pf-key i {
+  background: #c6cfcb;
+}
+.payfig .pf-amount {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  margin: 5px 0 2px;
+  color: var(--text);
+}
+.payfig.bank .pf-amount {
+  color: #2a78d6;
+}
+.payfig.cash .pf-amount {
+  color: #1baf7a;
+}
+.payfig .pf-meta {
+  font-size: 12px;
+  color: var(--text-faint);
+}

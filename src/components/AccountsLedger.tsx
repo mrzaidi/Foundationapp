@@ -27,6 +27,15 @@ interface Ledger {
   entries: Entry[];
 }
 
+interface Methods {
+  cash: number;
+  bank: number;
+  unrecorded: number;
+  counts: { cash: number; bank: number; unrecorded: number };
+  total: number;
+  transfers: number;
+}
+
 interface MonthRow {
   month: string;
   opening: number;
@@ -78,9 +87,16 @@ export default function AccountsLedger() {
   const [month, setMonth] = useState(thisMonth);
   const [data, setData] = useState<Ledger | null>(null);
   const [months, setMonths] = useState<MonthRow[]>([]);
+  /* Cash and bank transfer are not the same act — one is reconciled against a
+     tin, the other against a statement — so a month closes with them apart. */
+  const [methods, setMethods] = useState<Methods | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<'all' | 'in' | 'out'>('all');
+  /* One month in detail, or every month in summary. They were stacked on one
+     page, which put the month picker and a heading saying the same month side
+     by side and then a second table underneath answering a different question. */
+  const [view, setView] = useState<'month' | 'history'>('month');
   // Absent until migration 0017 runs; the screen says so rather than showing
   // a Postgres error.
   const [available, setAvailable] = useState(true);
@@ -88,9 +104,10 @@ export default function AccountsLedger() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [ledgerRes, monthsRes] = await Promise.all([
+      const [ledgerRes, monthsRes, methodRes] = await Promise.all([
         fetch(`/api/admin/accounts?month=${month}`),
         fetch('/api/admin/accounts?months=12'),
+        fetch(`/api/admin/accounts/methods?month=${month}`),
       ]);
 
       const ledger = await ledgerRes.json();
@@ -101,6 +118,8 @@ export default function AccountsLedger() {
         const m = await monthsRes.json();
         setMonths((m.months ?? []) as MonthRow[]);
       }
+
+      setMethods(methodRes.ok ? ((await methodRes.json()) as Methods) : null);
 
       setError('');
       setAvailable(true);
@@ -143,21 +162,39 @@ export default function AccountsLedger() {
     <>
       {/* ---- the four figures ---- */}
       <div className="acct-head">
-        <input
-          type="month"
-          className="input budget-month"
-          value={month.slice(0, 7)}
-          onChange={(e) => setMonth(e.target.value ? `${e.target.value}-01` : thisMonth())}
-          aria-label="Month"
-        />
-        <span className="acct-caption">{monthLabel(month)}</span>
+        <div className="tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'month'}
+            className={view === 'month' ? 'on' : ''}
+            onClick={() => setView('month')}
+          >
+            Current month
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'history'}
+            className={view === 'history' ? 'on' : ''}
+            onClick={() => setView('history')}
+          >
+            Month by month
+          </button>
+        </div>
 
-        {/*
-          A plain link, not a fetch: the browser downloads it, names it and
-          puts it where downloads go, which is what somebody expects from a
-          download. Amounts arrive as numbers Excel will add up rather than as
-          formatted text it treats as words.
-        */}
+        {/* The picker belongs to the month view; in the summary every month
+            is already on the screen and choosing one would mean nothing. */}
+        {view === 'month' && (
+          <input
+            type="month"
+            className="input budget-month"
+            value={month.slice(0, 7)}
+            onChange={(e) => setMonth(e.target.value ? `${e.target.value}-01` : thisMonth())}
+            aria-label="Month"
+          />
+        )}
+
         <a
           className="admin-btn ghost acct-download"
           href={`/api/admin/accounts/export?month=${month}`}
@@ -176,7 +213,7 @@ export default function AccountsLedger() {
         </div>
       )}
 
-      {!error && (
+      {!error && view === 'month' && (
         <div className="acct-cards mt-16">
           <Card
             label="Brought forward"
@@ -218,7 +255,7 @@ export default function AccountsLedger() {
         is money already promised. Saying so here stops a committee spending
         the same rupee twice.
       */}
-      {!loading && data && data.committed > 0 && (
+      {!loading && data && data.committed > 0 && view === 'month' && (
         <div className="acct-note mt-16">
           <Icon name="alert" />
           <span>
@@ -228,7 +265,74 @@ export default function AccountsLedger() {
         </div>
       )}
 
+      {/*
+        How the month's grants left the building.
+
+        Cash and a bank transfer are reconciled against different things — a
+        tin and a statement — so a treasurer closing the month needs them
+        apart. The bar is the split at a glance; the figures under it are what
+        actually gets checked.
+      */}
+      {view === 'month' && !loading && methods && methods.total > 0 && (
+        <div className="panel mt-16">
+          <div className="panel-head">
+            <div>
+              <h2>How it was paid</h2>
+              <div className="ph-sub">
+                {methods.transfers} transfer{methods.transfers === 1 ? '' : 's'} in{' '}
+                {monthLabel(month)}
+              </div>
+            </div>
+            <Icon name="wallet" />
+          </div>
+
+          <div className="panel-body">
+            <div className="paysplit-bar" aria-hidden="true">
+              {methods.bank > 0 && (
+                <span className="ps-bank" style={{ width: pct(methods.bank, methods.total) }} />
+              )}
+              {methods.cash > 0 && (
+                <span className="ps-cash" style={{ width: pct(methods.cash, methods.total) }} />
+              )}
+              {methods.unrecorded > 0 && (
+                <span
+                  className="ps-none"
+                  style={{ width: pct(methods.unrecorded, methods.total) }}
+                />
+              )}
+            </div>
+
+            <div className="paysplit">
+              <PayFigure
+                label="Bank transfer"
+                tone="bank"
+                amount={methods.bank}
+                count={methods.counts.bank}
+                total={methods.total}
+              />
+              <PayFigure
+                label="Cash"
+                tone="cash"
+                amount={methods.cash}
+                count={methods.counts.cash}
+                total={methods.total}
+              />
+              {methods.unrecorded > 0 && (
+                <PayFigure
+                  label="Not recorded"
+                  tone="none"
+                  amount={methods.unrecorded}
+                  count={methods.counts.unrecorded}
+                  total={methods.total}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ---- the ledger ---- */}
+      {view === 'month' && (
       <div className="panel mt-16">
         <div className="panel-head">
           <div>
@@ -343,9 +447,10 @@ export default function AccountsLedger() {
           </div>
         )}
       </div>
+      )}
 
       {/* ---- month by month ---- */}
-      {months.length > 0 && (
+      {view === 'history' && months.length > 0 && (
         <div className="panel mt-16">
           <div className="panel-head">
             <div>
@@ -395,6 +500,36 @@ export default function AccountsLedger() {
         </div>
       )}
     </>
+  );
+}
+
+const pct = (part: number, whole: number) => `${(part / whole) * 100}%`;
+
+/** One payment method: what it came to, and what share of the month it was. */
+function PayFigure({
+  label,
+  tone,
+  amount,
+  count,
+  total,
+}: {
+  label: string;
+  tone: 'bank' | 'cash' | 'none';
+  amount: number;
+  count: number;
+  total: number;
+}) {
+  return (
+    <div className={`payfig ${tone}`}>
+      <span className="pf-key">
+        <i />
+        {label}
+      </span>
+      <strong className="pf-amount num">{money(amount)}</strong>
+      <span className="pf-meta">
+        {count} transfer{count === 1 ? '' : 's'} · {Math.round((amount / total) * 100)}%
+      </span>
+    </div>
   );
 }
 
