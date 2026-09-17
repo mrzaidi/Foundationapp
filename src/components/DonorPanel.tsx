@@ -5,12 +5,21 @@ import Icon from './Icon';
 import MemberPicker, { type Candidate } from './MemberPicker';
 import { useToast } from './Toast';
 import { money } from '@/lib/format';
+import {
+  DEFAULT_DONATION_TYPE,
+  DONATION_LABEL,
+  DONATION_TYPES,
+  donationLabel,
+  type DonationType,
+} from '@/lib/donation-types';
 
 /** One gift. A donor may make several in the same month. */
 interface Entry {
   id: string;
   amount: number;
   received_on: string;
+  /** Khums, Zakat, Sadaqah… — absent on gifts recorded before migration 0018. */
+  donation_type?: string | null;
   note: string | null;
 }
 
@@ -65,6 +74,10 @@ export default function DonorPanel() {
   const [available, setAvailable] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  /* Which kind of giving each row is about to record. Per row rather than one
+     for the panel: an administrator working down a list is entering a Zakat
+     for one donor and a Khums for the next. */
+  const [kinds, setKinds] = useState<Record<string, DonationType>>({});
   /* Which donors have their gifts expanded. Kept across a reload so recording
      a second gift does not fold the list you were just looking at. */
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
@@ -115,11 +128,16 @@ export default function DonorPanel() {
       const res = await fetch('/api/admin/donors', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: row.id, month, amount }),
+        body: JSON.stringify({
+          id: row.id,
+          month,
+          amount,
+          donation_type: kinds[row.id] ?? DEFAULT_DONATION_TYPE,
+        }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-      toast(`${row.name}: ${money(amount)} recorded`);
+      toast(`${row.name}: ${money(amount)} ${donationLabel(kinds[row.id])} recorded`);
       setDrafts((d) => ({ ...d, [row.id]: '' }));
       // A second gift is worth seeing next to the first.
       setOpenIds((s) => new Set(s).add(row.id));
@@ -355,6 +373,20 @@ export default function DonorPanel() {
                         )}
 
                         <div className="donor-amount">
+                          <select
+                            className="input gift-kind"
+                            value={kinds[r.id] ?? DEFAULT_DONATION_TYPE}
+                            onChange={(e) =>
+                              setKinds({ ...kinds, [r.id]: e.target.value as DonationType })
+                            }
+                            aria-label={"Kind of donation from " + r.name}
+                          >
+                            {DONATION_TYPES.map((k) => (
+                              <option key={k} value={k}>
+                                {DONATION_LABEL[k]}
+                              </option>
+                            ))}
+                          </select>
                           <input
                             className="input"
                             type="number"
@@ -467,6 +499,7 @@ function GiftLine({
   return (
     <div className="gift-line">
       <strong className="num">{money(Number(entry.amount), false)}</strong>
+      <span className="gl-kind">{donationLabel(entry.donation_type)}</span>
       <span className="gl-when">{dayLabel(entry.received_on)}</span>
       {entry.note && <span className="gl-note">{entry.note}</span>}
       <button

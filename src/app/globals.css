@@ -624,13 +624,26 @@ a {
 .track .step.done::before {
   background: var(--grad-brand);
 }
+/*
+ * Every stage the application has actually reached is green.
+ *
+ * The stage it was sitting on used to be gold, to say "here, and waiting on
+ * somebody". But a member looking at their own application does not read gold
+ * as a status of the office's queue — they read it as a warning about their
+ * money. Green for reached, grey for still to come, and the ring is what says
+ * which one it is standing on.
+ */
 .track .step.current .dot {
-  background: var(--grad-gold);
-  color: #6b4a06;
-  box-shadow: 0 0 0 4px rgba(224, 165, 43, 0.18);
+  background: var(--grad-brand);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(14, 157, 99, 0.18);
 }
 .track .step.current .lbl {
   color: var(--text);
+}
+/* The line into a stage that has been reached has been travelled. */
+.track .step.current::before {
+  background: var(--grad-brand);
 }
 /* A rejection is an ending, not a stage — the line into it reads red. */
 .track .step.rejected .dot {
@@ -4608,4 +4621,64 @@ table.grid td {
 .donor-amount + .gift-line {
   margin-top: 7px;
   color: var(--text-dim);
+}
+
+/* The kind of giving sits with the amount, because choosing it is part of
+   recording the gift rather than a separate decision. */
+.gift-kind {
+  width: 120px;
+  padding: 5px 7px;
+  font-size: 12px;
+  margin: 0;
+}
+.gl-kind {
+  font-size: 10.5px;
+  font-weight: 650;
+  color: var(--brand-2);
+  background: rgba(27, 175, 122, 0.1);
+  padding: 1px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+/* Three things and a remove button need more room than two did. */
+.gift-lines,
+.donor-amount + .gift-line {
+  max-width: 340px;
+}
+.donor-amount {
+  flex-wrap: wrap;
+}
+
+/* The two type charts side by side where there is room; stacked on a laptop. */
+.type-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+}
+.type-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  margin-inline-end: 8px;
+  vertical-align: baseline;
+}
+.type-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 12px;
+}
+.type-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+.type-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex: none;
 }

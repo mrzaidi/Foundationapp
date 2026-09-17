@@ -1,4 +1,5 @@
 import { requirePage } from '@/lib/admin-guard';
+import DonationTypes from '@/components/charts/DonationTypes';
 import DonorCharts from '@/components/charts/DonorCharts';
 import DonorPanel from '@/components/DonorPanel';
 
@@ -26,6 +27,8 @@ export default async function AdminDonorsPage() {
       </div>
 
       <DonorPanel />
+
+      <DonationTypes />
 
       <DonorCharts />
     </>

@@ -1,6 +1,7 @@
 import { requireCapability } from '@/lib/admin-guard';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { asDonationType } from '@/lib/donation-types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -126,6 +127,8 @@ export async function PATCH(request: Request) {
     month?: string;
     amount?: number | null;
     received_on?: string;
+    /* Khums, Zakat, Sadaqah… — see lib/donation-types */
+    donation_type?: string;
     /* removing one gift rather than the whole month */
     donation_id?: string;
   };
@@ -186,6 +189,10 @@ export async function PATCH(request: Request) {
         donor_id: id,
         month: body.month,
         amount,
+        // Anything unrecognised becomes a general donation rather than being
+        // refused: a guess here would be a guess about somebody's religious
+        // obligation, and "not captured" is the honest answer.
+        donation_type: asDonationType(body.donation_type),
         received_on: isMonth(body.received_on)
           ? body.received_on
           : new Date().toISOString().slice(0, 10),
