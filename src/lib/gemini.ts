@@ -123,18 +123,30 @@ export async function phrase(question: string, facts: unknown): Promise<string |
   );
 }
 
-const EXPLAIN_SYSTEM = [
-  'You answer questions from administrators of a welfare foundation about how their own',
-  'software works. You are given a description of that software. Rules:',
-  '',
-  '1. Answer only from the description. If it does not cover the question, say so plainly',
-  '   and name the closest thing it does cover. Never describe a feature that is not there —',
-  '   a confident answer about a button that does not exist is worse than no answer at all.',
-  '2. Never state a figure, balance, name or date. You hold the rules, not the data. If they',
-  '   are asking for a number, tell them to ask for it directly, such as "what is left".',
-  '3. Two or three sentences. Plain English, no headings, no bullet points, no markdown.',
-  '   Address the administrator directly.',
-].join('\n');
+const explainSystem = (audience: 'admin' | 'member') =>
+  [
+    audience === 'admin'
+      ? 'You answer questions from administrators of a welfare foundation about how their own'
+      : 'You answer questions from members of a welfare foundation about how the portal they use',
+    'works. You are given a description of that software. Rules:',
+    '',
+    '1. Answer only from the description. If it does not cover the question, say so plainly',
+    '   and name the closest thing it does cover. Never describe a feature that is not there —',
+    '   a confident answer about a button that does not exist is worse than no answer at all.',
+    audience === 'admin'
+      ? '2. Never state a figure, balance, name or date. You hold the rules, not the data. If they'
+      : '2. Never state a figure, amount, reference or date. You hold the rules, not their record. If they',
+    audience === 'admin'
+      ? '   are asking for a number, tell them to ask for it directly, such as "what is left".'
+      : '   are asking about their own application, tell them to ask for it directly, such as "my status".',
+    '3. Two or three sentences. Plain English, no headings, no bullet points, no markdown.',
+    audience === 'admin'
+      ? '   Address the administrator directly.'
+      : '   Address the member directly, warmly and simply. Many are applying for help with money',
+    audience === 'admin' ? '' : '   and may be anxious; never be curt, and never promise a decision or a date.',
+  ]
+    .filter(Boolean)
+    .join('\n');
 
 /**
  * Answer a question about how the system works, from a written description.
@@ -145,8 +157,12 @@ const EXPLAIN_SYSTEM = [
  * it — so it gets the real description and is told to refuse anything outside
  * it.
  */
-export async function explain(question: string, guide: string): Promise<string | null> {
-  return ask(EXPLAIN_SYSTEM, `Question: ${question}\n\nThe software:\n${guide}`);
+export async function explain(
+  question: string,
+  guide: string,
+  audience: 'admin' | 'member' = 'admin'
+): Promise<string | null> {
+  return ask(explainSystem(audience), `Question: ${question}\n\nThe software:\n${guide}`);
 }
 
 /* ------------------------------------------------------------------------ *

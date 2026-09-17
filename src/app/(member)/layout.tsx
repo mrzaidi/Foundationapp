@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import ApplyProvider from '@/components/ApplyProvider';
 import BottomNav from '@/components/BottomNav';
+import MemberAssistant from '@/components/MemberAssistant';
 import PhoneShell from '@/components/PhoneShell';
 import { rowHasBankColumns } from '@/lib/bank-schema';
 import { createClient } from '@/lib/supabase/server';
@@ -37,6 +38,9 @@ export default async function MemberLayout({ children }: { children: React.React
         bankEnabled={rowHasBankColumns(profile)}
       >
         {children}
+        {/* Beside the navigation rather than on a page, so it can be asked a
+            question from wherever the member happens to be. */}
+        <MemberAssistant profile={profile as Profile} />
         <BottomNav />
       </ApplyProvider>
     </PhoneShell>
