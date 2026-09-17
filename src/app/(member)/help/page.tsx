@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import Icon from '@/components/Icon';
-import { StatusBar } from '@/components/PhoneShell';
 import { getI18n } from '@/lib/i18n/server';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +16,6 @@ export default async function HelpPage() {
   return (
     <div className="screen">
       <div className="hero tight">
-        <StatusBar />
         <div className="appbar">
           <Link href="/" className="icon-btn" aria-label={d.common.back}>
             <Icon name="chevronLeft" className="flip" />

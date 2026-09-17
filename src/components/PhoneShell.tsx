@@ -22,21 +22,14 @@ export default function PhoneShell({
   );
 }
 
-/** Simulated iOS status bar — hidden on desktop, sells the app feel on a phone. */
-export function StatusBar({ label = '9:41' }: { label?: string }) {
-  return (
-    <div className="status-bar">
-      <span>{label}</span>
-      <span className="dots">
-        <i />
-        <i />
-        <i />
-        <svg width="22" height="11" viewBox="0 0 22 11" fill="none" aria-hidden="true">
-          <rect x="0.6" y="0.6" width="17" height="9.8" rx="2.6" stroke="currentColor" opacity=".5" />
-          <rect x="2" y="2" width="13" height="7" rx="1.6" fill="currentColor" />
-          <path d="M19.4 4v3a1.9 1.9 0 0 0 0-3Z" fill="currentColor" opacity=".5" />
-        </svg>
-      </span>
-    </div>
-  );
-}
+/*
+ * There used to be a simulated iOS status bar here — a clock reading 9:41 and
+ * a battery icon, drawn at the top of every screen.
+ *
+ * It was hidden from 1024px up, which is where the desktop mock it was meant
+ * to decorate actually lives. So the only place it ever appeared was a real
+ * phone, a few pixels under that phone's real status bar, telling every member
+ * that the time was 9:41. A fake clock is not a design flourish on a device
+ * that has a true one; it is simply wrong, and it was wrong for everybody who
+ * ever used the portal on a handset.
+ */

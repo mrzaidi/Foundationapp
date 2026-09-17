@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import DocumentGallery from '@/components/DocumentGallery';
 import Icon from '@/components/Icon';
-import { StatusBar } from '@/components/PhoneShell';
 import StatusBadge from '@/components/StatusBadge';
 import Tracker from '@/components/Tracker';
 import { createClient } from '@/lib/supabase/server';
@@ -49,7 +48,6 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="screen">
       <div className="hero tight">
-        <StatusBar />
         <div className="appbar">
           <Link href="/requests" className="icon-btn" aria-label={d.common.back}>
             <Icon name="chevronLeft" className="flip" />

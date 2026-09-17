@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import LocaleProvider from '@/components/LocaleProvider';
-import SafeAreaProbe from '@/components/SafeAreaProbe';
 import { ToastProvider } from '@/components/Toast';
 import { dirOf } from '@/lib/i18n';
 import { getLocale } from '@/lib/i18n/server';
@@ -43,7 +42,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body>
-        <SafeAreaProbe />
         <LocaleProvider locale={locale}>
           <ToastProvider>{children}</ToastProvider>
         </LocaleProvider>

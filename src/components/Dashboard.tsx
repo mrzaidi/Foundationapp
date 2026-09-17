@@ -5,7 +5,6 @@ import { useApply } from './ApplyProvider';
 import Icon from './Icon';
 import LanguageToggle from './LanguageToggle';
 import { useI18n } from './LocaleProvider';
-import { StatusBar } from './PhoneShell';
 import StatusBadge from './StatusBadge';
 import { fundText } from '@/lib/funds';
 import { initials, money, timeAgo } from '@/lib/format';
@@ -51,7 +50,6 @@ export default function Dashboard({
     <div className="screen">
       {/* ---------- welcome band ---------- */}
       <div className="hero welcome">
-        <StatusBar />
 
         <div className="welcome-row">
           <div className="greet">

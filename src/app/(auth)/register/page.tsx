@@ -7,7 +7,6 @@ import BankFields, { EMPTY_BANK, useBankValidation, type BankForm } from '@/comp
 import Icon from '@/components/Icon';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useI18n } from '@/components/LocaleProvider';
-import { StatusBar } from '@/components/PhoneShell';
 import { useToast } from '@/components/Toast';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeAccount } from '@/lib/banks';
@@ -193,7 +192,6 @@ export default function RegisterPage() {
   return (
     <div className="screen no-nav">
       <div className="hero tight">
-        <StatusBar />
         <div className="appbar">
           {step === 0 ? (
             <Link href="/login" className="icon-btn" aria-label={d.common.back}>

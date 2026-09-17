@@ -8,10 +8,12 @@ interface BudgetStatus {
   month: string;
   /** What an admin set aside — a reserve, or a one-off gift. */
   budget: number;
+  /** Left over from every month before this one — see migration 0017. */
+  opening?: number;
   /** What donors actually gave this month. */
   donated: number;
   donors: number;
-  /** budget + donated: the money the committee can actually spend. */
+  /** opening + donated: the money the committee can actually spend. */
   fund: number;
   spent: number;
   transfers: number;
@@ -82,8 +84,10 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
     );
   }
 
-  // The month's fund is what donors gave it. Nothing else adds to it: a
-  // figure somebody typed was a promise, and the committee spent against it.
+  // The month's fund is what was left over plus what donors gave it. A figure
+  // somebody typed is still not part of it — that was a promise, and the
+  // committee used to spend against it.
+  const opening = Number(status.opening ?? 0);
   const fund = Number(status.fund ?? status.donated ?? 0);
   const used = fund > 0 ? Math.min(1, status.spent / fund) : 0;
   const over = status.remaining < 0;
@@ -97,7 +101,7 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
           <div className="ph-sub">
             {fund > 0
               ? `${monthLabel(status.month)} · ${status.transfers} transfer${status.transfers === 1 ? '' : 's'} so far`
-              : `Nothing donated yet for ${monthLabel(status.month)}`}
+              : `Nothing brought forward or donated yet for ${monthLabel(status.month)}`}
           </div>
         </div>
 
@@ -115,6 +119,17 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
 
       <div className="panel-body">
         <div className="budget-figures">
+          {/* Shown only when there is one. A month that genuinely opened at
+              zero should not carry a row of zeroes explaining that. */}
+          {opening !== 0 && (
+            <div className="bf">
+              <span className="bf-label">Brought forward</span>
+              <span className="bf-value num" style={{ color: 'var(--text-dim)' }}>
+                {money(opening)}
+              </span>
+              <Fx pkr={opening} />
+            </div>
+          )}
           <div className="bf">
             <span className="bf-label">
               Donations{status.donors > 0 ? ` · ${status.donors}` : ''}
@@ -166,9 +181,9 @@ export default function BudgetPanel({ compact = false }: { compact?: boolean }) 
 
         {over && (
           <div className="note budget-alert">
-            <strong style={{ color: 'var(--danger)' }}>Over the fund.</strong> Transfers this month
-            exceed what donors gave by {money(Math.abs(status.remaining))}. Transfers are not
-            blocked — this is a warning, not a limit.
+            <strong style={{ color: 'var(--danger)' }}>Over the fund.</strong> Transfers have gone
+            past what the foundation holds by {money(Math.abs(status.remaining))}, counting what was
+            brought forward. Transfers are not blocked — this is a warning, not a limit.
           </div>
         )}
         {tight && (

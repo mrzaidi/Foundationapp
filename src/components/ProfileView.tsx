@@ -7,7 +7,6 @@ import BankFields, { useBankValidation, type BankForm } from './BankFields';
 import Icon from './Icon';
 import LanguageToggle from './LanguageToggle';
 import { useI18n } from './LocaleProvider';
-import { StatusBar } from './PhoneShell';
 import { useToast } from './Toast';
 import { createClient } from '@/lib/supabase/client';
 import { formatAccount, hasBankDetails, normalizeAccount } from '@/lib/banks';
@@ -120,7 +119,6 @@ export default function ProfileView({
   return (
     <div className="screen">
       <div className="hero">
-        <StatusBar />
         <div className="appbar">
           <Link href="/" className="icon-btn" aria-label={d.common.back}>
             <Icon name="chevronLeft" className="flip" />

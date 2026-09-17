@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import Icon from '@/components/Icon';
-import { StatusBar } from '@/components/PhoneShell';
 import StatusBadge from '@/components/StatusBadge';
 import { createClient } from '@/lib/supabase/server';
 import { money, progressPercent, timeAgo } from '@/lib/format';
@@ -43,7 +42,6 @@ export default async function RequestsPage({
   return (
     <div className="screen">
       <div className="hero tight">
-        <StatusBar />
         <div className="appbar">
           <Link href="/" className="icon-btn" aria-label={d.common.back}>
             <Icon name="chevronLeft" className="flip" />

@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Icon from '@/components/Icon';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useI18n } from '@/components/LocaleProvider';
-import { StatusBar } from '@/components/PhoneShell';
 import { useToast } from '@/components/Toast';
 import { createClient } from '@/lib/supabase/client';
 
@@ -47,7 +46,6 @@ function LoginForm() {
   return (
     <div className="screen no-nav">
       <div className="auth-hero">
-        <StatusBar />
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6 }}>
           <LanguageToggle />
         </div>

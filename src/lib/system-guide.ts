@@ -47,10 +47,20 @@ The requested amount can be corrected by a Master Admin until the money moves,
 for cases where it was typed wrongly at the office.
 
 MONEY IN
-The month's fund is the donations recorded against that month. Nothing else
-adds to it. It cannot be typed in — the only way it goes up is a donor
-actually giving. Donors are members; recording a donation from someone adds
-them to the donor list automatically.
+The month's fund is what was left over from earlier months plus the donations
+recorded against this month. It cannot be typed in — the only way it goes up
+is a donor actually giving. Donors are members; recording a donation from
+someone adds them to the donor list automatically. A donor may give more than
+once in a month, and each gift is recorded separately.
+
+ACCOUNTS
+The Accounts screen is the foundation's book: what the month opened with,
+every donation in and every transfer out as its own line with a running
+balance, and what it closes with. Whatever is left at the end of a month is
+what the next month opens with — that carries by itself, with nothing to run
+and nothing to switch on. An approved application that has not yet been paid
+is shown separately, because it is money already promised out of that closing
+balance.
 
 MONEY OUT
 A transfer cannot exceed what is left in the month's fund. The database itself

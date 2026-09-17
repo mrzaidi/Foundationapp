@@ -44,6 +44,7 @@ export type Capability =
   | 'view_requests'
   | 'decide_requests'
   | 'view_budget'
+  | 'view_accounts'
   | 'view_donors'
   | 'edit_donors'
   | 'view_funds'
@@ -60,6 +61,7 @@ const MASTER: Capability[] = [
   'view_requests',
   'decide_requests',
   'view_budget',
+  'view_accounts',
   'view_donors',
   'edit_donors',
   'view_funds',
@@ -98,6 +100,10 @@ const INTAKE: Capability[] = [
   'edit_members',
   'create_members',
   'view_budget',
+  // The account book is the budget seen properly — what came in, what went
+  // out, what is left. The donor names inside it are hidden by the ledger
+  // itself, so this level reads the money without reading the donor list.
+  'view_accounts',
 ];
 
 const BY_LEVEL: Record<AdminLevel, Capability[]> = {
@@ -125,6 +131,7 @@ export const MODULES: {
   { href: '/admin/funds', label: 'Funds', icon: 'wallet', needs: 'view_funds', group: 'Manage' },
   { href: '/admin/donors', label: 'Donors', icon: 'heart', needs: 'view_donors', group: 'Manage' },
   { href: '/admin/budget', label: 'Budget', icon: 'budget', needs: 'view_budget', group: 'Manage' },
+  { href: '/admin/accounts', label: 'Accounts', icon: 'book', needs: 'view_accounts', group: 'Manage' },
 ];
 
 /** Where to send someone who has no business on the page they asked for. */

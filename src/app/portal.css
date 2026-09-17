@@ -186,9 +186,6 @@
     padding: 0 var(--gutter) 64px;
   }
 
-  .app-body .status-bar {
-    display: none;
-  }
 
   /* ---- top navigation, full width ---- */
   .app-body .nav {
