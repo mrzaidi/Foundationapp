@@ -4458,3 +4458,35 @@ table.grid .rowlink:hover {
 .app-body .screen {
   padding-bottom: calc(var(--nav-h) + 78px + env(safe-area-inset-bottom, 0px));
 }
+
+/*
+ * The phone frame is a frame, not a scroller.
+ *
+ * overflow:hidden still leaves a box that JavaScript can scroll, and anything
+ * calling scrollIntoView inside it — a chat scrolling its own log, a browser
+ * revealing a focused field — scrolled the whole application instead, pushing
+ * the header off the top and the parked apply sheet into view. `clip` removes
+ * the scroll container altogether, so there is nothing left to scroll by
+ * accident. The desktop layout overrides this back to visible.
+ */
+.phone {
+  overflow: clip;
+}
+
+/* A figure with a long label wrapped rather than forcing the chat panel wider
+   than the screen and putting a horizontal scrollbar under the conversation. */
+.mbot-log {
+  overflow-x: hidden;
+}
+.mbot-fig {
+  flex-wrap: wrap;
+}
+.mbot-fig .mf-k {
+  white-space: normal;
+  overflow: visible;
+}
+.mbot-fig strong {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: end;
+}

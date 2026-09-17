@@ -61,10 +61,20 @@ export type MemberTopic =
 
 /** Anything that turns a sentence into a question rather than an instruction. */
 const ASKING =
-  /\b(how|what|which|where|when|why|who|whose|whom|kaise|kaisay|kaisy|kya|kia|kab|kahan|kon|kaun|kitna|kitni|kitne)\b/;
+  /\b(how|what|which|where|when|why|who|whose|whom|kaise|kaisay|kaisy|kya|kia|kab|kahan|kon|kaun|kitna|kitni|kitne)\b|کیا|کیسے|کیسا|کتنا|کتنی|کتنے|کب|کہاں|کون|کیوں/;
 
 /** Wanting, or doing. "I want to", "I need to", "please make", "submit". */
 const WANT = /\b(want|wanna|wish|need|require|like|chahta|chahti|chahiye|chahye)\b/;
+/**
+ * Urdu for actually making an application.
+ *
+ * Deliberately not the bare word درخواست. That also appears in "میری درخواست
+ * کا کیا بنا؟" — where has my application got to — which is a question about
+ * one that already exists, and opening a new application in reply to it would
+ * be alarming. The verb has to be there as well.
+ */
+const UR_APPLY = /درخواست\s*(دیں|دینا|دینی|دے|دوں)|فنڈ کے لیے درخواست/;
+
 const DO_VERB =
   /\b(submit|submitting|make|making|start|starting|create|creating|file|filing|raise|raising|lodge|send|sending|put|putting|open|opening|apply|applying|register|registering|raise|do|karna|karni|karu|karoon|dena|deni|dalna)\b/;
 
@@ -178,9 +188,10 @@ const RULES: Rule[] = [
     topic: 'apply_now',
     test: (q) =>
       !ASKING.test(q) &&
-      (WANT.test(q) || DO_VERB.test(q)) &&
-      THING.test(q) &&
-      !DOC.test(q),
+      (((WANT.test(q) || DO_VERB.test(q)) && THING.test(q) && !DOC.test(q)) ||
+        // "Apply for a fund" — the option, said plainly.
+        (/\bapply\b/.test(q) && /\bfunds?\b/.test(q)) ||
+        UR_APPLY.test(q)),
   },
 
   /* ---- how long ---- */

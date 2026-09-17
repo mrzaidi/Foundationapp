@@ -220,7 +220,7 @@ export async function POST(request: Request) {
       if (!list.length)
         return reply({
           text: 'You have not made any applications yet. I can take you through one now if you like — it takes a minute.',
-          options: [{ value: 'apply', label: 'Apply now' }],
+          options: [{ value: 'apply for a fund', label: 'Apply now' }],
           suggestions: ['How do I apply?', 'What funds are there?'],
         });
 
@@ -245,7 +245,7 @@ export async function POST(request: Request) {
       if (!list.length)
         return reply({
           text: 'There is nothing to track yet — you have not applied for anything. Shall I take you through an application?',
-          options: [{ value: 'apply', label: 'Apply now' }],
+          options: [{ value: 'apply for a fund', label: 'Apply now' }],
         });
 
       const ref = referenceFrom(question);
@@ -423,8 +423,8 @@ export async function POST(request: Request) {
             ? 'Applying takes four steps: choose the fund you need, enter the amount, say in a sentence what it is for, and attach anything that supports it — a bill, a report, a fee voucher. You then get a reference, and I can tell you where it has got to at any time. Press the round + button at the bottom of the screen, or I can take you through it here.'
             : 'Before you can apply, your bank details need to be on file — that is where an approved grant is sent. Once they are saved, applying takes four steps: choose a fund, enter the amount, say what it is for, and attach anything that supports it.',
           options: bankOnFile
-            ? [{ value: 'apply', label: 'Take me through it' }]
-            : [{ value: 'bank', label: 'Add my bank details' }],
+            ? [{ value: 'apply for a fund', label: 'Take me through it' }]
+            : [{ value: 'add my bank details', label: 'Add my bank details' }],
           link: bankOnFile
             ? { href: '/help', label: 'See the full process' }
             : { href: '/profile', label: 'Open my profile' },
@@ -445,7 +445,7 @@ export async function POST(request: Request) {
               : `from ${money(Number(f.min_amount), false)}`,
           })),
           link: { href: '/', label: 'See the funds' },
-          options: [{ value: 'apply', label: 'Apply to one' }],
+          options: [{ value: 'apply for a fund', label: 'Apply to one' }],
         };
       }
 
@@ -457,7 +457,7 @@ export async function POST(request: Request) {
               named.max_amount ? `, and the largest is ${money(Number(named.max_amount))}` : ', with no upper limit set'
             }. ${named.document_required ? 'It will not accept an application without a supporting document.' : 'A supporting document is welcome but not required.'}`,
             link: { href: '/', label: 'See the funds' },
-            options: [{ value: 'apply', label: 'Apply to this fund' }],
+            options: [{ value: 'apply for a fund', label: 'Apply to this fund' }],
           };
 
         return {
@@ -482,7 +482,7 @@ export async function POST(request: Request) {
             label: f.name,
             value: f.document_required ? `${f.document_label} — required` : f.document_label || 'optional',
           })),
-          options: [{ value: 'attach', label: 'Attach one now' }],
+          options: [{ value: 'attach a document', label: 'Attach one now' }],
         };
       }
 
@@ -603,7 +603,7 @@ export async function POST(request: Request) {
     if (!open.length)
       return reply({
         text: 'You have no applications to attach anything to. Shall I take you through a new application instead? You can attach your documents as part of it.',
-        options: [{ value: 'apply', label: 'Apply now' }],
+        options: [{ value: 'apply for a fund', label: 'Apply now' }],
       });
 
     const ref = referenceFrom(question);

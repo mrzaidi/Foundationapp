@@ -46,11 +46,15 @@ const UI = {
     failed: (n: string) => `${n} could not be sent.`,
     opening: (name: string) =>
       `Hello ${name}. I can explain how anything here works, tell you where your applications have got to, or take you through a new one — I will ask one question at a time, and you can send me a photograph of a bill right here in the chat.`,
+    /* Applying first, and worded as the thing itself rather than as a
+       question about it — it is what most members open the chat to do. */
+    /* label shown, value sent. Applying comes first — it is what most
+       members open the chat to do. */
     suggestions: [
-      'How do I apply?',
-      'What is the status of my application?',
-      'What documents do I need?',
-      'How much can I apply for?',
+      { label: 'Apply for a fund', value: 'Apply for a fund' },
+      { label: 'Where is my application?', value: 'What is the status of my application?' },
+      { label: 'What documents do I need?', value: 'What documents do I need?' },
+      { label: 'How much can I apply for?', value: 'How much can I apply for?' },
     ],
   },
   ur: {
@@ -76,11 +80,19 @@ const UI = {
     failed: (n: string) => `${n} نہیں بھیجی جا سکی۔`,
     opening: (name: string) =>
       `السلام علیکم ${name}۔ میں بتا سکتا ہوں کہ یہاں سب کچھ کیسے کام کرتا ہے، آپ کی درخواستیں کہاں تک پہنچی ہیں، یا آپ کی نئی درخواست بھی بنوا سکتا ہوں — ایک وقت میں ایک سوال، اور بل کی تصویر آپ یہیں چیٹ میں بھیج سکتے ہیں۔`,
+    /*
+     * The label is Urdu; the value is English.
+     *
+     * The matcher reads English and Roman Urdu, not Urdu script — so a button
+     * sends the question it MEANS rather than the words on it, and the answer
+     * comes back translated. A member tapping an Urdu chip gets an Urdu reply
+     * and never finds out that the machinery underneath is in English.
+     */
     suggestions: [
-      'میں درخواست کیسے دوں؟',
-      'میری درخواست کا کیا بنا؟',
-      'کون سی دستاویز چاہیے؟',
-      'کتنی رقم مل سکتی ہے؟',
+      { label: 'فنڈ کے لیے درخواست دیں', value: 'Apply for a fund' },
+      { label: 'میری درخواست کہاں تک پہنچی؟', value: 'What is the status of my application?' },
+      { label: 'کون سی دستاویز چاہیے؟', value: 'What documents do I need?' },
+      { label: 'کتنی رقم مل سکتی ہے؟', value: 'How much can I apply for?' },
     ],
   },
 } as const;
@@ -172,7 +184,7 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
      while they are still deciding. */
   const [files, setFiles] = useState<File[]>([]);
 
-  const endRef = useRef<HTMLDivElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -186,14 +198,25 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
         text: '',
         answer: {
           text: say.opening(first),
-          suggestions: [...say.suggestions],
+          options: say.suggestions.map((s) => ({ ...s })),
         },
       },
     ]);
   }, [open, turns.length, first, say]);
 
+  /*
+   * Scroll the conversation, and nothing else.
+   *
+   * This used to call scrollIntoView on a marker at the end of the log, which
+   * scrolls EVERY scrollable ancestor — including the phone frame itself. The
+   * frame is overflow:hidden but still programmatically scrollable, so opening
+   * the chat quietly scrolled the whole application up by eighty-seven pixels,
+   * pushing the header off the top and dragging the parked apply sheet into
+   * view at the bottom. Setting scrollTop on the log touches only the log.
+   */
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+    const log = logRef.current;
+    if (log) log.scrollTop = log.scrollHeight;
   }, [turns, busy]);
 
   useEffect(() => {
@@ -420,7 +443,7 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
           </button>
         </div>
 
-        <div className="mbot-log">
+        <div className="mbot-log" ref={logRef}>
           {turns.map((turn, i) => (
             <div className={`mbot-turn ${turn.from}`} key={i}>
               {turn.from === 'you' ? (
@@ -462,7 +485,7 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
                         <button
                           key={o.value}
                           type="button"
-                          onClick={() => ask(o.label)}
+                          onClick={() => ask(o.value)}
                           disabled={busy}
                         >
                           {o.label}
@@ -528,7 +551,6 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
             </div>
           )}
 
-          <div ref={endRef} />
         </div>
 
         {/* Chosen files, before they go anywhere. Removable, because a wrong
