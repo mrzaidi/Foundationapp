@@ -436,8 +436,14 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
             <strong>{say.title}</strong>
             <span>{say.sub}</span>
           </div>
+          {/*
+            The plain .icon-btn is a white icon on translucent white, made for
+            the green hero. On this white header it was invisible — the close
+            button was there the whole time and simply could not be seen. The
+            dark variant is the one meant for a light surface.
+          */}
           <button
-            className="icon-btn"
+            className="icon-btn dark mbot-close"
             onClick={() => setOpen(false)}
             aria-label={say.close}
             type="button"

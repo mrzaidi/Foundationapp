@@ -5,7 +5,6 @@ import MonthlyTrends from '@/components/charts/MonthlyTrends';
 import BudgetPanel from '@/components/BudgetPanel';
 import Icon from '@/components/Icon';
 import StatusBadge from '@/components/StatusBadge';
-import SystemStatus from '@/components/SystemStatus';
 import { createClient } from '@/lib/supabase/server';
 import { initials, money, shortMoney, timeAgo } from '@/lib/format';
 import type { AdminStats, FundRequest } from '@/lib/types';
@@ -135,7 +134,6 @@ export default async function AdminDashboard() {
         <AdminCharts />
       </div>
 
-      <SystemStatus />
 
       <div className="two-col mt-24">
         {/* ---------- recent applications ---------- */}
