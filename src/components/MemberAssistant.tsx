@@ -4,14 +4,86 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Icon from './Icon';
+import { useI18n } from './LocaleProvider';
 import { useToast } from './Toast';
 import { createClient } from '@/lib/supabase/client';
 import { bytes } from '@/lib/format';
-import { MEMBER_SUGGESTIONS } from '@/lib/member-assistant';
 import type { Profile } from '@/lib/types';
 
 const MAX_FILES = 8;
 const MAX_BYTES = 10 * 1024 * 1024;
+
+/**
+ * The chat's own furniture, in both languages.
+ *
+ * The answers are translated on the server, where they are composed. These
+ * are the words around them — the heading, the placeholder, the two buttons
+ * that commit an application — and they are written here rather than in the
+ * shared dictionary because they belong to one component and nothing else
+ * reads them.
+ */
+const UI = {
+  en: {
+    title: 'Assistant',
+    sub: 'Ask me anything about your applications',
+    placeholder: 'Ask me anything…',
+    placeholderFiles: 'Send them…',
+    thinking: 'One moment…',
+    attach: 'Attach a photo or document',
+    send: 'Send',
+    close: 'Close',
+    openLabel: 'Ask the assistant',
+    message: 'Your message',
+    submit: 'Submit',
+    attachDo: 'Attach',
+    notYet: 'Not yet',
+    confirmed: 'Confirmed',
+    cancelled: 'Cancelled',
+    remove: (n: string) => `Remove ${n}`,
+    attached: (n: number) => `${n} file${n === 1 ? '' : 's'} attached`,
+    tooBig: (n: string) => `${n} is larger than 10 MB.`,
+    tooMany: `You can attach up to ${MAX_FILES} files.`,
+    failed: (n: string) => `${n} could not be sent.`,
+    opening: (name: string) =>
+      `Hello ${name}. I can explain how anything here works, tell you where your applications have got to, or take you through a new one — I will ask one question at a time, and you can send me a photograph of a bill right here in the chat.`,
+    suggestions: [
+      'How do I apply?',
+      'What is the status of my application?',
+      'What documents do I need?',
+      'How much can I apply for?',
+    ],
+  },
+  ur: {
+    title: 'معاون',
+    sub: 'اپنی درخواستوں کے بارے میں کچھ بھی پوچھیں',
+    placeholder: 'کچھ بھی پوچھیں…',
+    placeholderFiles: 'اب بھیج دیں…',
+    thinking: 'ایک لمحہ…',
+    attach: 'تصویر یا دستاویز منسلک کریں',
+    send: 'بھیجیں',
+    close: 'بند کریں',
+    openLabel: 'معاون سے پوچھیں',
+    message: 'آپ کا پیغام',
+    submit: 'درخواست جمع کریں',
+    attachDo: 'منسلک کریں',
+    notYet: 'ابھی نہیں',
+    confirmed: 'ہو گیا',
+    cancelled: 'منسوخ',
+    remove: (n: string) => `${n} ہٹا دیں`,
+    attached: (n: number) => `${n} فائلیں منسلک`,
+    tooBig: (n: string) => `${n} کا حجم 10 MB سے زیادہ ہے۔`,
+    tooMany: `آپ زیادہ سے زیادہ ${MAX_FILES} فائلیں بھیج سکتے ہیں۔`,
+    failed: (n: string) => `${n} نہیں بھیجی جا سکی۔`,
+    opening: (name: string) =>
+      `السلام علیکم ${name}۔ میں بتا سکتا ہوں کہ یہاں سب کچھ کیسے کام کرتا ہے، آپ کی درخواستیں کہاں تک پہنچی ہیں، یا آپ کی نئی درخواست بھی بنوا سکتا ہوں — ایک وقت میں ایک سوال، اور بل کی تصویر آپ یہیں چیٹ میں بھیج سکتے ہیں۔`,
+    suggestions: [
+      'میں درخواست کیسے دوں؟',
+      'میری درخواست کا کیا بنا؟',
+      'کون سی دستاویز چاہیے؟',
+      'کتنی رقم مل سکتی ہے؟',
+    ],
+  },
+} as const;
 
 interface Figure {
   label: string;
@@ -88,6 +160,8 @@ async function readJson(res: Response): Promise<ApiReply> {
 export default function MemberAssistant({ profile }: { profile: Profile }) {
   const router = useRouter();
   const toast = useToast();
+  const { locale } = useI18n();
+  const say = UI[locale === 'ur' ? 'ur' : 'en'];
 
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -111,12 +185,12 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
         from: 'bot',
         text: '',
         answer: {
-          text: `Hello ${first}. I can explain how anything here works, tell you where your applications have got to, or take you through a new one — I will ask one question at a time, and you can send me a photograph of a bill right here in the chat.`,
-          suggestions: MEMBER_SUGGESTIONS.slice(0, 4),
+          text: say.opening(first),
+          suggestions: [...say.suggestions],
         },
       },
     ]);
-  }, [open, turns.length, first]);
+  }, [open, turns.length, first, say]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
@@ -139,12 +213,12 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
     const room = MAX_FILES - files.length;
     const good = Array.from(list).filter((f) => {
       if (f.size > MAX_BYTES) {
-        toast(`${f.name} is larger than 10 MB.`, 'bad');
+        toast(say.tooBig(f.name), 'bad');
         return false;
       }
       return true;
     });
-    if (good.length > room) toast(`You can attach up to ${MAX_FILES} files.`, 'bad');
+    if (good.length > room) toast(say.tooMany, 'bad');
     setFiles((prev) => [...prev, ...good.slice(0, room)]);
   }
 
@@ -158,7 +232,7 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
       ...t,
       {
         from: 'you',
-        text: q || `${files.length} file${files.length === 1 ? '' : 's'} attached`,
+        text: q || say.attached(files.length),
       },
     ]);
     setDraft('');
@@ -172,6 +246,7 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
           question: q || 'here they are',
           ...(pending ? { pending } : {}),
           fileCount: files.length,
+          locale,
         }),
       });
       const json = await readJson(res);
@@ -202,7 +277,7 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
         .upload(path, file, { contentType: file.type, upsert: false });
 
       if (error) {
-        toast(`${file.name} could not be sent.`, 'bad');
+        toast(say.failed(file.name), 'bad');
         continue;
       }
       uploaded.push({
@@ -304,7 +379,7 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
       <button
         className="mbot-fab"
         onClick={() => setOpen(true)}
-        aria-label="Ask the assistant"
+        aria-label={say.openLabel}
         type="button"
       >
         <Icon name="chat" />
@@ -318,19 +393,27 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
         onClick={busy ? undefined : () => setOpen(false)}
       />
 
-      <div className={`mbot ${open ? 'open' : ''}`} role="dialog" aria-label="Assistant">
+      {/*
+        The chrome is written in English, so it is laid out left to right even
+        when the portal is in Urdu. Without this the whole panel inherited the
+        page's direction and English sentences came out with their punctuation
+        at the wrong end — ".ring the office from the Help screen". Each
+        message then carries dir="auto", which reads its own first letter, so
+        an Urdu reply lays itself out right to left without being told.
+      */}
+      <div className={`mbot ${open ? 'open' : ''}`} role="dialog" aria-label={say.title} dir={locale === 'ur' ? 'rtl' : 'ltr'}>
         <div className="mbot-head">
           <span className="mh-ico">
             <Icon name="chat" />
           </span>
           <div className="mh-text">
-            <strong>Assistant</strong>
-            <span>Ask me anything about your applications</span>
+            <strong>{say.title}</strong>
+            <span>{say.sub}</span>
           </div>
           <button
             className="icon-btn"
             onClick={() => setOpen(false)}
-            aria-label="Close"
+            aria-label={say.close}
             type="button"
           >
             <Icon name="x" />
@@ -341,9 +424,11 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
           {turns.map((turn, i) => (
             <div className={`mbot-turn ${turn.from}`} key={i}>
               {turn.from === 'you' ? (
-                <p className="mbot-bubble">{turn.text}</p>
+                <p className="mbot-bubble" dir="auto">
+                  {turn.text}
+                </p>
               ) : (
-                <div className="mbot-bubble">
+                <div className="mbot-bubble" dir="auto">
                   <p>{turn.answer?.text}</p>
 
                   {turn.answer?.figures && turn.answer.figures.length > 0 && (
@@ -391,7 +476,7 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
                       {turn.settled ? (
                         <span className="mc-settled">
                           <Icon name={turn.settled === 'done' ? 'checkCircle' : 'x'} />
-                          {turn.settled === 'done' ? 'Confirmed' : 'Cancelled'}
+                          {turn.settled === 'done' ? say.confirmed : say.cancelled}
                         </span>
                       ) : (
                         <>
@@ -405,7 +490,7 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
                               )
                             }
                           >
-                            Not yet
+                            {say.notYet}
                           </button>
                           <button
                             type="button"
@@ -414,7 +499,7 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
                             onClick={() => confirm(i, turn.answer!.action!)}
                           >
                             <Icon name="check" />
-                            {turn.answer.action.kind === 'apply' ? 'Submit' : 'Attach'}
+                            {turn.answer.action.kind === 'apply' ? say.submit : say.attachDo}
                           </button>
                         </>
                       )}
@@ -438,7 +523,7 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
           {busy && (
             <div className="mbot-turn bot">
               <p className="mbot-bubble thinking">
-                <span className="spin dark" /> One moment…
+                <span className="spin dark" /> {say.thinking}
               </p>
             </div>
           )}
@@ -459,7 +544,7 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
                 <button
                   type="button"
                   onClick={() => setFiles((p) => p.filter((_, j) => j !== i))}
-                  aria-label={`Remove ${f.name}`}
+                  aria-label={say.remove(f.name)}
                   disabled={busy}
                 >
                   <Icon name="x" />
@@ -492,7 +577,7 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
             className={`mbot-clip ${lastWantsFiles(turns) ? 'wanted' : ''}`}
             onClick={() => fileRef.current?.click()}
             disabled={busy || files.length >= MAX_FILES}
-            aria-label="Attach a photo or document"
+            aria-label={say.attach}
           >
             <Icon name="camera" />
           </button>
@@ -501,15 +586,15 @@ export default function MemberAssistant({ profile }: { profile: Profile }) {
             className="input"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder={files.length ? 'Send them…' : 'Ask me anything…'}
-            aria-label="Your message"
+            placeholder={files.length ? say.placeholderFiles : say.placeholder}
+            aria-label={say.message}
             disabled={busy}
           />
           <button
             className="mbot-send"
             type="submit"
             disabled={busy || (!draft.trim() && !files.length)}
-            aria-label="Send"
+            aria-label={say.send}
           >
             <Icon name="send" />
           </button>

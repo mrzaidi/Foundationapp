@@ -113,12 +113,60 @@ async function ask(system: string, user: string, json = false): Promise<string |
 }
 
 /**
+ * Answer in the language the portal is being read in.
+ *
+ * Only the wording changes. Amounts, references and dates stay in Western
+ * digits because that is how they are written in Pakistan and how they appear
+ * everywhere else on the screen — an Urdu sentence quoting "PKR 12,500" is
+ * normal; the same figure in Eastern Arabic numerals would not match the
+ * application it refers to.
+ */
+const inUrdu = [
+  '',
+  'IMPORTANT: reply in Urdu (اردو), in plain conversational Urdu that an ordinary',
+  'person reads easily. Keep every amount, reference number and date exactly as',
+  'given, in Western digits — write "PKR 12,500" and "SHF-26-01001" unchanged.',
+].join('\n');
+
+const languaged = (system: string, locale?: string) =>
+  locale === 'ur' ? system + inUrdu : system;
+
+const TRANSLATE_SYSTEM = [
+  'You translate short messages from a Pakistani welfare foundation into Urdu, for',
+  'members reading them on a phone. Rules:',
+  '',
+  '1. Translate the meaning, not the words. Plain, warm, everyday Urdu — the way it is',
+  '   spoken, not formal newspaper Urdu. Many readers are anxious about money.',
+  '2. Keep every amount, reference number, date, fund name and English proper noun',
+  '   exactly as given, in Western digits. "PKR 12,500" and "SHF-26-01001" are unchanged.',
+  '3. Return only the translation. No quotation marks, no notes, no English original.',
+  '4. Keep it the same length. Do not add, explain or soften anything.',
+].join('\n');
+
+/**
+ * Put a sentence the application already composed into the reader's language.
+ *
+ * Only ever given text this codebase wrote, so there is nothing to invent — at
+ * worst a clumsy translation of a correct sentence. Any failure returns null
+ * and the caller shows the English, which is right but in the wrong language:
+ * still far better than showing nothing.
+ */
+export async function translate(text: string, locale: string): Promise<string | null> {
+  if (locale !== 'ur' || !text.trim()) return null;
+  return ask(TRANSLATE_SYSTEM, text);
+}
+
+/**
  * Word an answer from figures already established. Returns null on any
  * problem at all, which the caller reads as "use the deterministic sentence".
  */
-export async function phrase(question: string, facts: unknown): Promise<string | null> {
+export async function phrase(
+  question: string,
+  facts: unknown,
+  locale?: string
+): Promise<string | null> {
   return ask(
-    SYSTEM,
+    languaged(SYSTEM, locale),
     `Question: ${question}\n\nFigures held by the application:\n${JSON.stringify(facts, null, 1)}`
   );
 }
@@ -160,9 +208,13 @@ const explainSystem = (audience: 'admin' | 'member') =>
 export async function explain(
   question: string,
   guide: string,
-  audience: 'admin' | 'member' = 'admin'
+  audience: 'admin' | 'member' = 'admin',
+  locale?: string
 ): Promise<string | null> {
-  return ask(explainSystem(audience), `Question: ${question}\n\nThe software:\n${guide}`);
+  return ask(
+    languaged(explainSystem(audience), locale),
+    `Question: ${question}\n\nThe software:\n${guide}`
+  );
 }
 
 /* ------------------------------------------------------------------------ *

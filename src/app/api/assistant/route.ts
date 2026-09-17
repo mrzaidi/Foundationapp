@@ -10,7 +10,7 @@ import {
   readAmount,
   type MemberPending,
 } from '@/lib/member-flows';
-import { explain, geminiReady, phrase } from '@/lib/gemini';
+import { explain, geminiReady, phrase, translate } from '@/lib/gemini';
 import { hasBankDetails } from '@/lib/banks';
 import { money } from '@/lib/format';
 import type { FundRequest, FundType, Profile } from '@/lib/types';
@@ -97,6 +97,8 @@ export async function POST(request: Request) {
     pending?: MemberPending | null;
     /** Set by the browser once files have been chosen for the current step. */
     fileCount?: number;
+    /** Which language the portal is being read in, so the reply matches it. */
+    locale?: string;
   };
   try {
     body = await request.json();
@@ -105,6 +107,7 @@ export async function POST(request: Request) {
   }
 
   const question = (body.question ?? '').trim();
+  const locale = body.locale === 'ur' ? 'ur' : 'en';
   if (!question && !body.fileCount)
     return NextResponse.json({ error: 'Ask me something.' }, { status: 422 });
 
@@ -147,9 +150,23 @@ export async function POST(request: Request) {
 
   const bankOnFile = hasBankDetails(me);
 
-  /** Wrap a reply so every exit point has the same shape. */
-  const reply = (answer: Answer, pending: MemberPending | null = null) =>
-    NextResponse.json({ answer, pending });
+  /**
+   * Wrap a reply so every exit point has the same shape — and, when the portal
+   * is being read in Urdu, so is the answer.
+   *
+   * Translating here rather than at each of the forty places an answer is
+   * composed means no reply can be forgotten, and the English stays the single
+   * version anybody has to keep true. If the model is unavailable the English
+   * shows through, which is the right answer in the wrong language: worse than
+   * Urdu, far better than nothing.
+   */
+  const reply = async (answer: Answer, pending: MemberPending | null = null) => {
+    if (locale === 'ur' && geminiReady() && answer.text) {
+      const said = await translate(answer.text, locale);
+      if (said) answer = { ...answer, text: said };
+    }
+    return NextResponse.json({ answer, pending });
+  };
 
   /* ================================================================ *
    * A flow in progress owns the next message                          *
@@ -353,7 +370,7 @@ export async function POST(request: Request) {
   // The model gets a last look, but only at the written description — it can
   // word an answer it finds there and cannot invent a feature.
   if (geminiReady()) {
-    const said = await explain(question, MEMBER_GUIDE, 'member');
+    const said = await explain(question, MEMBER_GUIDE, 'member', locale);
     if (said) return reply({ text: said, suggestions: MEMBER_FALLBACK });
   }
 
@@ -389,7 +406,7 @@ export async function POST(request: Request) {
    */
   async function worded(fallback: string, facts: unknown): Promise<string> {
     if (!geminiReady()) return fallback;
-    const said = await phrase(question, facts);
+    const said = await phrase(question, facts, locale);
     return said || fallback;
   }
 

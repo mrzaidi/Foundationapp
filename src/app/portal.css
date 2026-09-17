@@ -179,10 +179,12 @@
 
   .app-body .mbot {
     position: fixed;
+    /* Logical only. `right: 24px` pinned the panel to the right of the screen
+       while the button, positioned logically, moved to the left in Urdu — so
+       in Urdu the two sat on opposite sides and the panel opened nowhere near
+       the button that opened it. */
     inset-inline-end: 24px;
     inset-inline-start: auto;
-    left: auto;
-    right: 24px;
     bottom: 24px;
     width: 396px;
     height: min(640px, calc(100vh - 48px));
