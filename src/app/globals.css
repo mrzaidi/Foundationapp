@@ -3135,6 +3135,36 @@ table.grid .rowlink:hover {
   }
 }
 
+/* A dialog whose title and buttons stay put while the fields scroll.
+ *
+ * On a laptop opened short — a browser window 420px tall is ordinary — a form
+ * of this length cannot fit, so the dialog scrolls. When the whole dialog is
+ * the scroller, scrolling down takes the heading away with it, and scrolling
+ * to reach the buttons takes away the field you were filling in. You end up
+ * looking at the middle of a form with no idea what it is or how to submit it.
+ *
+ * Pinning the two ends fixes that: you can always see what this is and always
+ * reach Cancel and File, and only the fields move.
+ */
+.amodal.pinned {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* the scrolling belongs to the middle, not the dialog */
+}
+.amodal.pinned > .amodal-scroll {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0; /* without this a flex item refuses to shrink below its content */
+  /* Room for the focus ring on the last field, which a scroll box would clip. */
+  padding: 2px;
+  margin: -2px;
+}
+.amodal.pinned > .amodal-foot {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
 /* Colour and icon pickers. A fund's look is a choice from a fixed set, so it
    is shown rather than typed — the old advice was to memorise class names. */
 .swatches {

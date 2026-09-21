@@ -147,7 +147,7 @@ export default function FileRequestPanel({ funds }: { funds: FundOption[] }) {
         <Modal
           onClose={close}
           busy={busy}
-          className="roomy"
+          className="roomy pinned"
           label="File an application"
         >
           <h3>File an application</h3>
@@ -156,98 +156,100 @@ export default function FileRequestPanel({ funds }: { funds: FundOption[] }) {
             goes through review, approval and transfer exactly like any other.
           </p>
 
-          <div className="form-grid">
-            <div className="field span-2">
-              <label>Member</label>
-              <MemberPicker
-                value={picked}
-                onPick={(m) => {
-                  setPicked(m as Picked | null);
-                  setBankForced(false);
-                  setBankErrors({});
-                  setError("");
-                }}
-                source="members"
-                placeholder="Search the roll by name, email or mobile…"
-              />
-            </div>
+          <div className="amodal-scroll">
+            <div className="form-grid">
+              <div className="field span-2">
+                <label>Member</label>
+                <MemberPicker
+                  value={picked}
+                  onPick={(m) => {
+                    setPicked(m as Picked | null);
+                    setBankForced(false);
+                    setBankErrors({});
+                    setError("");
+                  }}
+                  source="members"
+                  placeholder="Search the roll by name, email or mobile…"
+                />
+              </div>
 
-            <div className="field">
-              <label htmlFor="fr_fund">Fund</label>
-              <select
-                id="fr_fund"
-                className="input"
-                value={fundId}
-                onChange={(e) => setFundId(e.target.value)}
-              >
-                <option value="" disabled>
-                  Choose a fund…
-                </option>
-                {funds.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name}
+              <div className="field">
+                <label htmlFor="fr_fund">Fund</label>
+                <select
+                  id="fr_fund"
+                  className="input"
+                  value={fundId}
+                  onChange={(e) => setFundId(e.target.value)}
+                >
+                  <option value="" disabled>
+                    Choose a fund…
                   </option>
-                ))}
-              </select>
-            </div>
+                  {funds.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="field">
-              <label htmlFor="fr_amount">Amount requested (PKR)</label>
-              <input
-                id="fr_amount"
-                className="input"
-                type="number"
-                min={0}
-                inputMode="numeric"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder={fund ? String(fund.min_amount) : "0"}
-              />
-              {fund && (
-                <p className="field-hint">
-                  {money(Number(fund.min_amount), false)}
-                  {fund.max_amount
-                    ? ` to ${money(Number(fund.max_amount), false)}`
-                    : " and above"}{" "}
-                  for {fund.name}.
-                </p>
+              <div className="field">
+                <label htmlFor="fr_amount">Amount requested (PKR)</label>
+                <input
+                  id="fr_amount"
+                  className="input"
+                  type="number"
+                  min={0}
+                  inputMode="numeric"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder={fund ? String(fund.min_amount) : "0"}
+                />
+                {fund && (
+                  <p className="field-hint">
+                    {money(Number(fund.min_amount), false)}
+                    {fund.max_amount
+                      ? ` to ${money(Number(fund.max_amount), false)}`
+                      : " and above"}{" "}
+                    for {fund.name}.
+                  </p>
+                )}
+              </div>
+
+              <div className="field span-2">
+                <label htmlFor="fr_purpose">What it is for</label>
+                <textarea
+                  id="fr_purpose"
+                  className="input"
+                  rows={3}
+                  value={purpose}
+                  onChange={(e) => setPurpose(e.target.value)}
+                  placeholder="The circumstances, in the member’s own words where possible."
+                />
+              </div>
+
+              {showBank && (
+                <div className="span-2">
+                  <p
+                    className="field-hint"
+                    style={{ marginTop: 0, marginBottom: 12 }}
+                  >
+                    <strong>{picked?.full_name ?? "This member"}</strong> has no
+                    bank details on file, and the foundation will not approve
+                    money with nowhere to send it. Take them down here — they
+                    are saved to the member’s own profile.
+                  </p>
+                  <BankFields
+                    value={bank}
+                    onChange={setBank}
+                    errors={bankErrors}
+                    idPrefix="fr_bank"
+                  />
+                </div>
               )}
             </div>
 
-            <div className="field span-2">
-              <label htmlFor="fr_purpose">What it is for</label>
-              <textarea
-                id="fr_purpose"
-                className="input"
-                rows={3}
-                value={purpose}
-                onChange={(e) => setPurpose(e.target.value)}
-                placeholder="The circumstances, in the member’s own words where possible."
-              />
-            </div>
-
-            {showBank && (
-              <div className="span-2">
-                <p
-                  className="field-hint"
-                  style={{ marginTop: 0, marginBottom: 12 }}
-                >
-                  <strong>{picked?.full_name ?? "This member"}</strong> has no
-                  bank details on file, and the foundation will not approve
-                  money with nowhere to send it. Take them down here — they are
-                  saved to the member’s own profile.
-                </p>
-                <BankFields
-                  value={bank}
-                  onChange={setBank}
-                  errors={bankErrors}
-                  idPrefix="fr_bank"
-                />
-              </div>
-            )}
+            {error && <p className="err-msg">{error}</p>}
           </div>
-
-          {error && <p className="err-msg">{error}</p>}
 
           <div className="amodal-foot">
             <button
