@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Icon from './Icon';
 
@@ -84,27 +84,8 @@ export default function AdminDateFilter({ basePath }: { basePath: string }) {
           Submitted
         </span>
 
-        <label className="df-input">
-          <span>From</span>
-          <input
-            type="date"
-            value={from}
-            max={to || undefined}
-            onChange={(e) => setFrom(e.target.value)}
-            aria-label="Submitted from"
-          />
-        </label>
-
-        <label className="df-input">
-          <span>To</span>
-          <input
-            type="date"
-            value={to}
-            min={from || undefined}
-            onChange={(e) => setTo(e.target.value)}
-            aria-label="Submitted to"
-          />
-        </label>
+        <DateField label="Start date" value={from} max={to || undefined} onChange={setFrom} />
+        <DateField label="End date" value={to} min={from || undefined} onChange={setTo} />
 
         <button className="admin-btn ghost" type="button" onClick={() => push(from, to)}>
           <Icon name="filter" />
@@ -141,5 +122,73 @@ export default function AdminDateFilter({ basePath }: { basePath: string }) {
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * A date field that says what it is for while it is empty.
+ *
+ * An empty <input type="date"> prints its own format — mm/dd/yyyy — which is
+ * the browser's idea of a date order, not the reader's: staff in Lahore were
+ * being shown the American one, and it said nothing about which end of the
+ * range they were filling in.
+ *
+ * Hiding that text with ::-webkit-datetime-edit does not work reliably; the
+ * format stays visible underneath whatever is drawn over it. So while the
+ * field is empty and unfocused it is simply a text input with a real
+ * placeholder, and it becomes a date input — with the picker — the moment it
+ * is touched. The moment there is a date, the browser's display returns, so
+ * nobody is left guessing how what they chose was understood.
+ */
+function DateField({
+  label,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  min?: string;
+  max?: string;
+  onChange: (v: string) => void;
+}) {
+  const [touched, setTouched] = useState(false);
+  const ref = useRef<HTMLInputElement>(null);
+  const asDate = touched || Boolean(value);
+
+  /*
+   * Changing the input type re-renders it, which drops the focus that caused
+   * the change — so the first click would land on a text box and open
+   * nothing. Focus is put back and the picker asked for directly, so one click
+   * does what one click looks like it should.
+   */
+  useEffect(() => {
+    if (!touched || !ref.current) return;
+    const el = ref.current;
+    el.focus();
+    try {
+      (el as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
+    } catch {
+      // Some browsers refuse showPicker outside a user gesture; the field is
+      // still a working date input, which is the part that matters.
+    }
+  }, [touched]);
+
+  return (
+    <label className="df-input">
+      <input
+        ref={ref}
+        type={asDate ? 'date' : 'text'}
+        value={value}
+        min={min}
+        max={max}
+        placeholder={label}
+        aria-label={label}
+        onFocus={() => setTouched(true)}
+        onBlur={() => setTouched(false)}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </label>
   );
 }
