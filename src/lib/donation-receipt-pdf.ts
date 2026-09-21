@@ -221,19 +221,30 @@ export async function buildDonationReceipt(d: DonationReceiptData): Promise<Uint
 
   y -= boxH + 44;
 
-  /* ---- the thank you ---- */
-  page.drawText('Thank you', { x: MARGIN, y, size: 13, font: bold, color: INK });
+  /* ---- the acknowledgement ----
+     A receipt is a formal record, so it reads as one: the donor's full name
+     rather than their first, the obligation named properly, and a statement of
+     what the foundation undertakes to do with the money. The warmth belongs in
+     the closing line, not in the whole of it. */
+  page.drawText('Acknowledgement', { x: MARGIN, y, size: 13, font: bold, color: INK });
   y -= 20;
 
-  const thanks =
-    `${donor.split(' ')[0]}, the foundation has received your ${kind.toLowerCase()} and is grateful for it. ` +
-    'What you have given goes to families in this community — a bill cleared, a fee paid, ' +
-    'a month of groceries, medicine after an accident. Every rupee is accounted for and ' +
-    'nothing is spent outside the purpose it was given for.';
+  const paragraphs = [
+    `The ${FOUNDATION} gratefully acknowledges the contribution recorded above, ` +
+      `received from ${donor}.`,
+    `This ${kind} has been entered in the foundation's accounts for ${monthLabel} and will be ` +
+      'applied solely to the purpose for which it was given, in support of the families the ' +
+      'foundation assists. A complete record of all funds received and disbursed is maintained ' +
+      'and is available on request.',
+    'We are grateful for your support.',
+  ];
 
-  for (const line of wrapText(thanks, body, 10.5, A4.w - MARGIN * 2)) {
-    page.drawText(line, { x: MARGIN, y, size: 10.5, font: body, color: INK });
-    y -= 15;
+  for (const paragraph of paragraphs) {
+    for (const line of wrapText(paragraph, body, 10.5, A4.w - MARGIN * 2)) {
+      page.drawText(line, { x: MARGIN, y, size: 10.5, font: body, color: INK });
+      y -= 15;
+    }
+    y -= 7;
   }
 
   /* ---- the narration ----
