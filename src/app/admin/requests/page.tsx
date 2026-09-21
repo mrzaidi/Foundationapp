@@ -1,4 +1,7 @@
 import { requirePage } from '@/lib/admin-guard';
+import { can } from '@/lib/permissions';
+import { columnReady } from '@/lib/schema';
+import FileRequestPanel from '@/components/FileRequestPanel';
 import Link from 'next/link';
 import Icon from '@/components/Icon';
 import AdminDateFilter from '@/components/AdminDateFilter';
@@ -42,6 +45,15 @@ export default async function AdminRequestsPage({
     to?: string;
   }>;
 }) {
+  /*
+   * This page was importing the guard without ever calling it, so every other
+   * admin screen checked the level and this one — the one holding every
+   * member's circumstances and the money asked for — did not. An Admin 1 or
+   * Admin 2 who typed the address in was let straight through, because the
+   * only check left was the layout's "is an administrator at all".
+   */
+  const level = await requirePage('view_requests');
+
   const sp = await searchParams;
   const status = sp.status && sp.status !== 'all' ? sp.status : 'all';
   const q = sp.q?.trim() ?? '';
@@ -53,7 +65,20 @@ export default async function AdminRequestsPage({
 
   const supabase = await createClient();
 
-  const { data: funds } = await supabase.from('fund_types').select('id, name').order('sort_order');
+  const { data: funds } = await supabase
+    .from('fund_types')
+    .select('id, name, min_amount, max_amount, is_active')
+    .order('sort_order');
+
+  /*
+   * The button waits for its migration. 0021 adds the column that records who
+   * filed on whose behalf, and the insert policy that lets a master do it at
+   * all; until both are there the endpoint would only refuse. Offering a
+   * button that cannot work is worse than not offering it yet, and the moment
+   * the SQL runs it appears without a redeploy.
+   */
+  const mayFile =
+    can(level, 'file_requests') && (await columnReady(supabase, 'fund_requests', 'filed_by'));
 
   // A query that looks like a reference (SHF-26-01001) searches the reference
   // column; anything else searches the member via the joined profiles row.
@@ -134,6 +159,19 @@ export default async function AdminRequestsPage({
               ` · ${dateFrom ? dateLabel(dateFrom) : 'the beginning'} to ${dateTo ? dateLabel(dateTo) : 'today'}`}
           </div>
         </div>
+        {/* Only the level that can decide an application may file one. */}
+        {mayFile && (
+          <FileRequestPanel
+            funds={(funds ?? [])
+              .filter((f) => f.is_active)
+              .map((f) => ({
+                id: f.id,
+                name: f.name,
+                min_amount: Number(f.min_amount),
+                max_amount: f.max_amount === null ? null : Number(f.max_amount),
+              }))}
+          />
+        )}
       </div>
 
       <div className="panel">

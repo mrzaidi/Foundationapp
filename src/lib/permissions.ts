@@ -42,6 +42,7 @@ export type Capability =
   | 'create_members'
   | 'create_admins'
   | 'view_requests'
+  | 'file_requests'
   | 'decide_requests'
   | 'view_budget'
   | 'view_accounts'
@@ -59,6 +60,7 @@ const MASTER: Capability[] = [
   'create_members',
   'create_admins',
   'view_requests',
+  'file_requests',
   'decide_requests',
   'view_budget',
   'view_accounts',

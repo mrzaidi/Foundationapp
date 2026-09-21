@@ -20,13 +20,25 @@ export interface Candidate {
  * Members already added as donors are excluded server-side, so the list is what
  * can actually be picked.
  */
+/**
+ * Which roll to search.
+ *
+ * `donors` is the one this picker was written for: members not yet added as
+ * donors, so the list is exactly what can be picked. `members` is everybody on
+ * the roll, for filing an application on someone's behalf — there the point is
+ * to reach any member at all, including one who is already a donor.
+ */
+export type PickerSource = 'donors' | 'members';
+
 export default function MemberPicker({
   value,
   onPick,
+  source = 'donors',
   placeholder = 'Search by name, email or mobile…',
 }: {
   value: Candidate | null;
   onPick: (member: Candidate | null) => void;
+  source?: PickerSource;
   placeholder?: string;
 }) {
   const [query, setQuery] = useState('');
@@ -42,13 +54,17 @@ export default function MemberPicker({
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
+        const q = encodeURIComponent(query.trim());
         const res = await fetch(
-          `/api/admin/donors?candidates=1&q=${encodeURIComponent(query.trim())}`
+          source === 'members'
+            ? `/api/admin/members?limit=10&q=${q}`
+            : `/api/admin/donors?candidates=1&q=${q}`
         );
         const json = await res.json();
         if (cancelled) return;
         if (res.ok) {
-          setItems(json.candidates ?? []);
+          // Both endpoints answer with the same fields; only the key differs.
+          setItems(source === 'members' ? (json.members ?? []) : (json.candidates ?? []));
           setFailed('');
         } else {
           setItems([]);
@@ -74,7 +90,7 @@ export default function MemberPicker({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query, value]);
+  }, [query, value, source]);
 
   // Clicking anywhere else closes the list.
   useEffect(() => {
