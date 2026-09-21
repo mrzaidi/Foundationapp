@@ -3053,8 +3053,15 @@ table.grid .rowlink:hover {
   background: rgba(10, 30, 24, 0.5);
   backdrop-filter: blur(3px);
   display: grid;
-  place-items: center;
+  /* `safe` matters on a short window. A centred item taller than its container
+     overflows equally top and bottom, and the half above the top edge cannot be
+     scrolled to — the dialog's heading and first field simply are not reachable.
+     `safe` drops back to start-alignment the moment it would overflow, so the
+     top is always the part you keep, and the scroll below reaches the rest.
+     A browser that does not know the keyword ignores it and centres as before. */
+  place-items: safe center;
   padding: 20px;
+  overflow-y: auto;
 }
 .amodal {
   background: #fff;
