@@ -73,12 +73,13 @@ export default function DonorPanel() {
   // itself rather than showing a Postgres error on the budget screen.
   const [available, setAvailable] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
-  /* Which kind of giving each row is about to record. Per row rather than one
-     for the panel: an administrator working down a list is entering a Zakat
-     for one donor and a Khums for the next. */
   /* The donor a gift is being recorded against, or null. One at a time: a
      form open on six rows at once is what made this table unreadable. */
   const [recording, setRecording] = useState<DonorRow | null>(null);
+  /* What was just saved, so the receipt can be offered before the dialog goes. */
+  const [saved, setSaved] = useState<{ id: string; name: string; amount: number; kind: string } | null>(
+    null
+  );
   const [amount, setAmount] = useState('');
   const [kind, setKind] = useState<DonationType | ''>('');
   /* Which donors have their gifts expanded. Kept across a reload so recording
@@ -114,13 +115,6 @@ export default function DonorPanel() {
   /**
    * Record a gift.
    *
-   * It is added to the month rather than replacing it. This used to overwrite,
-   * which meant a donor's second gift silently erased their first and the fund
-   * reported less money than had arrived.
-   */
-  /**
-   * Record a gift.
-   *
    * It is added to the month rather than replacing it. This used to
    * overwrite, which meant a donor's second gift silently erased their first
    * and the fund reported less money than had arrived.
@@ -149,6 +143,12 @@ export default function DonorPanel() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       toast(row.name + ': ' + money(value) + ' ' + donationLabel(kind) + ' recorded');
+      setSaved({
+        id: json.donation?.id ?? '',
+        name: row.name,
+        amount: value,
+        kind: donationLabel(kind),
+      });
       setRecording(null);
       setAmount('');
       setKind('');
@@ -161,6 +161,7 @@ export default function DonorPanel() {
       setBusyId(null);
     }
   }
+
   /** Take one gift back out, leaving the donor's other gifts alone. */
   async function removeGift(row: DonorRow, entry: Entry) {
     setBusyId(row.id);
@@ -332,6 +333,40 @@ export default function DonorPanel() {
         with. A table is for reading. Recording is a decision, and a decision
         gets a form with room to say what it is asking for.
       */}
+      {/*
+        Recorded, and here is the receipt.
+
+        The moment a donation is entered is the moment its receipt is wanted —
+        the donor is often still standing at the counter — so the dialog is
+        replaced by this rather than simply vanishing.
+      */}
+      {saved && (
+        <Modal onClose={() => setSaved(null)} label="Donation recorded">
+          <h3>Recorded</h3>
+          <p className="sub">
+            <strong>{money(saved.amount)}</strong> of {saved.kind} from{' '}
+            <strong>{saved.name}</strong>, counted toward {monthLabel(month)}.
+          </p>
+
+          <div className="amodal-foot">
+            <button className="admin-btn ghost" type="button" onClick={() => setSaved(null)}>
+              Done
+            </button>
+            {saved.id && (
+              <a
+                className="admin-btn"
+                href={`/api/admin/donations/${saved.id}/receipt`}
+                download
+                onClick={() => setSaved(null)}
+              >
+                <Icon name="download" />
+                Donor receipt
+              </a>
+            )}
+          </div>
+        </Modal>
+      )}
+
       {recording && (
         <Modal
           busy={busyId === recording.id}
@@ -578,6 +613,17 @@ function GiftLine({
       <strong className="num">{money(Number(entry.amount), false)}</strong>
       <span className="gl-kind">{donationLabel(entry.donation_type)}</span>
       <span className="gl-when">{dayLabel(entry.received_on)}</span>
+      {/* A plain link: the browser downloads it, names it and files it where
+          downloads go, which is what somebody expects of a receipt. */}
+      <a
+        className="gl-receipt"
+        href={`/api/admin/donations/${entry.id}/receipt`}
+        download
+        title="Download a receipt for this donation"
+      >
+        <Icon name="download" />
+        Receipt
+      </a>
       {entry.note && <span className="gl-note">{entry.note}</span>}
       <button
         type="button"
