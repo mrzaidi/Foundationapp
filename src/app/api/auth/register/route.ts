@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { bankColumnsReady } from '@/lib/bank-schema';
-import { normalizeAccount, validateBank } from '@/lib/banks';
 import { corsHeaders, preflight } from '@/lib/cors';
 
 export const runtime = 'nodejs';
@@ -20,9 +18,6 @@ interface Body {
   email?: string;
   mobile?: string;
   password?: string;
-  bank_name?: string;
-  bank_account_title?: string;
-  bank_account_number?: string;
 }
 
 const GENDERS = ['male', 'female', 'other'];
@@ -45,9 +40,6 @@ export async function POST(request: Request) {
   const email = (body.email ?? '').trim().toLowerCase();
   const mobile = (body.mobile ?? '').trim();
   const password = body.password ?? '';
-  const bank_name = (body.bank_name ?? '').trim();
-  const bank_account_title = (body.bank_account_title ?? '').trim();
-  const bank_account_number = normalizeAccount(body.bank_account_number ?? '');
 
   let admin;
   try {
@@ -67,14 +59,18 @@ export async function POST(request: Request) {
   if (mobile.replace(/\D/g, '').length < 10) errors.mobile = 'Enter a valid mobile number.';
   if (password.length < 8) errors.password = 'Password must be at least 8 characters.';
 
-  // The foundation pays into an account, so one is collected up front rather
-  // than chased down after a committee has already approved the money — but
-  // only once the database has somewhere to put it. See lib/bank-schema.
-  const bankReady = await bankColumnsReady(admin);
-  if (bankReady) {
-    const bankProblem = validateBank({ bank_name, bank_account_title, bank_account_number });
-    if (bankProblem) errors[bankProblem.field] = bankProblem.message;
-  }
+  /*
+   * No bank details here.
+   *
+   * They used to be collected at registration, which asked everybody for an
+   * account number before they had any reason to give one — including the
+   * people who only ever donate, and the people registering at a desk who do
+   * not have the number with them. The rule that matters is not "we hold an
+   * account for everyone"; it is "no money is approved with nowhere to send
+   * it", and that is enforced where it belongs: the apply flow asks for them
+   * the first time somebody actually requests a fund, and the database
+   * refuses the application without them either way.
+   */
 
   if (Object.keys(errors).length) {
     return NextResponse.json({ error: 'Please check the form.', errors }, { status: 422, headers: cors });
@@ -111,7 +107,6 @@ export async function POST(request: Request) {
     city,
     email,
     mobile,
-    ...(bankReady ? { bank_name, bank_account_title, bank_account_number } : {}),
     role: 'member',
   });
 
