@@ -4,5 +4,6 @@
       "path": "/api/cron/monthly",
       "schedule": "5 19 * * *"
     }
-  ]
+  ],
+  "regions": ["bom1"]
 }
