@@ -1,27 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import Icon from './Icon';
 import MemberPicker, { type Candidate } from './MemberPicker';
-import Modal from './Modal';
 import { useToast } from './Toast';
 import { money } from '@/lib/format';
-import {
-  DONATION_LABEL,
-  DONATION_TYPES,
-  donationLabel,
-  type DonationType,
-} from '@/lib/donation-types';
-
-/** One gift. A donor may make several in the same month. */
-interface Entry {
-  id: string;
-  amount: number;
-  received_on: string;
-  /** Khums, Zakat, Sadaqah… — absent on gifts recorded before migration 0018. */
-  donation_type?: string | null;
-  note: string | null;
-}
 
 interface DonorRow {
   id: string;
@@ -29,13 +13,11 @@ interface DonorRow {
   contact: string | null;
   monthly_pledge: number;
   is_active: boolean;
-  note: string | null;
   /** The month's total across every gift — null when nothing was given. */
   given: number | null;
   entry_count: number;
   /** The most recent gift's date. */
   received_on: string | null;
-  entries: Entry[];
 }
 
 const monthLabel = (iso: string) =>
@@ -52,15 +34,16 @@ const thisMonth = () => {
 /**
  * Who gives, and what arrived this month.
  *
- * The pledge is what a donor said they would give; the donations are what came
- * in. Only those count toward the month's fund — a month must never be spent
- * against a promise. A donor with nothing recorded stays in the list with an
- * empty box, so a missing gift is visible rather than absent.
+ * A list, and only a list. It used to carry each donor's whole giving history
+ * inside one of its cells — every gift with its kind, its date, its receipt
+ * and a remove button — which made a page of records try to be a page of
+ * detail at the same time and did neither well. All of that lives on the
+ * donor's own page now; this answers "who gave, and how much" and hands over.
  *
- * A donor may give more than once in a month. The column shows the total,
- * because the total is what the fund is made of; the gifts behind it are
- * listed underneath, and fold away once there are several so that a donor who
- * gives every payday does not push the rest of the table off the screen.
+ * The pledge is what a donor said they would give; the donation is what came
+ * in. Only what came in counts toward the month's fund — a month must never be
+ * spent against a promise — so a donor with nothing recorded stays in the list
+ * saying so, rather than quietly disappearing from it.
  */
 export default function DonorPanel() {
   const toast = useToast();
@@ -72,19 +55,7 @@ export default function DonorPanel() {
   // Until migration 0010 runs there is no donor_month function; the panel hides
   // itself rather than showing a Postgres error on the budget screen.
   const [available, setAvailable] = useState(true);
-  const [busyId, setBusyId] = useState<string | null>(null);
-  /* The donor a gift is being recorded against, or null. One at a time: a
-     form open on six rows at once is what made this table unreadable. */
-  const [recording, setRecording] = useState<DonorRow | null>(null);
-  /* What was just saved, so the receipt can be offered before the dialog goes. */
-  const [saved, setSaved] = useState<{ id: string; name: string; amount: number; kind: string } | null>(
-    null
-  );
-  const [amount, setAmount] = useState('');
-  const [kind, setKind] = useState<DonationType | ''>('');
-  /* Which donors have their gifts expanded. Kept across a reload so recording
-     a second gift does not fold the list you were just looking at. */
-  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
+  const [busy, setBusy] = useState(false);
 
   const [adding, setAdding] = useState(false);
   const [picked, setPicked] = useState<Candidate | null>(null);
@@ -112,101 +83,12 @@ export default function DonorPanel() {
     void load();
   }, [load]);
 
-  /**
-   * Record a gift.
-   *
-   * It is added to the month rather than replacing it. This used to
-   * overwrite, which meant a donor's second gift silently erased their first
-   * and the fund reported less money than had arrived.
-   */
-  async function saveGift() {
-    const row = recording;
-    if (!row) return;
-
-    const value = Number(amount);
-    if (amount.trim() === '' || !Number.isFinite(value) || value <= 0) {
-      toast('Enter an amount to record.', 'bad');
-      return;
-    }
-    if (!kind) {
-      toast('Choose which kind of donation this is.', 'bad');
-      return;
-    }
-
-    setBusyId(row.id);
-    try {
-      const res = await fetch('/api/admin/donors', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: row.id, month, amount: value, donation_type: kind }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      toast(row.name + ': ' + money(value) + ' ' + donationLabel(kind) + ' recorded');
-      setSaved({
-        id: json.donation?.id ?? '',
-        name: row.name,
-        amount: value,
-        kind: donationLabel(kind),
-      });
-      setRecording(null);
-      setAmount('');
-      setKind('');
-      // A second gift is worth seeing next to the first.
-      setOpenIds((x) => new Set(x).add(row.id));
-      await load();
-    } catch (e) {
-      toast((e as Error).message, 'bad');
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  /** Take one gift back out, leaving the donor's other gifts alone. */
-  async function removeGift(row: DonorRow, entry: Entry) {
-    setBusyId(row.id);
-    try {
-      const res = await fetch('/api/admin/donors', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: row.id, donation_id: entry.id }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      toast(`${money(Number(entry.amount))} removed from ${row.name}`);
-      await load();
-    } catch (e) {
-      toast((e as Error).message, 'bad');
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  async function toggle(row: DonorRow) {
-    setBusyId(row.id);
-    try {
-      const res = await fetch('/api/admin/donors', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: row.id, is_active: !row.is_active }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      toast(row.is_active ? `${row.name} marked inactive` : `${row.name} is active again`);
-      await load();
-    } catch (e) {
-      toast((e as Error).message, 'bad');
-    } finally {
-      setBusyId(null);
-    }
-  }
-
   async function add() {
     if (!picked) {
       toast('Choose a member first.', 'bad');
       return;
     }
-    setBusyId('new');
+    setBusy(true);
     try {
       const res = await fetch('/api/admin/donors', {
         method: 'POST',
@@ -226,7 +108,7 @@ export default function DonorPanel() {
     } catch (e) {
       toast((e as Error).message, 'bad');
     } finally {
-      setBusyId(null);
+      setBusy(false);
     }
   }
 
@@ -281,18 +163,13 @@ export default function DonorPanel() {
               />
             </div>
           </div>
-          <button
-            className="admin-btn mt-16"
-            type="button"
-            onClick={add}
-            disabled={busyId === 'new'}
-          >
-            {busyId === 'new' ? <span className="spin" /> : <Icon name="check" />}
+          <button className="admin-btn mt-16" type="button" onClick={add} disabled={busy}>
+            {busy ? <span className="spin" /> : <Icon name="check" />}
             Add donor
           </button>
           <p className="field-hint">
             Donors are chosen from registered members. The pledge is what they said they would
-            give; only what you record below counts toward the fund.
+            give; only what is recorded against them counts toward the fund.
           </p>
         </div>
       )}
@@ -324,130 +201,6 @@ export default function DonorPanel() {
         </div>
       )}
 
-      {/*
-        Recording a gift, as its own act.
-
-        This was three controls wedged into every row of the table — a select
-        whose label did not fit, an input whose placeholder did not fit, and a
-        button — repeated down the page beside the figures they were competing
-        with. A table is for reading. Recording is a decision, and a decision
-        gets a form with room to say what it is asking for.
-      */}
-      {/*
-        Recorded, and here is the receipt.
-
-        The moment a donation is entered is the moment its receipt is wanted —
-        the donor is often still standing at the counter — so the dialog is
-        replaced by this rather than simply vanishing.
-      */}
-      {saved && (
-        <Modal onClose={() => setSaved(null)} label="Donation recorded">
-          <h3>Recorded</h3>
-          <p className="sub">
-            <strong>{money(saved.amount)}</strong> of {saved.kind} from{' '}
-            <strong>{saved.name}</strong>, counted toward {monthLabel(month)}.
-          </p>
-
-          <div className="amodal-foot">
-            <button className="admin-btn ghost" type="button" onClick={() => setSaved(null)}>
-              Done
-            </button>
-            {saved.id && (
-              <a
-                className="admin-btn"
-                href={`/api/admin/donations/${saved.id}/receipt`}
-                download
-                onClick={() => setSaved(null)}
-              >
-                <Icon name="download" />
-                Donor receipt
-              </a>
-            )}
-          </div>
-        </Modal>
-      )}
-
-      {recording && (
-        <Modal
-          busy={busyId === recording.id}
-          onClose={() => setRecording(null)}
-          label={'Record a donation from ' + recording.name}
-        >
-          <h3>Record a donation</h3>
-          <p className="sub">
-            From <strong>{recording.name}</strong>, counted toward {monthLabel(month)}.
-          </p>
-
-          <div className="field">
-            <label htmlFor="gift_amount">Amount (PKR)</label>
-            <input
-              id="gift_amount"
-              className="input"
-              type="number"
-              min={0}
-              inputMode="numeric"
-              autoFocus
-              value={amount}
-              placeholder={String(Number(recording.monthly_pledge) || 0)}
-              onChange={(e) => setAmount(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  void saveGift();
-                }
-              }}
-            />
-            {Number(recording.monthly_pledge) > 0 && (
-              <p className="field-hint">
-                They pledge {money(Number(recording.monthly_pledge))} a month.
-              </p>
-            )}
-          </div>
-
-          <div className="field">
-            <label htmlFor="gift_kind">Kind of donation</label>
-            <select
-              id="gift_kind"
-              className="input"
-              value={kind}
-              onChange={(e) => setKind(e.target.value as DonationType)}
-            >
-              <option value="" disabled>
-                Choose a kind…
-              </option>
-              {DONATION_TYPES.map((k) => (
-                <option key={k} value={k}>
-                  {DONATION_LABEL[k]}
-                </option>
-              ))}
-            </select>
-            <p className="field-hint">
-              Khums, Zakat and the rest are spent under different rules, so the
-              foundation records which one arrived.
-            </p>
-          </div>
-
-          <div className="amodal-foot">
-            <button
-              className="admin-btn ghost"
-              type="button"
-              onClick={() => setRecording(null)}
-              disabled={busyId === recording.id}
-            >
-              Cancel
-            </button>
-            <button
-              className="admin-btn"
-              type="button"
-              onClick={saveGift}
-              disabled={busyId === recording.id}
-            >
-              {busyId === recording.id ? <span className="spin" /> : <Icon name="check" />}
-              Record it
-            </button>
-          </div>
-        </Modal>
-      )}
       {!error && !loading && rows.length > 0 && (
         <>
           <div style={{ overflowX: 'auto' }}>
@@ -463,115 +216,46 @@ export default function DonorPanel() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => {
-                  const entries = r.entries ?? [];
-                  const open = openIds.has(r.id);
-                  return (
-                    <tr key={r.id} className={r.is_active ? '' : 'row-off'}>
-                      <td>
-                        <div className="wn">{r.name}</div>
-                        {!r.is_active && <div className="we">inactive</div>}
-                      </td>
-                      <td style={{ color: 'var(--text-faint)', fontSize: 12.5 }} dir="ltr">
-                        {r.contact || '—'}
-                      </td>
-                      <td className="num">{money(Number(r.monthly_pledge), false)}</td>
-                      <td>
-                        {/* The total and the count share a line. They used to
-                            stack, and with the box and the list under them
-                            every row stood four items tall — a table of six
-                            donors that would not fit on a screen. */}
-                        {(Number(r.given ?? 0) > 0 || entries.length > 1) && (
-                          <div className="gift-top">
-                            {Number(r.given ?? 0) > 0 && (
-                              <strong className="gift-total num">
-                                {money(Number(r.given), false)}
-                              </strong>
-                            )}
-                            {entries.length > 1 && (
-                              <button
-                                type="button"
-                                className={`gift-toggle ${open ? 'on' : ''}`}
-                                aria-expanded={open}
-                                onClick={() =>
-                                  setOpenIds((s) => {
-                                    const next = new Set(s);
-                                    if (next.has(r.id)) next.delete(r.id);
-                                    else next.add(r.id);
-                                    return next;
-                                  })
-                                }
-                              >
-                                {entries.length} gifts
-                                <Icon name="chevronDown" />
-                              </button>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Reading only. Recording a gift opens a form: three
-                            controls wedged into every row made the table
-                            unreadable and clipped their own labels. */}
-                        {Number(r.given ?? 0) === 0 && (
-                          <span className="gift-none">Nothing yet</span>
-                        )}
-                        {/* One gift reads fine on its own line. Several fold
-                            away, so a donor who gives every week does not
-                            stretch the row down the page. */}
-                        {entries.length === 1 && (
-                          <GiftLine
-                            entry={entries[0]}
-                            busy={busyId === r.id}
-                            onRemove={() => removeGift(r, entries[0])}
-                          />
-                        )}
-
-                        {entries.length > 1 && open && (
-                          <div className="gift-lines">
-                            {entries.map((en) => (
-                              <GiftLine
-                                key={en.id}
-                                entry={en}
-                                busy={busyId === r.id}
-                                onRemove={() => removeGift(r, en)}
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </td>
-                      <td
-                        style={{ color: 'var(--text-faint)', fontSize: 12.5, whiteSpace: 'nowrap' }}
-                      >
-                        {r.received_on ? dayLabel(r.received_on) : '—'}
-                      </td>
-                      <td>
-                        <div className="row-actions">
-                          <button
-                            className="admin-btn ghost small"
-                            type="button"
-                            onClick={() => {
-                              setRecording(r);
-                              setAmount('');
-                              setKind('');
-                            }}
-                            disabled={busyId === r.id}
-                          >
-                            <Icon name="plus" />
-                            Record
-                          </button>
-                          <button
-                            className="rowlink"
-                            type="button"
-                            onClick={() => toggle(r)}
-                            disabled={busyId === r.id}
-                          >
-                            {r.is_active ? 'Deactivate' : 'Reactivate'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {rows.map((r) => (
+                  <tr key={r.id} className={r.is_active ? '' : 'row-off'}>
+                    <td>
+                      <div className="wn">{r.name}</div>
+                      {!r.is_active && <div className="we">inactive</div>}
+                    </td>
+                    <td style={{ color: 'var(--text-faint)', fontSize: 12.5 }} dir="ltr">
+                      {r.contact || '—'}
+                    </td>
+                    <td className="num">{money(Number(r.monthly_pledge), false)}</td>
+                    <td>
+                      {Number(r.given ?? 0) > 0 ? (
+                        <span className="gift-top">
+                          <strong className="gift-total num">
+                            {money(Number(r.given), false)}
+                          </strong>
+                          {r.entry_count > 1 && (
+                            <span className="gift-count">{r.entry_count} gifts</span>
+                          )}
+                        </span>
+                      ) : (
+                        <span className="gift-none">Nothing yet</span>
+                      )}
+                    </td>
+                    <td
+                      style={{ color: 'var(--text-faint)', fontSize: 12.5, whiteSpace: 'nowrap' }}
+                    >
+                      {r.received_on ? dayLabel(r.received_on) : '—'}
+                    </td>
+                    <td>
+                      {/* One way in. Recording a gift, the list of gifts, their
+                          receipts and the remove button all live on the donor's
+                          own page, where there is room for them. */}
+                      <Link className="admin-btn ghost small" href={`/admin/donors/${r.id}`}>
+                        View
+                        <Icon name="chevronRight" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -594,47 +278,6 @@ export default function DonorPanel() {
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-/** One recorded gift: what arrived, when, and a way to take it back out. */
-function GiftLine({
-  entry,
-  busy,
-  onRemove,
-}: {
-  entry: Entry;
-  busy: boolean;
-  onRemove: () => void;
-}) {
-  return (
-    <div className="gift-line">
-      <strong className="num">{money(Number(entry.amount), false)}</strong>
-      <span className="gl-kind">{donationLabel(entry.donation_type)}</span>
-      <span className="gl-when">{dayLabel(entry.received_on)}</span>
-      {/* A plain link: the browser downloads it, names it and files it where
-          downloads go, which is what somebody expects of a receipt. */}
-      <a
-        className="gl-receipt"
-        href={`/api/admin/donations/${entry.id}/receipt`}
-        download
-        title="Download a receipt for this donation"
-      >
-        <Icon name="download" />
-        Receipt
-      </a>
-      {entry.note && <span className="gl-note">{entry.note}</span>}
-      <button
-        type="button"
-        className="gl-x"
-        onClick={onRemove}
-        disabled={busy}
-        aria-label={`Remove ${money(Number(entry.amount))} received ${dayLabel(entry.received_on)}`}
-        title="Remove this gift"
-      >
-        <Icon name="x" />
-      </button>
     </div>
   );
 }
