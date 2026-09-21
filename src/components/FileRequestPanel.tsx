@@ -8,7 +8,18 @@ import MemberPicker, { type Candidate } from "./MemberPicker";
 import BankFields, { EMPTY_BANK, type BankForm } from "./BankFields";
 import { useToast } from "./Toast";
 import { hasBankDetails } from "@/lib/banks";
-import { money } from "@/lib/format";
+import { bytes, money } from "@/lib/format";
+import { createClient as createBrowserClient } from "@/lib/supabase/client";
+
+/** What the documents bucket accepts, and its per-file ceiling. */
+const ACCEPTED = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "application/pdf",
+];
+const MAX_BYTES = 10 * 1024 * 1024;
 
 export interface FundOption {
   id: string;
@@ -59,7 +70,31 @@ export default function FileRequestPanel({ funds }: { funds: FundOption[] }) {
     Partial<Record<keyof BankForm, string>>
   >({});
 
+  const [files, setFiles] = useState<File[]>([]);
+
   const [error, setError] = useState("");
+
+  /**
+   * The bucket refuses anything outside its allowlist and anything over 10MB,
+   * but it refuses it after the upload has been sent. Checking here means a
+   * wrong file is named on the spot rather than failing halfway through
+   * filing, when the application already exists.
+   */
+  function addFiles(list: FileList | null) {
+    if (!list?.length) return;
+    const taken: File[] = [];
+    const refused: string[] = [];
+
+    for (const file of Array.from(list)) {
+      if (!ACCEPTED.includes(file.type))
+        refused.push(`${file.name} — not a photo or PDF`);
+      else if (file.size > MAX_BYTES) refused.push(`${file.name} — over 10MB`);
+      else taken.push(file);
+    }
+
+    if (taken.length) setFiles((current) => [...current, ...taken]);
+    if (refused.length) toast(refused.join("; "), "bad");
+  }
 
   const fund = funds.find((f) => f.id === fundId);
 
@@ -74,6 +109,7 @@ export default function FileRequestPanel({ funds }: { funds: FundOption[] }) {
     setFundId("");
     setAmount("");
     setPurpose("");
+    setFiles([]);
     setBank(EMPTY_BANK);
     setBankForced(false);
     setBankErrors({});
@@ -118,8 +154,70 @@ export default function FileRequestPanel({ funds }: { funds: FundOption[] }) {
         return;
       }
 
+      /*
+       * Attachments go up after the application exists, because each one is
+       * filed against its id. They land in the member's own storage folder —
+       * the only place the attachments endpoint will accept them — so the
+       * member sees the bill they brought in, in their own case file.
+       *
+       * A file that fails to upload is reported and the rest continue. The
+       * application is already filed by this point and is not worth throwing
+       * away over one photograph, which can be added again from the case.
+       */
+      const requestId: string = json.request.id;
+      let attached = 0;
+
+      if (files.length) {
+        const storage = createBrowserClient();
+        const uploaded: {
+          path: string;
+          file_name: string;
+          mime_type: string;
+          size_bytes: number;
+        }[] = [];
+
+        for (const file of files) {
+          const safe = file.name.replace(/[^\w.\-]+/g, "_");
+          const path = `${picked.id}/requests/${requestId}/${Date.now()}-${safe}`;
+          const { error: upErr } = await storage.storage
+            .from("documents")
+            .upload(path, file, { contentType: file.type, upsert: false });
+
+          if (upErr) {
+            toast(`Could not upload ${file.name}.`, "bad");
+            continue;
+          }
+          uploaded.push({
+            path,
+            file_name: file.name,
+            mime_type: file.type,
+            size_bytes: file.size,
+          });
+        }
+
+        if (uploaded.length) {
+          const rec = await fetch(`/api/requests/${requestId}/attachments`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              files: uploaded,
+              kind: fundId === "electricity" ? "bill" : "report",
+            }),
+          });
+          if (rec.ok) attached = uploaded.length;
+          else
+            toast(
+              "The application was filed, but the documents were not recorded.",
+              "bad",
+            );
+        }
+      }
+
+      const reference = json.request?.reference ?? "the application";
       toast(
-        `Filed ${json.request?.reference ?? "the application"} for ${picked.full_name}`,
+        attached
+          ? `Filed ${reference} for ${picked.full_name} with ${attached} document${attached === 1 ? "" : "s"}`
+          : `Filed ${reference} for ${picked.full_name}`,
       );
       setOpen(false);
       reset();
@@ -225,6 +323,57 @@ export default function FileRequestPanel({ funds }: { funds: FundOption[] }) {
                   onChange={(e) => setPurpose(e.target.value)}
                   placeholder="The circumstances, in the member’s own words where possible."
                 />
+              </div>
+
+              <div className="field span-2">
+                <label htmlFor="fr_files">Documents</label>
+                <input
+                  id="fr_files"
+                  className="input"
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
+                  onChange={(e) => addFiles(e.target.files)}
+                />
+                <p className="field-hint">
+                  The bill, the report, the prescription — whatever was brought
+                  in. Photographs or PDFs, up to 10MB each. They are filed
+                  against the member, so the member and the committee both see
+                  them.
+                </p>
+
+                {files.length > 0 && (
+                  <div className="filelist">
+                    {files.map((f, i) => (
+                      <div className="fileitem" key={`${f.name}-${i}`}>
+                        <div className="fi">
+                          <Icon
+                            name={
+                              f.type.startsWith("image/") ? "image" : "file"
+                            }
+                          />
+                        </div>
+                        <div className="fmid">
+                          <div className="fn" dir="ltr">
+                            {f.name}
+                          </div>
+                          <div className="fs">{bytes(f.size)}</div>
+                        </div>
+                        <button
+                          type="button"
+                          className="rm"
+                          aria-label={`Remove ${f.name}`}
+                          onClick={() =>
+                            setFiles((list) => list.filter((_, n) => n !== i))
+                          }
+                          disabled={busy}
+                        >
+                          <Icon name="x" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {showBank && (
