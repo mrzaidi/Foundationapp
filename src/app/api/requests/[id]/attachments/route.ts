@@ -1,5 +1,5 @@
+import { currentSession } from '@/lib/session';
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,11 +26,7 @@ const KINDS = ['report', 'bill', 'cnic', 'receipt', 'other'];
  */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   let body: { files?: Incoming[]; kind?: string };

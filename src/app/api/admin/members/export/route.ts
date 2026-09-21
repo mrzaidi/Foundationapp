@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
+import { currentSession } from '@/lib/session';
 import { formatAccount } from '@/lib/banks';
 import { toCsv } from '@/lib/csv';
-import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/lib/types';
 
 export const runtime = 'nodejs';
@@ -47,10 +47,7 @@ const day = (iso: string | null | undefined) => (iso ? iso.slice(0, 10) : '');
  * exist, because a household is the thing the committee actually reviews.
  */
 export async function GET(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();

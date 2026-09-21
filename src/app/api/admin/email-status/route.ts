@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireCapability } from '@/lib/admin-guard';
 import { mailProvider, mailReady, sendEmail } from '@/lib/mailer';
-import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -78,26 +77,21 @@ export async function POST() {
       { status: 400 }
     );
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: me } = await supabase
-    .from('profiles')
-    .select('full_name, email')
-    .eq('id', user!.id)
-    .single();
+  // Already established by the gate above — their own row, not a fresh read.
+  const me = gate.profile;
 
   if (!me?.email)
     return NextResponse.json({ sent: false, reason: 'Your account has no email address.' });
 
+  // A profile is not obliged to carry a name; the test should still send.
+  const name = me.full_name ?? me.email.split('@')[0];
+
   // Awaited rather than backgrounded: the whole point is to report the outcome.
   const result = await sendEmail({
     to: me.email,
-    toName: me.full_name,
+    toName: name,
     subject: 'Test from the foundation portal',
-    text: `${me.full_name.split(' ')[0]}, if you are reading this, email from the live portal is working.`,
+    text: `${name.split(' ')[0]}, if you are reading this, email from the live portal is working.`,
     html: '<p>If you are reading this, email from the live portal is working.</p>',
   });
 

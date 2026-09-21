@@ -1,7 +1,6 @@
 import { requireCapability } from '@/lib/admin-guard';
 import { NextResponse } from 'next/server';
 import { toCsv } from '@/lib/csv';
-import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,15 +27,7 @@ export async function GET(request: Request) {
   const gate = await requireCapability('view_budget');
   if ('refusal' in gate) return gate.refusal;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
-
-  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (me?.role !== 'admin')
-    return NextResponse.json({ error: 'Administrators only.' }, { status: 403 });
+  const { supabase } = gate;
 
   const raw = new URL(request.url).searchParams.get('month');
   const month = isMonth(raw) ? raw : new Date().toISOString().slice(0, 10);

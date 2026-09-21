@@ -1,14 +1,11 @@
+import { currentSession } from '@/lib/session';
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 async function requireAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return { error: NextResponse.json({ error: 'Not authenticated.' }, { status: 401 }) };
 
   const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();

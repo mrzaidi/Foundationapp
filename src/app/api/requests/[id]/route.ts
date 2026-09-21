@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
+import { currentSession } from '@/lib/session';
 import { mailReady, sendInBackground } from '@/lib/mailer';
 import { decisionEmail, transferEmail } from '@/lib/emails';
 import { buildReceipt } from '@/lib/invoice-pdf';
 import { columnReady } from '@/lib/schema';
-import { createClient } from '@/lib/supabase/server';
 import type { RequestStatus } from '@/lib/types';
 
 export const runtime = 'nodejs';
@@ -20,11 +20,7 @@ const STATUSES: RequestStatus[] = [
 /** GET /api/requests/:id — full detail, including timeline and attachments. */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   // RLS decides whether this row is visible (own request, or any if admin).
@@ -48,11 +44,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
  */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();

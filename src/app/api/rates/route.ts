@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
+import { currentSession } from '@/lib/session';
 import { getRates } from '@/lib/rates';
-import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -16,10 +16,7 @@ export const dynamic = 'force-dynamic';
  * shows rupees and no conversion, which is a worse page but not a broken one.
  */
 export async function GET() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   const rates = await getRates();

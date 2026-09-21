@@ -23,18 +23,10 @@ const isMonth = (s: unknown) => typeof s === 'string' && /^\d{4}-\d{2}-01$/.test
  * become nonsense, fails at this door rather than on the way in.
  */
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
-
-  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (me?.role !== 'admin')
-    return NextResponse.json({ error: 'Administrators only.' }, { status: 403 });
-
   const gate = await requireCapability('use_assistant_writes');
   if ('refusal' in gate) return gate.refusal;
+
+  const { supabase, user } = gate;
 
   let action: Action;
   try {

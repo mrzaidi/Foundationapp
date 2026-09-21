@@ -4,7 +4,7 @@ import DocumentGallery from '@/components/DocumentGallery';
 import Icon from '@/components/Icon';
 import StatusBadge from '@/components/StatusBadge';
 import Tracker from '@/components/Tracker';
-import { createClient } from '@/lib/supabase/server';
+import { currentSession } from '@/lib/session';
 import { PIPELINE, dateTimeLabel, money, stageIndex } from '@/lib/format';
 import { fundText } from '@/lib/funds';
 import { getI18n } from '@/lib/i18n/server';
@@ -15,11 +15,7 @@ export const dynamic = 'force-dynamic';
 export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { d, locale } = await getI18n();
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) redirect('/login');
 
   const { data } = await supabase

@@ -1,17 +1,14 @@
 import { NextResponse } from 'next/server';
+import { currentSession } from '@/lib/session';
 import { bankColumnsReady } from '@/lib/bank-schema';
 import { normalizeAccount, validateBank } from '@/lib/banks';
-import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /** GET /api/me — the signed-in member's profile. */
 export async function GET() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
@@ -22,10 +19,7 @@ export async function GET() {
 
 /** PATCH /api/me — update editable profile fields. */
 export async function PATCH(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   let body: Record<string, unknown>;

@@ -1,16 +1,12 @@
 import { redirect } from 'next/navigation';
 import Dashboard from '@/components/Dashboard';
-import { createClient } from '@/lib/supabase/server';
+import { currentSession } from '@/lib/session';
 import type { FundRequest, FundType, Profile } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) redirect('/login');
 
   const [{ data: profile }, { data: funds }, { data: requests }] = await Promise.all([

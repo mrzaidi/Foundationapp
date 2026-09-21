@@ -1,29 +1,52 @@
 import { redirect } from 'next/navigation';
+import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { levelOf, can, firstAllowed, type AdminLevel, type Capability } from './permissions';
-import { columnReady } from './schema';
-import { createClient } from './supabase/server';
+import { rowHasColumn } from './schema';
+import { currentSession, forgetSessions, type Session, type SessionProfile } from './session';
+
+export type AdminProfile = SessionProfile;
+
+export interface AdminIdentity {
+  user: User;
+  profile: AdminProfile;
+  level: AdminLevel;
+}
+
+/** Forget every established session — called when a role or level changes. */
+export const forgetIdentities = forgetSessions;
 
 /**
  * Who is asking, and may they.
  *
- * Every admin page and every admin write calls this. Hiding a link in the
- * sidebar decides what is offered; this decides what is allowed, and typing
- * the address in directly meets the same answer.
+ * Every admin page and every admin write passes through here. It used to cost
+ * three round trips to Supabase — verify the token, read the profile, then ask
+ * the database whether a column existed — and most routes then asked the same
+ * two questions again on their own.
+ *
+ * All three are gone. The session is established once per request and shared
+ * (see lib/session), and the column probe was never needed: the profile row is
+ * already in hand and `select *` omits a column that does not exist, so its
+ * presence answers the question for nothing.
  */
+export async function adminIdentity(): Promise<
+  { supabase: SupabaseClient; identity: AdminIdentity | null } & Session
+> {
+  const { supabase, signedIn, user, profile } = await currentSession();
+
+  // Which kind of administrator. Absent until migration 0015 lands, in which
+  // case everyone is a master — exactly what they were before levels existed,
+  // so a deploy that outruns the SQL changes nobody's access.
+  const levelled = rowHasColumn(profile, 'admin_level');
+  const level = levelOf(profile?.role, levelled ? (profile?.admin_level ?? null) : null);
+  const identity = user && profile && level ? { user, profile, level } : null;
+
+  return { supabase, signedIn, user, profile, identity };
+}
+
+/** The asker's level, or null if they are not an administrator. */
 export async function adminLevel(): Promise<AdminLevel | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-  if (profile?.role !== 'admin') return null;
-
-  // Absent until 0015 is applied, and then everyone is master — which is what
-  // every administrator already was.
-  const levelled = await columnReady(supabase, 'profiles', 'admin_level');
-  return levelOf('admin', levelled ? ((profile as { admin_level?: string | null }).admin_level ?? null) : null);
+  const { identity } = await adminIdentity();
+  return identity?.level ?? null;
 }
 
 /**
@@ -38,18 +61,21 @@ export async function requirePage(capability: Capability): Promise<AdminLevel> {
   return level;
 }
 
-/** Guard an API route. Returns null when allowed, or the refusal to return. */
+/** Guard an API route. Returns the refusal to send, or what the route needs. */
 export async function requireCapability(
   capability: Capability
-): Promise<{ level: AdminLevel } | { refusal: Response }> {
-  const level = await adminLevel();
+): Promise<
+  | { level: AdminLevel; supabase: SupabaseClient; user: User; profile: AdminProfile }
+  | { refusal: Response }
+> {
+  const { supabase, identity } = await adminIdentity();
 
-  if (!level)
+  if (!identity)
     return {
       refusal: Response.json({ error: 'Administrators only.' }, { status: 403 }),
     };
 
-  if (!can(level, capability))
+  if (!can(identity.level, capability))
     return {
       refusal: Response.json(
         { error: 'Your administrator account does not have access to this.' },
@@ -57,5 +83,5 @@ export async function requireCapability(
       ),
     };
 
-  return { level };
+  return { level: identity.level, supabase, user: identity.user, profile: identity.profile };
 }

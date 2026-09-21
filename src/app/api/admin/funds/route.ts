@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
+import { currentSession } from '@/lib/session';
 import { columnReady } from '@/lib/schema';
-import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,10 +21,7 @@ const ICONS = [
 ];
 
 async function requireAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return { error: NextResponse.json({ error: 'Not authenticated.' }, { status: 401 }) };
 
   const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();

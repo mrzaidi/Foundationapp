@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
+import { currentSession } from '@/lib/session';
 import { buildReceipt } from '@/lib/invoice-pdf';
-import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -14,11 +14,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();

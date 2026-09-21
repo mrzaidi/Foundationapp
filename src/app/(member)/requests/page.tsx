@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import Icon from '@/components/Icon';
 import NewRequestButton from '@/components/NewRequestButton';
 import StatusBadge from '@/components/StatusBadge';
-import { createClient } from '@/lib/supabase/server';
+import { currentSession } from '@/lib/session';
 import { money, progressPercent, timeAgo } from '@/lib/format';
 import { fundText } from '@/lib/funds';
 import { getI18n } from '@/lib/i18n/server';
@@ -22,11 +22,7 @@ export default async function RequestsPage({
   const active = status && status !== 'all' ? status : 'all';
 
   const { d, locale } = await getI18n();
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) redirect('/login');
 
   let query = supabase

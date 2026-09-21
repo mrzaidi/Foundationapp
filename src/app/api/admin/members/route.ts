@@ -1,26 +1,22 @@
 import { NextResponse } from 'next/server';
-import { requireCapability } from '@/lib/admin-guard';
+import { adminIdentity, forgetIdentities, requireCapability } from '@/lib/admin-guard';
 import { mailReady, sendInBackground } from '@/lib/mailer';
 import { welcomeEmail } from '@/lib/emails';
 import { columnReady } from '@/lib/schema';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+/** Established once per request and shared — see lib/admin-guard. */
 async function requireAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated.', status: 401 as const, supabase, user: null };
-
-  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (me?.role !== 'admin')
+  const { supabase, signedIn, identity } = await adminIdentity();
+  if (!signedIn)
+    return { error: 'Not authenticated.', status: 401 as const, supabase, user: null };
+  if (!identity)
     return { error: 'Administrators only.', status: 403 as const, supabase, user: null };
 
-  return { error: null, status: 200 as const, supabase, user };
+  return { error: null, status: 200 as const, supabase, user: identity.user };
 }
 
 /** GET /api/admin/members?q=&limit=&offset= */
@@ -80,6 +76,10 @@ export async function PATCH(request: Request) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  // Making somebody an administrator, or taking it away, must be felt at once
+  // rather than after the guard's cache has aged out.
+  if (patch.role !== undefined || patch.is_blocked) forgetIdentities();
 
   return NextResponse.json({ member: data });
 }

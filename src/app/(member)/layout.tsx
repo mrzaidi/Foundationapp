@@ -3,8 +3,8 @@ import ApplyProvider from '@/components/ApplyProvider';
 import BottomNav from '@/components/BottomNav';
 import MemberAssistant from '@/components/MemberAssistant';
 import PhoneShell from '@/components/PhoneShell';
+import { currentSession } from '@/lib/session';
 import { rowHasBankColumns } from '@/lib/bank-schema';
-import { createClient } from '@/lib/supabase/server';
 import type { FundType, Profile } from '@/lib/types';
 
 // Deliberately NOT force-dynamic. Reading cookies already makes this dynamic,
@@ -14,11 +14,7 @@ import type { FundType, Profile } from '@/lib/types';
 // screen, so it should be rendered once and kept.
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) redirect('/login');
 
   // The apply flow lives beside the navigation rather than inside a page, so

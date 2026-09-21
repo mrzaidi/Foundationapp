@@ -1,17 +1,13 @@
 import { redirect } from 'next/navigation';
 import ProfileView from '@/components/ProfileView';
+import { currentSession } from '@/lib/session';
 import { rowHasBankColumns } from '@/lib/bank-schema';
-import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ProfilePage() {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) redirect('/login');
 
   const [{ data: profile }, { count: total }, { data: transferred }] = await Promise.all([

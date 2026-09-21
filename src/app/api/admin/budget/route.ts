@@ -1,23 +1,8 @@
 import { requireCapability } from '@/lib/admin-guard';
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-async function requireAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, error: 'Not authenticated.', status: 401 as const };
-
-  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (me?.role !== 'admin')
-    return { supabase, user: null, error: 'Administrators only.', status: 403 as const };
-
-  return { supabase, user, error: null, status: 200 as const };
-}
 
 /** GET /api/admin/budget?month=YYYY-MM-01 — position for a month plus history. */
 export async function GET(request: Request) {
@@ -25,8 +10,7 @@ export async function GET(request: Request) {
   const gate = await requireCapability('view_dashboard');
   if ('refusal' in gate) return gate.refusal;
 
-  const { supabase, error: authError, status } = await requireAdmin();
-  if (authError) return NextResponse.json({ error: authError }, { status });
+  const { supabase } = gate;
 
   const month = new URL(request.url).searchParams.get('month') ?? undefined;
 

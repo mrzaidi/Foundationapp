@@ -27,7 +27,7 @@ import {
   suggestPassword,
   type FlowKind,
 } from '@/lib/assistant-flows';
-import { requireCapability } from '@/lib/admin-guard';
+import { adminIdentity, requireCapability } from '@/lib/admin-guard';
 import { can, type Capability } from '@/lib/permissions';
 import { explain, geminiReady, phrase, route } from '@/lib/gemini';
 import { SYSTEM_GUIDE } from '@/lib/system-guide';
@@ -92,19 +92,11 @@ interface Answer {
  * one thing worse than a slow answer about a balance is a confident stale one.
  */
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+  const { supabase, signedIn, identity } = await adminIdentity();
+  if (!signedIn) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+  if (!identity) return NextResponse.json({ error: 'Administrators only.' }, { status: 403 });
 
-  const { data: me } = await supabase
-    .from('profiles')
-    .select('role, full_name')
-    .eq('id', user.id)
-    .single();
-  if (me?.role !== 'admin')
-    return NextResponse.json({ error: 'Administrators only.' }, { status: 403 });
+  const { user, profile: me } = identity;
 
   let body: {
     question?: string;

@@ -2,36 +2,24 @@ import { redirect } from 'next/navigation';
 import { RatesProvider } from '@/components/Fx';
 import AdminAssistant from '@/components/AdminAssistant';
 import AdminSidebar from '@/components/AdminSidebar';
-import { levelOf } from '@/lib/permissions';
-import { columnReady } from '@/lib/schema';
-import { createClient } from '@/lib/supabase/server';
+import { adminIdentity } from '@/lib/admin-guard';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect('/login?next=/admin');
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
-  // Middleware already guards this, but a direct render should never leak.
-  if (profile?.role !== 'admin') redirect('/');
-
   /*
-   * Which kind of administrator. Absent until migration 0015 lands, in which
-   * case everyone is a master — exactly what they were before levels existed,
-   * so a deploy that outruns the SQL changes nobody's access.
+   * The same lookup the page inside this layout is about to make, so it is
+   * made once and shared. Middleware already guards the area, but a direct
+   * render should never leak, and which kind of administrator somebody is
+   * comes back with it — including the case where migration 0015 has not
+   * landed and everyone is a master, exactly as they were before levels
+   * existed.
    */
-  const levelled = await columnReady(supabase, 'profiles', 'admin_level');
-  const level = levelOf('admin', levelled ? (profile.admin_level as string | null) : null);
+  const { supabase, signedIn, identity } = await adminIdentity();
+  if (!signedIn) redirect('/login?next=/admin');
+  if (!identity) redirect('/');
+
+  const { profile, level } = identity;
 
   const { count: pending } = await supabase
     .from('fund_requests')
@@ -44,8 +32,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="admin-body">
         <div className="admin-shell">
           <AdminSidebar
-            name={profile.full_name}
-            email={profile.email}
+            name={profile.full_name ?? 'Administrator'}
+            email={profile.email ?? ''}
             pending={pending ?? 0}
             level={level}
           />

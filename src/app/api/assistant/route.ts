@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { currentSession } from '@/lib/session';
 import { isGreeting, referenceFrom } from '@/lib/assistant';
 import { classifyMember, MEMBER_FALLBACK, MEMBER_SUGGESTIONS, wantsToAct } from '@/lib/member-assistant';
 import { MEMBER_GUIDE } from '@/lib/member-guide';
@@ -86,10 +86,7 @@ const fundName = (r: FundRequest) => r.fund_types?.name ?? 'a fund';
  * ------------------------------------------------------------------ */
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return NextResponse.json({ error: 'Please sign in again.' }, { status: 401 });
 
   let body: {

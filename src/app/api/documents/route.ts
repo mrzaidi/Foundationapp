@@ -1,5 +1,5 @@
+import { currentSession } from '@/lib/session';
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,10 +10,7 @@ export const dynamic = 'force-dynamic';
  * Storage RLS decides who may sign: the owner, or any admin.
  */
 export async function GET(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   const path = new URL(request.url).searchParams.get('path');

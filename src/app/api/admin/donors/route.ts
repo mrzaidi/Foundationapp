@@ -1,23 +1,23 @@
-import { requireCapability } from '@/lib/admin-guard';
+import { adminIdentity, requireCapability } from '@/lib/admin-guard';
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { asDonationType } from '@/lib/donation-types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+/**
+ * The answer the capability gate above already reached, in the shape these
+ * handlers expect. It costs nothing — the identity is established once for the
+ * request and simply read again here.
+ */
 async function requireAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: NextResponse.json({ error: 'Not authenticated.' }, { status: 401 }) };
-
-  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (me?.role !== 'admin')
+  const { supabase, signedIn, identity } = await adminIdentity();
+  if (!signedIn)
+    return { error: NextResponse.json({ error: 'Not authenticated.' }, { status: 401 }) };
+  if (!identity)
     return { error: NextResponse.json({ error: 'Administrators only.' }, { status: 403 }) };
 
-  return { supabase, userId: user.id };
+  return { supabase, userId: identity.user.id };
 }
 
 const isMonth = (v: unknown): v is string => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);

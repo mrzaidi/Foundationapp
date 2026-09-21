@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
+import { currentSession } from '@/lib/session';
 import { bankColumnsReady } from '@/lib/bank-schema';
 import { hasBankDetails } from '@/lib/banks';
-import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -13,10 +13,7 @@ export const dynamic = 'force-dynamic';
  *   ?limit / ?offset
  */
 export async function GET(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   const url = new URL(request.url);
@@ -46,10 +43,7 @@ export async function GET(request: Request) {
 
 /** POST /api/requests — a member submits a new application. */
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await currentSession();
   if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
 
   let body: { fund_type_id?: string; amount_requested?: number; purpose?: string | null };
