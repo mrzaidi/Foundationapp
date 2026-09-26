@@ -303,25 +303,9 @@ export default async function AdminMemberDetail({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* The household has its own section now. It is the thing the committee
-          weighs, and it was buried at the bottom of whichever member happened
-          to be the point of contact; this points at it rather than repeating
-          the whole form here. */}
-      <div className="panel mt-24">
-        <div className="panel-head">
-          <div>
-            <h2>Household</h2>
-            <div className="ph-sub">
-              Who lives with {m.full_name}, what comes in and what goes out — recorded by the
-              foundation, never visible to the member.
-            </div>
-          </div>
-          <Link className="admin-btn" href={`/admin/families/${m.id}`}>
-            <Icon name="home" />
-            Open the household
-          </Link>
-        </div>
-      </div>
+      {/* Households live in Families and nowhere else. This page used to carry
+          the whole form, then a card pointing at it; both are gone, because the
+          two sections are meant to stand apart. */}
     </>
   );
 }

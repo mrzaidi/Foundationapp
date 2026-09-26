@@ -12,9 +12,7 @@ const PAGE_SIZE = 30;
 interface Row {
   id: string;
   head: string | null;
-  member_name: string | null;
   city: string | null;
-  mobile: string | null;
   total_members: number | null;
   male_count: number | null;
   female_count: number | null;
@@ -134,8 +132,8 @@ export default async function AdminFamiliesPage({
                 <h3>{q ? 'No household by that name' : 'No members yet'}</h3>
                 <p>
                   {q
-                    ? 'The search looks at the head of the family, and at the member’s own name where no head has been entered.'
-                    : 'Households appear here as soon as there are members to record them against.'}
+                    ? 'The search looks at the head of the family. A household nobody has written down yet can still be found by the name it was registered under.'
+                    : 'Households appear here as soon as there are people to record them for.'}
                 </p>
               </div>
             </div>
@@ -148,7 +146,6 @@ export default async function AdminFamiliesPage({
                   <thead>
                     <tr>
                       <th>Head of the family</th>
-                      <th>Registered member</th>
                       <th>People</th>
                       <th>Monthly income</th>
                       <th>Home</th>
@@ -161,20 +158,16 @@ export default async function AdminFamiliesPage({
                       <tr key={r.id} className={r.recorded ? '' : 'row-off'}>
                         <td>
                           <div className="who">
-                            <div className="av">{initials(r.head ?? '?')}</div>
+                            <div className="av">{r.head ? initials(r.head) : '—'}</div>
                             <div>
-                              <div className="wn">{r.head ?? '—'}</div>
+                              {r.head ? (
+                                <div className="wn">{r.head}</div>
+                              ) : (
+                                <div className="gift-none">No head recorded yet</div>
+                              )}
                               {r.city && <div className="we">{r.city}</div>}
                             </div>
                           </div>
-                        </td>
-                        <td style={{ color: 'var(--text-dim)', fontSize: 13 }}>
-                          {r.member_name ?? '—'}
-                          {r.mobile && (
-                            <div style={{ color: 'var(--text-faint)', fontSize: 12 }} dir="ltr">
-                              {r.mobile}
-                            </div>
-                          )}
                         </td>
                         <td className="num">
                           {r.total_members ?? '—'}

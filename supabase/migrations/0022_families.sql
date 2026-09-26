@@ -13,10 +13,15 @@
 -- it; a member with nothing on file is listed as not recorded rather than left
 -- out, because the gap is the thing staff need to see.
 --
--- The search runs on the head of the family, falling back to the member's own
--- name where no head has been entered — which is how staff say it out loud.
--- It is a parameter, not a string pasted into a filter, so a name with a comma
--- or a bracket in it searches for exactly itself.
+-- The search runs on the head of the family, falling back to the name on the
+-- underlying row where no head has been written down yet — which is how staff
+-- say it out loud. It is a parameter, not a string pasted into a filter, so a
+-- name with a comma or a bracket in it searches for exactly itself.
+--
+-- Nothing about the member comes back. Families and Members are separate
+-- sections: the profile row is how a household is keyed, not something the
+-- households screen reports on, so no name, email or mobile is returned here
+-- for a screen that must not show them.
 -- ===========================================================================
 
 create or replace function public.families(
@@ -33,10 +38,12 @@ as $$
   with matched as (
     select
       p.id,
-      coalesce(nullif(btrim(f.head_name), ''), p.full_name) as head,
-      p.full_name                                           as member_name,
+      -- The head of the family as recorded, and nothing else. It used to fall
+      -- back to the name on the profile, which put a member's name on the
+      -- households screen; a household nobody has written down yet simply has
+      -- no head yet, and the list says so.
+      nullif(btrim(f.head_name), '')                        as head,
       p.city,
-      p.mobile,
       f.total_members,
       f.male_count,
       f.female_count,
@@ -50,7 +57,11 @@ as $$
      where p.role = 'member'
        and (
          coalesce(p_query, '') = ''
-         or coalesce(nullif(btrim(f.head_name), ''), p.full_name) ilike '%' || p_query || '%'
+         or f.head_name ilike '%' || p_query || '%'
+         -- A household with no head written down yet is still findable, by the
+         -- name on the row it is keyed to. That name is matched, never
+         -- returned: it decides which rows come back, and the screen shows
+         -- only what the foundation has actually recorded.
          or p.full_name ilike '%' || p_query || '%'
        )
   )

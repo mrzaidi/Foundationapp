@@ -117,10 +117,11 @@ const MAX_MEMBERS = 60;
  */
 export default function FamilyDetails({
   userId,
-  memberName,
+  headName,
 }: {
   userId: string;
-  memberName: string;
+  /** The head of the family; this component names the household after them. */
+  headName: string;
 }) {
   const toast = useToast();
 
@@ -240,7 +241,8 @@ export default function FamilyDetails({
         <div>
           <h2>Family details</h2>
           <div className="ph-sub">
-            {memberName}&rsquo;s household — recorded by the foundation, not visible to the member
+            {headName ? `The household of ${headName} — recorded` : 'Recorded'} by the
+            foundation, and never shown outside the office
           </div>
         </div>
         {!loading && !editing && (
