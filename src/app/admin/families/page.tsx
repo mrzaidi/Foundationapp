@@ -1,6 +1,7 @@
 import { requirePage } from '@/lib/admin-guard';
 import Link from 'next/link';
 import AdminSearch from '@/components/AdminSearch';
+import NewFamilyButton from '@/components/NewFamilyButton';
 import Icon from '@/components/Icon';
 import { createClient } from '@/lib/supabase/server';
 import { dateLabel, initials, money } from '@/lib/format';
@@ -11,8 +12,9 @@ const PAGE_SIZE = 30;
 
 interface Row {
   id: string;
-  head: string | null;
+  head_name: string;
   city: string | null;
+  contact: string | null;
   total_members: number | null;
   male_count: number | null;
   female_count: number | null;
@@ -20,17 +22,14 @@ interface Row {
   monthly_expense: number | null;
   house_type: 'own' | 'rent' | null;
   updated_at: string | null;
-  recorded: boolean;
 }
 
 /**
  * Households.
  *
- * The committee decides on a household, not on a name: how many people live on
- * that income, what the rent and the bills come to. That was only reachable by
- * opening whichever member happened to be the point of contact, so this is its
- * own place, with the whole roll in it — including the households nobody has
- * written down yet, because that gap is the thing staff need to see.
+ * Each one stands on its own, identified by the head of the family rather than
+ * by a registered member — see migration 0023. One can be started here at any
+ * time, for a family the office has met but who has never signed up.
  */
 export default async function AdminFamiliesPage({
   searchParams,
@@ -42,28 +41,28 @@ export default async function AdminFamiliesPage({
   const sp = await searchParams;
   const q = sp.q?.trim() ?? '';
   const wanted = Math.max(1, Number(sp.page ?? 1));
+  const from = (wanted - 1) * PAGE_SIZE;
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc('families', {
-    p_query: q,
-    p_limit: PAGE_SIZE,
-    p_offset: (wanted - 1) * PAGE_SIZE,
-  });
+  let query = supabase
+    .from('families')
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, from + PAGE_SIZE - 1);
 
-  // The function arrives with migration 0022; until it runs, say so plainly
+  // One column, matched by the client rather than pasted into a filter string,
+  // so a name with a comma or a bracket in it searches for itself.
+  if (q) query = query.ilike('head_name', `%${q}%`);
+
+  const { data, count, error } = await query;
+
+  // The table arrives with migration 0023; until it runs, say so plainly
   // rather than showing a Postgres error on a screen staff are trying to use.
   const missing = Boolean(error && /families|schema cache|does not exist/i.test(error.message));
 
-  const result = (data ?? null) as {
-    total?: number;
-    recorded?: number;
-    rows?: Row[];
-  } | null;
-
-  const rows = result?.rows ?? [];
-  const total = result?.total ?? 0;
-  const recorded = result?.recorded ?? 0;
+  const rows = (data ?? []) as Row[];
+  const total = count ?? 0;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const page = Math.min(wanted, pages);
 
@@ -88,11 +87,12 @@ export default async function AdminFamiliesPage({
               </>
             ) : (
               <>
-                {recorded} of {total} household{total === 1 ? '' : 's'} recorded
+                {total} household{total === 1 ? '' : 's'} on file
               </>
             )}
           </div>
         </div>
+        {!missing && <NewFamilyButton />}
       </div>
 
       {missing && (
@@ -102,10 +102,10 @@ export default async function AdminFamiliesPage({
               <div className="e-ico">
                 <Icon name="home" />
               </div>
-              <h3>Households need migration 0022</h3>
+              <h3>Households need migration 0023</h3>
               <p>
-                Run <code>supabase/migrations/0022_families.sql</code>, then this page picks the
-                households up on its own — no redeploy.
+                Run <code>supabase/migrations/0023_standalone_families.sql</code>, then this page
+                picks the households up on its own — no redeploy.
               </p>
             </div>
           </div>
@@ -129,11 +129,11 @@ export default async function AdminFamiliesPage({
                 <div className="e-ico">
                   <Icon name="home" />
                 </div>
-                <h3>{q ? 'No household by that name' : 'No members yet'}</h3>
+                <h3>{q ? 'No household by that name' : 'No households yet'}</h3>
                 <p>
                   {q
-                    ? 'The search looks at the head of the family. A household nobody has written down yet can still be found by the name it was registered under.'
-                    : 'Households appear here as soon as there are people to record them for.'}
+                    ? 'The search looks at the head of the family.'
+                    : 'Add the first one — a household does not need a registered member behind it.'}
                 </p>
               </div>
             </div>
@@ -146,28 +146,28 @@ export default async function AdminFamiliesPage({
                   <thead>
                     <tr>
                       <th>Head of the family</th>
+                      <th>Contact</th>
                       <th>People</th>
                       <th>Monthly income</th>
                       <th>Home</th>
-                      <th>Recorded</th>
+                      <th>Updated</th>
                       <th />
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map((r) => (
-                      <tr key={r.id} className={r.recorded ? '' : 'row-off'}>
+                      <tr key={r.id}>
                         <td>
                           <div className="who">
-                            <div className="av">{r.head ? initials(r.head) : '—'}</div>
+                            <div className="av">{initials(r.head_name)}</div>
                             <div>
-                              {r.head ? (
-                                <div className="wn">{r.head}</div>
-                              ) : (
-                                <div className="gift-none">No head recorded yet</div>
-                              )}
+                              <div className="wn">{r.head_name}</div>
                               {r.city && <div className="we">{r.city}</div>}
                             </div>
                           </div>
+                        </td>
+                        <td style={{ color: 'var(--text-faint)', fontSize: 12.5 }} dir="ltr">
+                          {r.contact || '—'}
                         </td>
                         <td className="num">
                           {r.total_members ?? '—'}
@@ -192,14 +192,10 @@ export default async function AdminFamiliesPage({
                               ? 'Rented'
                               : '—'}
                         </td>
-                        <td style={{ whiteSpace: 'nowrap' }}>
-                          {r.recorded ? (
-                            <span className="gift-top">
-                              <span className="gift-count">{dateLabel(r.updated_at ?? '')}</span>
-                            </span>
-                          ) : (
-                            <span className="gift-none">Not recorded</span>
-                          )}
+                        <td
+                          style={{ color: 'var(--text-faint)', fontSize: 12.5, whiteSpace: 'nowrap' }}
+                        >
+                          {r.updated_at ? dateLabel(r.updated_at) : '—'}
                         </td>
                         <td>
                           <Link className="admin-btn ghost small" href={`/admin/families/${r.id}`}>

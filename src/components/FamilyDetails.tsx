@@ -116,10 +116,11 @@ const MAX_MEMBERS = 60;
  * what get trimmed, and only on save.
  */
 export default function FamilyDetails({
-  userId,
+  familyId,
   headName,
 }: {
-  userId: string;
+  /** The household's own id. A family stands on its own; see migration 0023. */
+  familyId: string;
   /** The head of the family; this component names the household after them. */
   headName: string;
 }) {
@@ -138,7 +139,7 @@ export default function FamilyDetails({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/family?user_id=${userId}`);
+      const res = await fetch(`/api/admin/family?id=${familyId}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       setFamily(json.family ?? null);
@@ -147,12 +148,12 @@ export default function FamilyDetails({
       setError('');
     } catch (e) {
       const msg = (e as Error).message || 'Could not load family details.';
-      if (/family_details|schema cache|does not exist/i.test(msg)) setAvailable(false);
+      if (/families|schema cache|does not exist/i.test(msg)) setAvailable(false);
       else setError(msg);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [familyId]);
 
   useEffect(() => {
     void load();
@@ -209,8 +210,9 @@ export default function FamilyDetails({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: userId,
+          id: familyId,
           ...draft,
+          head_name: draft.head_name.trim() || headName,
           has_bank_account:
             draft.has_bank_account === '' ? null : draft.has_bank_account === 'yes',
         }),

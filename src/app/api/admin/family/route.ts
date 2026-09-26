@@ -1,22 +1,11 @@
-import { currentSession } from '@/lib/session';
 import { NextResponse } from 'next/server';
+import { requireCapability } from '@/lib/admin-guard';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const INCOME_SOURCES = ['labour', 'business', 'job', 'pension', 'other'];
 const MAX_MEMBERS = 60;
-
-async function requireAdmin() {
-  const { supabase, user } = await currentSession();
-  if (!user) return { error: NextResponse.json({ error: 'Not authenticated.' }, { status: 401 }) };
-
-  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (me?.role !== 'admin')
-    return { error: NextResponse.json({ error: 'Administrators only.' }, { status: 403 }) };
-
-  return { supabase, userId: user.id };
-}
 
 /** Money and counts arrive as strings from a form; blank means "not recorded". */
 const num = (v: unknown): number | null => {
@@ -33,61 +22,23 @@ const text = (v: unknown): string | null => {
   return s || null;
 };
 
-/** GET /api/admin/family?user_id= */
-export async function GET(request: Request) {
-  const gate = await requireAdmin();
-  if (gate.error) return gate.error;
-
-  const userId = new URL(request.url).searchParams.get('user_id');
-  if (!userId) return NextResponse.json({ error: 'Which member?' }, { status: 422 });
-
-  const { data, error } = await gate
-    .supabase!.from('family_details')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ family: data });
-}
-
 /**
- * PUT /api/admin/family — save a household.
+ * Everything the form sends, checked and shaped.
  *
- * The whole form in one write. Anything left blank is stored as null rather
- * than zero: a household that has not been asked about its rent is not a
- * household paying no rent, and the committee should be able to tell those
- * apart.
+ * Returns either the row to write or the sentence to show. The same rules
+ * apply whether a household is being started or corrected, so both handlers
+ * come through here.
  */
-export async function PUT(request: Request) {
-  const gate = await requireAdmin();
-  if (gate.error) return gate.error;
-
-  let body: Record<string, unknown>;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
-  }
-
-  const userId = text(body.user_id);
-  if (!userId) return NextResponse.json({ error: 'Which member?' }, { status: 422 });
-
-  // The member has to exist — a household with no one to attach it to is a typo.
-  const { data: member } = await gate
-    .supabase!.from('profiles')
-    .select('id')
-    .eq('id', userId)
-    .maybeSingle();
-  if (!member) return NextResponse.json({ error: 'Member not found.' }, { status: 404 });
+function shape(body: Record<string, unknown>): { row: Record<string, unknown> } | { bad: string } {
+  const head = text(body.head_name);
+  if (!head || head.length < 2) return { bad: 'Enter the name of the head of the family.' };
 
   const status = text(body.father_status);
   if (status && !['alive', 'deceased'].includes(status))
-    return NextResponse.json({ error: 'Father status must be alive or deceased.' }, { status: 422 });
+    return { bad: 'Father status must be alive or deceased.' };
 
   const house = text(body.house_type);
-  if (house && !['own', 'rent'].includes(house))
-    return NextResponse.json({ error: 'House type must be own or rent.' }, { status: 422 });
+  if (house && !['own', 'rent'].includes(house)) return { bad: 'House type must be own or rent.' };
 
   const sources = Array.isArray(body.income_sources)
     ? [...new Set(body.income_sources.map(String))].filter((s) => INCOME_SOURCES.includes(s))
@@ -109,45 +60,128 @@ export async function PUT(request: Request) {
   const male = int(body.male_count, MAX_MEMBERS);
   const female = int(body.female_count, MAX_MEMBERS);
   if (totalMembers !== null && male !== null && female !== null && male + female > totalMembers)
-    return NextResponse.json(
-      { error: 'Male and female counts add up to more than the total.' },
-      { status: 422 }
-    );
+    return { bad: 'Male and female counts add up to more than the total.' };
 
-  const row = {
-    user_id: userId,
-    head_name: text(body.head_name),
-    father_name: text(body.father_name),
-    father_mobile: text(body.father_mobile),
-    father_status: status,
-    address: text(body.address),
-    total_members: totalMembers,
-    male_count: male,
-    female_count: female,
-    members,
-    income_sources: sources,
-    income_source_other: sources.includes('other') ? text(body.income_source_other) : null,
-    monthly_income: num(body.monthly_income),
-    monthly_expense: num(body.monthly_expense),
-    house_type: house,
-    has_bank_account:
-      body.has_bank_account === null || body.has_bank_account === undefined
-        ? null
-        : Boolean(body.has_bank_account),
-    bill_ke: num(body.bill_ke),
-    rent: num(body.rent),
-    education_expense: num(body.education_expense),
-    medical_expense: num(body.medical_expense),
-    fund_reason: text(body.fund_reason),
-    updated_by: gate.userId,
+  return {
+    row: {
+      head_name: head,
+      father_name: text(body.father_name),
+      father_mobile: text(body.father_mobile),
+      father_status: status,
+      address: text(body.address),
+      city: text(body.city),
+      contact: text(body.contact),
+      total_members: totalMembers,
+      male_count: male,
+      female_count: female,
+      members,
+      income_sources: sources,
+      income_source_other: sources.includes('other') ? text(body.income_source_other) : null,
+      monthly_income: num(body.monthly_income),
+      monthly_expense: num(body.monthly_expense),
+      house_type: house,
+      has_bank_account:
+        body.has_bank_account === null || body.has_bank_account === undefined
+          ? null
+          : Boolean(body.has_bank_account),
+      bill_ke: num(body.bill_ke),
+      rent: num(body.rent),
+      education_expense: num(body.education_expense),
+      medical_expense: num(body.medical_expense),
+      fund_reason: text(body.fund_reason),
+    },
   };
+}
 
-  const { data, error } = await gate
-    .supabase!.from('family_details')
-    .upsert(row, { onConflict: 'user_id' })
+const read = async (request: Request) => {
+  try {
+    return { body: (await request.json()) as Record<string, unknown> };
+  } catch {
+    return { bad: 'Invalid request body.' };
+  }
+};
+
+/** GET /api/admin/family?id= — one household. */
+export async function GET(request: Request) {
+  const gate = await requireCapability('view_members');
+  if ('refusal' in gate) return gate.refusal;
+
+  const id = new URL(request.url).searchParams.get('id');
+  if (!id) return NextResponse.json({ error: 'Which household?' }, { status: 422 });
+
+  const { data, error } = await gate.supabase
+    .from('families')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json({ family: data ?? null });
+}
+
+/**
+ * POST /api/admin/family — start a household.
+ *
+ * Nothing else has to exist first. The office meets families who have never
+ * registered and may never register; the head of the family's name is the
+ * whole requirement, and the rest can be filled in whenever it is known.
+ */
+export async function POST(request: Request) {
+  const gate = await requireCapability('view_members');
+  if ('refusal' in gate) return gate.refusal;
+
+  const parsed = await read(request);
+  if ('bad' in parsed) return NextResponse.json({ error: parsed.bad }, { status: 400 });
+
+  const shaped = shape(parsed.body);
+  if ('bad' in shaped) return NextResponse.json({ error: shaped.bad }, { status: 422 });
+
+  const { data, error } = await gate.supabase
+    .from('families')
+    .insert({ ...shaped.row, created_by: gate.user.id, updated_by: gate.user.id })
     .select()
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json({ family: data }, { status: 201 });
+}
+
+/** PUT /api/admin/family — correct a household. Body carries its id. */
+export async function PUT(request: Request) {
+  const gate = await requireCapability('view_members');
+  if ('refusal' in gate) return gate.refusal;
+
+  const parsed = await read(request);
+  if ('bad' in parsed) return NextResponse.json({ error: parsed.bad }, { status: 400 });
+
+  const id = text(parsed.body.id);
+  if (!id) return NextResponse.json({ error: 'Which household?' }, { status: 422 });
+
+  const shaped = shape(parsed.body);
+  if ('bad' in shaped) return NextResponse.json({ error: shaped.bad }, { status: 422 });
+
+  const { data, error } = await gate.supabase
+    .from('families')
+    .update({ ...shaped.row, updated_by: gate.user.id })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (!data) return NextResponse.json({ error: 'Household not found.' }, { status: 404 });
   return NextResponse.json({ family: data });
+}
+
+/** DELETE /api/admin/family?id= — remove a household written down in error. */
+export async function DELETE(request: Request) {
+  const gate = await requireCapability('view_members');
+  if ('refusal' in gate) return gate.refusal;
+
+  const id = new URL(request.url).searchParams.get('id');
+  if (!id) return NextResponse.json({ error: 'Which household?' }, { status: 422 });
+
+  const { error } = await gate.supabase.from('families').delete().eq('id', id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  return NextResponse.json({ ok: true });
 }

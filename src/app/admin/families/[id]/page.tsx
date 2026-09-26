@@ -2,18 +2,19 @@ import { requirePage } from '@/lib/admin-guard';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import FamilyDetails from '@/components/FamilyDetails';
+import DeleteFamilyButton from '@/components/DeleteFamilyButton';
 import Icon from '@/components/Icon';
 import { createClient } from '@/lib/supabase/server';
+import { dateLabel } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * One household.
  *
- * Families and Members are separate sections and this page says nothing about
- * the member: no name, no contact details, no way through to their record. The
- * household is the subject, and the head of the family is who it is called
- * after — the member row underneath is only how the record is keyed.
+ * It stands on its own: no member behind it, nothing here about one. The head
+ * of the family is who the record is called after, and the rest is whatever
+ * the office has managed to write down so far.
  */
 export default async function AdminFamilyPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePage('view_members');
@@ -21,24 +22,13 @@ export default async function AdminFamilyPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const supabase = await createClient();
 
-  // Only enough to know the household exists and is not an administrator's.
-  // The name on the row is deliberately not read: this page shows what the
-  // foundation has recorded about the household, and nothing about the member.
-  const { data: owner } = await supabase
-    .from('profiles')
-    .select('id, city, role')
-    .eq('id', id)
-    .single();
-
-  if (!owner || owner.role === 'admin') notFound();
-
   const { data: family } = await supabase
-    .from('family_details')
-    .select('head_name')
-    .eq('user_id', id)
+    .from('families')
+    .select('id, head_name, city, contact, created_at')
+    .eq('id', id)
     .maybeSingle();
 
-  const head = family?.head_name?.trim() ?? '';
+  if (!family) notFound();
 
   return (
     <>
@@ -48,16 +38,19 @@ export default async function AdminFamilyPage({ params }: { params: Promise<{ id
             <Icon name="chevronLeft" />
           </Link>
           <div>
-            <h1>{head || 'Household'}</h1>
+            <h1>{family.head_name}</h1>
             <div className="crumb">
-              {head ? 'Head of the family' : 'No head recorded yet'}
-              {owner.city ? ` · ${owner.city}` : ''}
+              Head of the family
+              {family.city ? ` · ${family.city}` : ''}
+              {family.contact ? ` · ${family.contact}` : ''}
+              {family.created_at ? ` · added ${dateLabel(family.created_at)}` : ''}
             </div>
           </div>
         </div>
+        <DeleteFamilyButton familyId={family.id} headName={family.head_name} />
       </div>
 
-      <FamilyDetails userId={id} headName={head} />
+      <FamilyDetails familyId={family.id} headName={family.head_name} />
     </>
   );
 }
