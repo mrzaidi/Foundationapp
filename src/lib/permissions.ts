@@ -130,6 +130,7 @@ export const MODULES: {
   { href: '/admin', label: 'Dashboard', icon: 'grid', needs: 'view_dashboard', group: 'Overview' },
   { href: '/admin/requests', label: 'Applications', icon: 'inbox', needs: 'view_requests', group: 'Manage' },
   { href: '/admin/members', label: 'Members', icon: 'users', needs: 'view_members', group: 'Manage' },
+  { href: '/admin/families', label: 'Families', icon: 'home', needs: 'view_members', group: 'Manage' },
   { href: '/admin/funds', label: 'Funds', icon: 'wallet', needs: 'view_funds', group: 'Manage' },
   { href: '/admin/donors', label: 'Donors', icon: 'heart', needs: 'view_donors', group: 'Manage' },
   { href: '/admin/budget', label: 'Budget', icon: 'budget', needs: 'view_budget', group: 'Manage' },

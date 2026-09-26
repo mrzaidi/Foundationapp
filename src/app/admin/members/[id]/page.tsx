@@ -2,7 +2,6 @@ import { requirePage } from '@/lib/admin-guard';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import DocumentGallery from '@/components/DocumentGallery';
-import FamilyDetails from '@/components/FamilyDetails';
 import Icon from '@/components/Icon';
 import RecurringControl from '@/components/RecurringControl';
 import StatusBadge from '@/components/StatusBadge';
@@ -304,7 +303,25 @@ export default async function AdminMemberDetail({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      <FamilyDetails userId={m.id} memberName={m.full_name} />
+      {/* The household has its own section now. It is the thing the committee
+          weighs, and it was buried at the bottom of whichever member happened
+          to be the point of contact; this points at it rather than repeating
+          the whole form here. */}
+      <div className="panel mt-24">
+        <div className="panel-head">
+          <div>
+            <h2>Household</h2>
+            <div className="ph-sub">
+              Who lives with {m.full_name}, what comes in and what goes out — recorded by the
+              foundation, never visible to the member.
+            </div>
+          </div>
+          <Link className="admin-btn" href={`/admin/families/${m.id}`}>
+            <Icon name="home" />
+            Open the household
+          </Link>
+        </div>
+      </div>
     </>
   );
 }
