@@ -43,12 +43,12 @@ export async function GET(request: Request) {
   return NextResponse.json({ members: data ?? [], total: count ?? 0 });
 }
 
-/** PATCH /api/admin/members — { id, role?, is_blocked? } */
+/** PATCH /api/admin/members — { id, role?, role_id?, is_blocked? } */
 export async function PATCH(request: Request) {
   const { error: authError, status, supabase } = await requireAdmin();
   if (authError) return NextResponse.json({ error: authError }, { status });
 
-  let body: { id?: string; role?: string; is_blocked?: boolean };
+  let body: { id?: string; role?: string; role_id?: string; is_blocked?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -65,6 +65,29 @@ export async function PATCH(request: Request) {
   }
   if (body.is_blocked !== undefined) patch.is_blocked = Boolean(body.is_blocked);
 
+  /*
+   * Changing somebody's role is a master's job, and the trigger from 0025 says
+   * so too. Checked here as well so the refusal is a sentence rather than a
+   * Postgres exception, and so a role that has since been deleted is caught
+   * before it leaves an administrator attached to nothing.
+   */
+  if (body.role_id !== undefined) {
+    const roleGate = await requireCapability('manage_roles');
+    if ('refusal' in roleGate) return roleGate.refusal;
+
+    const { data: theRole } = await supabase
+      .from('roles')
+      .select('id')
+      .eq('id', body.role_id)
+      .maybeSingle();
+    if (!theRole)
+      return NextResponse.json({ error: 'That role no longer exists.' }, { status: 422 });
+
+    patch.role_id = body.role_id;
+    // A role is only meaningful on an administrator.
+    patch.role = 'admin';
+  }
+
   if (!Object.keys(patch).length)
     return NextResponse.json({ error: 'Nothing to update.' }, { status: 422 });
 
@@ -79,7 +102,8 @@ export async function PATCH(request: Request) {
 
   // Making somebody an administrator, or taking it away, must be felt at once
   // rather than after the guard's cache has aged out.
-  if (patch.role !== undefined || patch.is_blocked) forgetIdentities();
+  if (patch.role !== undefined || patch.role_id !== undefined || patch.is_blocked)
+    forgetIdentities();
 
   return NextResponse.json({ member: data });
 }
@@ -114,7 +138,7 @@ export async function POST(request: Request) {
     mobile?: string;
     password?: string;
     role?: string;
-    admin_level?: string;
+    role_id?: string;
   };
   try {
     body = await request.json();
@@ -131,15 +155,23 @@ export async function POST(request: Request) {
   const mobile = (body.mobile ?? '').trim();
   const password = body.password ?? '';
   const role = body.role === 'admin' ? 'admin' : 'member';
-  const adminLevelWanted = ['master', 'reports', 'intake'].includes(body.admin_level ?? '')
-    ? (body.admin_level as string)
-    : 'master';
+  const roleId = (body.role_id ?? '').trim() || null;
 
   // Making another administrator is a different permission from adding a
   // member, and only a master has it.
   if (role === 'admin') {
     const adminGate = await requireCapability('create_admins');
     if ('refusal' in adminGate) return adminGate.refusal;
+
+    if (roleId) {
+      const { data: theRole } = await adminGate.supabase
+        .from('roles')
+        .select('id')
+        .eq('id', roleId)
+        .maybeSingle();
+      if (!theRole)
+        return NextResponse.json({ error: 'That role no longer exists.' }, { status: 422 });
+    }
   }
 
   const errors: Record<string, string> = {};
@@ -178,9 +210,10 @@ export async function POST(request: Request) {
     );
   }
 
-  // Absent until migration 0015; without it every administrator is a master,
-  // which is what they all were before levels existed.
-  const levelsReady = await columnReady(admin, 'profiles', 'admin_level');
+  // Absent until migration 0025. Without it there is nothing to assign, and
+  // the administrator falls back to a master — which is what every
+  // administrator was before roles existed.
+  const rolesReady = await columnReady(admin, 'profiles', 'role_id');
 
   const { error: profileError } = await admin.from('profiles').insert({
     id: created.user.id,
@@ -192,7 +225,7 @@ export async function POST(request: Request) {
     email,
     mobile,
     role,
-    ...(role === 'admin' && levelsReady ? { admin_level: adminLevelWanted } : {}),
+    ...(role === 'admin' && rolesReady && roleId ? { role_id: roleId } : {}),
   });
 
   if (profileError) {

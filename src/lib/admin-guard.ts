@@ -1,7 +1,12 @@
 import { redirect } from 'next/navigation';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
-import { levelOf, can, firstAllowed, type AdminLevel, type Capability } from './permissions';
-import { rowHasColumn } from './schema';
+import {
+  can,
+  firstAllowed,
+  grantFromLevel,
+  type Capability,
+  type Grant,
+} from './permissions';
 import { currentSession, forgetSessions, type Session, type SessionProfile } from './session';
 
 export type AdminProfile = SessionProfile;
@@ -9,44 +14,66 @@ export type AdminProfile = SessionProfile;
 export interface AdminIdentity {
   user: User;
   profile: AdminProfile;
-  level: AdminLevel;
+  grant: Grant;
 }
 
-/** Forget every established session — called when a role or level changes. */
+/** Forget every established session — called when a role or grant changes. */
 export const forgetIdentities = forgetSessions;
+
+/** The role as PostgREST embeds it, when 0025 has run. */
+interface EmbeddedRole {
+  id: string;
+  name: string;
+  is_master: boolean;
+  role_capabilities: { capability: string }[] | null;
+}
+
+/**
+ * What this administrator may do.
+ *
+ * Read from the role on their profile, which arrived with the session in one
+ * query. An administrator with no role yet — which 0025 should leave none of —
+ * falls back to the level they had, so a deploy landing before its migration
+ * does not lock the office out.
+ */
+function grantOf(profile: AdminProfile | null): Grant | null {
+  if (!profile || profile.role !== 'admin') return null;
+
+  const role = (profile as { roles?: EmbeddedRole | null }).roles;
+  if (role) {
+    return {
+      roleId: role.id,
+      roleName: role.name,
+      isMaster: Boolean(role.is_master),
+      capabilities: (role.role_capabilities ?? []).map((c) => c.capability as Capability),
+    };
+  }
+
+  return grantFromLevel(profile.role, profile.admin_level);
+}
 
 /**
  * Who is asking, and may they.
  *
- * Every admin page and every admin write passes through here. It used to cost
- * three round trips to Supabase — verify the token, read the profile, then ask
- * the database whether a column existed — and most routes then asked the same
- * two questions again on their own.
- *
- * All three are gone. The session is established once per request and shared
- * (see lib/session), and the column probe was never needed: the profile row is
- * already in hand and `select *` omits a column that does not exist, so its
- * presence answers the question for nothing.
+ * Every admin page and every admin write passes through here. The session is
+ * established once per request and shared (see lib/session), so this costs
+ * nothing beyond reading what is already in hand.
  */
 export async function adminIdentity(): Promise<
   { supabase: SupabaseClient; identity: AdminIdentity | null } & Session
 > {
   const { supabase, signedIn, user, profile } = await currentSession();
 
-  // Which kind of administrator. Absent until migration 0015 lands, in which
-  // case everyone is a master — exactly what they were before levels existed,
-  // so a deploy that outruns the SQL changes nobody's access.
-  const levelled = rowHasColumn(profile, 'admin_level');
-  const level = levelOf(profile?.role, levelled ? (profile?.admin_level ?? null) : null);
-  const identity = user && profile && level ? { user, profile, level } : null;
+  const grant = grantOf(profile);
+  const identity = user && profile && grant ? { user, profile, grant } : null;
 
   return { supabase, signedIn, user, profile, identity };
 }
 
-/** The asker's level, or null if they are not an administrator. */
-export async function adminLevel(): Promise<AdminLevel | null> {
+/** What the asker may do, or null if they are not an administrator. */
+export async function adminGrant(): Promise<Grant | null> {
   const { identity } = await adminIdentity();
-  return identity?.level ?? null;
+  return identity?.grant ?? null;
 }
 
 /**
@@ -54,18 +81,18 @@ export async function adminLevel(): Promise<AdminLevel | null> {
  * can, rather than to an error — they have not done anything wrong, the link
  * simply was not theirs.
  */
-export async function requirePage(capability: Capability): Promise<AdminLevel> {
-  const level = await adminLevel();
-  if (!level) redirect('/');
-  if (!can(level, capability)) redirect(firstAllowed(level));
-  return level;
+export async function requirePage(capability: Capability): Promise<Grant> {
+  const grant = await adminGrant();
+  if (!grant) redirect('/');
+  if (!can(grant, capability)) redirect(firstAllowed(grant));
+  return grant;
 }
 
 /** Guard an API route. Returns the refusal to send, or what the route needs. */
 export async function requireCapability(
   capability: Capability
 ): Promise<
-  | { level: AdminLevel; supabase: SupabaseClient; user: User; profile: AdminProfile }
+  | { grant: Grant; level: Grant; supabase: SupabaseClient; user: User; profile: AdminProfile }
   | { refusal: Response }
 > {
   const { supabase, identity } = await adminIdentity();
@@ -75,7 +102,7 @@ export async function requireCapability(
       refusal: Response.json({ error: 'Administrators only.' }, { status: 403 }),
     };
 
-  if (!can(identity.level, capability))
+  if (!can(identity.grant, capability))
     return {
       refusal: Response.json(
         { error: 'Your administrator account does not have access to this.' },
@@ -83,5 +110,13 @@ export async function requireCapability(
       ),
     };
 
-  return { level: identity.level, supabase, user: identity.user, profile: identity.profile };
+  return {
+    grant: identity.grant,
+    // Kept under its old name too: routes written against the level API read
+    // `gate.level`, and a grant answers the same questions.
+    level: identity.grant,
+    supabase,
+    user: identity.user,
+    profile: identity.profile,
+  };
 }

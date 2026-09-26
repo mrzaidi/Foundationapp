@@ -5030,3 +5030,74 @@ table.grid td {
   color: var(--text-faint);
   font-weight: 650;
 }
+
+/* =====================================================================
+   Roles: the capability grid
+   
+   Ticking what a role opens is the one screen where somebody is reading
+   a long list of similar things and deciding on each. So each row says
+   what it grants in plain words and, where it turns a section on, which
+   section — the connection between "See applications" and the word
+   Applications in the sidebar should not have to be remembered.
+   ===================================================================== */
+.capgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.capbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.capbox:hover {
+  border-color: var(--brand-1);
+}
+.capbox.on {
+  border-color: var(--brand-1);
+  background: rgba(20, 184, 146, 0.07);
+}
+.capbox:focus-visible {
+  outline: 2px solid var(--brand-1);
+  outline-offset: 2px;
+}
+.capbox .capmark {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  margin-top: 1px;
+  border-radius: 5px;
+  border: 1.5px solid var(--border);
+  display: grid;
+  place-items: center;
+  background: #fff;
+}
+.capbox.on .capmark {
+  background: var(--brand-1);
+  border-color: var(--brand-1);
+  color: #fff;
+}
+.capbox .capmark svg {
+  width: 12px;
+  height: 12px;
+}
+.capbox .capname {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.capbox .capmod {
+  display: block;
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}

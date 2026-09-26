@@ -5,16 +5,16 @@ import { usePathname, useRouter } from 'next/navigation';
 import Icon from './Icon';
 import { createClient } from '@/lib/supabase/client';
 import { initials } from '@/lib/format';
-import { LEVEL_LABEL, MODULES, can, type AdminLevel } from '@/lib/permissions';
+import { MODULES, can, type Grant } from '@/lib/permissions';
 
 interface Props {
   name: string;
   email: string;
   pending: number;
-  level: AdminLevel | null;
+  grant: Grant | null;
 }
 
-export default function AdminSidebar({ name, email, pending, level }: Props) {
+export default function AdminSidebar({ name, email, pending, grant }: Props) {
   const path = usePathname();
   const router = useRouter();
 
@@ -41,8 +41,8 @@ export default function AdminSidebar({ name, email, pending, level }: Props) {
       {/* Only what this administrator may actually open. The pages refuse it
           again on the server — a hidden link is tidiness, not a rule. */}
       <nav>
-        {(['Overview', 'Manage'] as const).map((group) => {
-          const items = MODULES.filter((m) => m.group === group && can(level, m.needs));
+        {(['Overview', 'Manage', 'Settings'] as const).map((group) => {
+          const items = MODULES.filter((m) => m.group === group && can(grant, m.needs));
           if (!items.length) return null;
           return (
             <div key={group}>
@@ -65,7 +65,7 @@ export default function AdminSidebar({ name, email, pending, level }: Props) {
         <div className="av">{initials(name)}</div>
         <div className="who">
           <div className="wn">{name}</div>
-          <div className="we">{level ? LEVEL_LABEL[level] : email}</div>
+          <div className="we">{grant?.roleName ?? email}</div>
         </div>
         <button className="out" onClick={signOut} aria-label="Sign out" type="button">
           <Icon name="logout" />

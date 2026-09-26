@@ -19,7 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!signedIn) redirect('/login?next=/admin');
   if (!identity) redirect('/');
 
-  const { profile, level } = identity;
+  const { profile, grant } = identity;
 
   const { count: pending } = await supabase
     .from('fund_requests')
@@ -35,7 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             name={profile.full_name ?? 'Administrator'}
             email={profile.email ?? ''}
             pending={pending ?? 0}
-            level={level}
+            grant={grant}
           />
           <main className="main">{children}</main>
         </div>

@@ -66,13 +66,30 @@ export function forgetSessions() {
   established.clear();
 }
 
+/*
+ * The profile, with the role it holds and everything that role grants, in one
+ * query. Asking separately would put the permission lookup back on the request
+ * path that lib/session exists to keep clear.
+ *
+ * The embed needs the tables from 0025. Until that migration runs PostgREST
+ * rejects the whole select, so a rejection falls back to the plain profile and
+ * the caller works from the old level — the same way every other feature here
+ * waits for its SQL rather than taking the portal down.
+ */
+const WITH_ROLE = '*, roles ( id, name, is_master, role_capabilities ( capability ) )';
+
 async function verify(supabase: SupabaseClient): Promise<Session> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NOBODY;
 
-  const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  const joined = await supabase.from('profiles').select(WITH_ROLE).eq('id', user.id).single();
+
+  const { data } = joined.error
+    ? await supabase.from('profiles').select('*').eq('id', user.id).single()
+    : joined;
+
   return { signedIn: true, user, profile: (data as SessionProfile | null) ?? null };
 }
 

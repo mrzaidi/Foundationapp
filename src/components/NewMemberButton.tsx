@@ -1,21 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from './Icon';
 import Modal from './Modal';
 import { useToast } from './Toast';
 
-import { LEVEL_BLURB, LEVEL_LABEL, type AdminLevel } from '@/lib/permissions';
+interface Role {
+  id: string;
+  name: string;
+  description: string | null;
+  is_master: boolean;
+  capability_count: number;
+}
 
-type Kind = 'member' | AdminLevel;
-
-const KINDS: { k: Kind; label: string; icon: string; blurb: string }[] = [
-  { k: 'member', label: 'Member', icon: 'user', blurb: 'Applies for funds. Sees only their own applications.' },
-  { k: 'master', label: LEVEL_LABEL.master, icon: 'shield', blurb: LEVEL_BLURB.master },
-  { k: 'reports', label: LEVEL_LABEL.reports, icon: 'eye', blurb: LEVEL_BLURB.reports },
-  { k: 'intake', label: LEVEL_LABEL.intake, icon: 'users', blurb: LEVEL_BLURB.intake },
-];
+const MEMBER = 'member';
 
 const BLANK = {
   full_name: '',
@@ -44,10 +43,37 @@ export default function NewMemberButton() {
   const toast = useToast();
 
   const [open, setOpen] = useState(false);
-  const [kind, setKind] = useState<Kind>('member');
+  /** 'member', or the id of a role from the database. */
+  const [kind, setKind] = useState<string>(MEMBER);
+  const [roles, setRoles] = useState<Role[]>([]);
+
+  /*
+   * The roles are whatever the foundation has made up, so they are fetched
+   * rather than listed here. Only somebody who may manage roles can read them
+   * back; for everybody else the list stays empty and this creates members,
+   * which is the only thing they could do with it anyway.
+   */
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch('/api/admin/roles');
+        const json = await res.json();
+        if (!cancelled && res.ok) setRoles(json.roles ?? []);
+      } catch {
+        if (!cancelled) setRoles([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
   const [form, setForm] = useState(BLANK);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+
+  const chosen = roles.find((r) => r.id === kind) ?? null;
 
   const set = (k: keyof typeof BLANK, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -56,7 +82,7 @@ export default function NewMemberButton() {
     setOpen(false);
     setForm(BLANK);
     setErrors({});
-    setKind('member');
+    setKind(MEMBER);
   }
 
   /** Something they can read out over a counter without misreading it. */
@@ -77,8 +103,8 @@ export default function NewMemberButton() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
-          role: kind === 'member' ? 'member' : 'admin',
-          admin_level: kind === 'member' ? undefined : kind,
+          role: kind === MEMBER ? 'member' : 'admin',
+          role_id: kind === MEMBER ? undefined : kind,
         }),
       });
       const json = await res.json();
@@ -133,32 +159,44 @@ export default function NewMemberButton() {
 
           <form onSubmit={submit} className="form-grid">
             {/* What kind of account. Each says what it grants, because the
-                difference between these four is entirely what they can reach
-                and nobody should have to remember which is which. */}
+                difference between them is entirely what they can reach and
+                nobody should have to remember which is which. */}
             <div className="field span-2">
               <label>What kind of account?</label>
               <div className="kindchoice">
-                {KINDS.map((k) => (
+                <button
+                  type="button"
+                  className={`paybtn ${kind === MEMBER ? 'on' : ''}`}
+                  onClick={() => setKind(MEMBER)}
+                  aria-pressed={kind === MEMBER}
+                >
+                  <Icon name="user" />
+                  Member
+                </button>
+                {roles.map((r) => (
                   <button
-                    key={k.k}
+                    key={r.id}
                     type="button"
-                    className={`paybtn ${kind === k.k ? 'on' : ''}`}
-                    onClick={() => setKind(k.k)}
-                    aria-pressed={kind === k.k}
+                    className={`paybtn ${kind === r.id ? 'on' : ''}`}
+                    onClick={() => setKind(r.id)}
+                    aria-pressed={kind === r.id}
                   >
-                    <Icon name={k.icon} />
-                    {k.label}
+                    <Icon name={r.is_master ? 'shield' : 'lock'} />
+                    {r.name}
                   </button>
                 ))}
               </div>
               <p
                 className="err-msg"
                 style={{
-                  color: kind === 'master' ? 'var(--st-review)' : 'var(--text-faint)',
-                  fontWeight: kind === 'master' ? 600 : 500,
+                  color: chosen?.is_master ? 'var(--st-review)' : 'var(--text-faint)',
+                  fontWeight: chosen?.is_master ? 600 : 500,
                 }}
               >
-                {KINDS.find((k) => k.k === kind)?.blurb}
+                {kind === MEMBER
+                  ? 'Applies for funds. Sees only their own applications.'
+                  : (chosen?.description ??
+                     `Opens whatever the ${chosen?.name ?? 'role'} role has been given.`)}
               </p>
             </div>
 
@@ -241,7 +279,11 @@ export default function NewMemberButton() {
                 type="submit"
               >
                 {busy ? <span className="spin" /> : <Icon name="check" />}
-                {busy ? 'Creating…' : kind === 'member' ? 'Create member' : 'Create ' + (KINDS.find((k) => k.k === kind)?.label ?? 'account')}
+                {busy
+                  ? 'Creating…'
+                  : kind === MEMBER
+                    ? 'Create member'
+                    : `Create ${chosen?.name ?? 'account'}`}
               </button>
             </div>
           </form>
