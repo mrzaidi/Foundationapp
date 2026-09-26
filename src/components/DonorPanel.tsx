@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Icon from './Icon';
-import MemberPicker, { type Candidate } from './MemberPicker';
 import { useToast } from './Toast';
 import { money } from '@/lib/format';
 
@@ -58,8 +57,12 @@ export default function DonorPanel() {
   const [busy, setBusy] = useState(false);
 
   const [adding, setAdding] = useState(false);
-  const [picked, setPicked] = useState<Candidate | null>(null);
+  const [name, setName] = useState('');
+  const [contact, setContact] = useState('');
+  const [email, setEmail] = useState('');
+  const [city, setCity] = useState('');
   const [pledge, setPledge] = useState('');
+  const [note, setNote] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -84,8 +87,8 @@ export default function DonorPanel() {
   }, [load]);
 
   async function add() {
-    if (!picked) {
-      toast('Choose a member first.', 'bad');
+    if (name.trim().length < 2) {
+      toast('Enter the donor’s name.', 'bad');
       return;
     }
     setBusy(true);
@@ -94,15 +97,23 @@ export default function DonorPanel() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: picked.id,
+          name: name.trim(),
+          contact: contact.trim(),
+          email: email.trim(),
+          city: city.trim(),
+          note: note.trim(),
           monthly_pledge: pledge === '' ? 0 : Number(pledge),
         }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-      toast(`${picked.full_name} added`);
-      setPicked(null);
+      toast(`${name.trim()} added`);
+      setName('');
+      setContact('');
+      setEmail('');
+      setCity('');
       setPledge('');
+      setNote('');
       setAdding(false);
       await load();
     } catch (e) {
@@ -147,9 +158,57 @@ export default function DonorPanel() {
         <div className="panel-body donor-add">
           <div className="donor-add-row">
             <div className="field mb-0">
-              <label>Member</label>
-              <MemberPicker value={picked} onPick={setPicked} />
+              <label htmlFor="dn_name">
+                Donor&rsquo;s name <span className="req-star">*</span>
+              </label>
+              <input
+                id="dn_name"
+                className="input"
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="The name to thank, and to put on the receipt"
+              />
             </div>
+            <div className="field mb-0">
+              <label htmlFor="dn_contact">Contact number</label>
+              <input
+                id="dn_contact"
+                className="input"
+                dir="ltr"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder="03xx xxxxxxx"
+              />
+            </div>
+          </div>
+
+          <div className="donor-add-row mt-16">
+            <div className="field mb-0">
+              <label htmlFor="dn_email">Email</label>
+              <input
+                id="dn_email"
+                className="input"
+                type="email"
+                dir="ltr"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Where the receipt goes"
+              />
+            </div>
+            <div className="field mb-0">
+              <label htmlFor="dn_city">City</label>
+              <input
+                id="dn_city"
+                className="input"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="Karachi, Dubai, London…"
+              />
+            </div>
+          </div>
+
+          <div className="donor-add-row mt-16">
             <div className="field mb-0">
               <label htmlFor="dn_pledge">Monthly pledge (PKR)</label>
               <input
@@ -162,14 +221,26 @@ export default function DonorPanel() {
                 placeholder="0"
               />
             </div>
+            <div className="field mb-0">
+              <label htmlFor="dn_note">Note</label>
+              <input
+                id="dn_note"
+                className="input"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Anything the office should remember"
+              />
+            </div>
           </div>
+
           <button className="admin-btn mt-16" type="button" onClick={add} disabled={busy}>
             {busy ? <span className="spin" /> : <Icon name="check" />}
             Add donor
           </button>
           <p className="field-hint">
-            Donors are chosen from registered members. The pledge is what they said they would
-            give; only what is recorded against them counts toward the fund.
+            A donor is their own record — they do not need a member account, and most will never
+            have one. The pledge is what they said they would give; only what is actually
+            recorded against them counts toward the month&rsquo;s fund.
           </p>
         </div>
       )}

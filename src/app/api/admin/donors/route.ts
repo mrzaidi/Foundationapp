@@ -53,57 +53,78 @@ export async function GET(request: Request) {
 }
 
 /**
- * POST /api/admin/donors — add a member as a donor.
+ * POST /api/admin/donors — add a donor.
  *
- * A donor is an account, not a typed name: free text let the same person in
- * twice under two spellings and tied their giving to nothing.
+ * A donor is their own record, not a member who happens to give. The people
+ * who fund this foundation are largely not the people it helps: a benefactor
+ * abroad, a shopkeeper down the road, a family trust. None of them want a
+ * member account and none of them should need one, so the office writes down
+ * what it knows and that is the donor.
+ *
+ * The name is the only requirement. Everything else is whatever was to hand
+ * when they gave.
  */
 export async function POST(request: Request) {
-  const level = await requireCapability('view_donors');
-  if ('refusal' in level) return level.refusal;
+  const gate = await requireCapability('view_donors');
+  if ('refusal' in gate) return gate.refusal;
 
-  const gate = await requireAdmin();
-  if (gate.error) return gate.error;
-
-  let body: { user_id?: string; monthly_pledge?: number; note?: string };
+  let body: {
+    name?: string;
+    contact?: string;
+    email?: string;
+    city?: string;
+    address?: string;
+    monthly_pledge?: number | string;
+    note?: string;
+  };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
   }
 
-  const userId = (body.user_id ?? '').trim();
-  if (!userId) return NextResponse.json({ error: 'Choose a member.' }, { status: 422 });
+  const clean = (v: unknown) => (typeof v === 'string' ? v.trim() : '') || null;
 
-  const { data: member } = await gate
-    .supabase!.from('profiles')
-    .select('id, full_name, mobile')
-    .eq('id', userId)
-    .maybeSingle();
-  if (!member) return NextResponse.json({ error: 'Member not found.' }, { status: 404 });
+  const name = (body.name ?? '').trim();
+  if (name.length < 2)
+    return NextResponse.json({ error: 'Enter the donor’s name.' }, { status: 422 });
 
-  const pledge = body.monthly_pledge === undefined ? 0 : Number(body.monthly_pledge);
+  const email = clean(body.email);
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+    return NextResponse.json({ error: 'Enter a valid email address.' }, { status: 422 });
+
+  const pledge =
+    body.monthly_pledge === undefined || body.monthly_pledge === '' ? 0 : Number(body.monthly_pledge);
   if (!Number.isFinite(pledge) || pledge < 0)
     return NextResponse.json({ error: 'Enter a valid monthly pledge.' }, { status: 422 });
 
-  const { data, error } = await gate
-    .supabase!.from('donors')
+  const { data, error } = await gate.supabase
+    .from('donors')
     .insert({
-      user_id: member.id,
-      // Kept as a display fallback if the account is ever removed.
-      name: member.full_name,
-      contact: member.mobile,
+      name,
+      contact: clean(body.contact),
+      email,
+      city: clean(body.city),
+      address: clean(body.address),
       monthly_pledge: pledge,
-      note: (body.note ?? '').trim() || null,
+      note: clean(body.note),
     })
     .select()
     .single();
 
+  // The email, city and address columns arrive with 0024; until it runs the
+  // insert is rejected for naming them, which is a migration problem and
+  // should say so rather than reading as a bad form.
   if (error) {
-    const duplicate = /duplicate|unique/i.test(error.message);
+    const missing = /column .* does not exist|schema cache/i.test(error.message);
     return NextResponse.json(
-      { error: duplicate ? 'That member is already a donor.' : error.message },
-      { status: duplicate ? 409 : 400 }
+      {
+        error: missing
+          ? 'Adding a donor needs migration 0024. Run it, then try again.'
+          : error.message,
+        ...(missing ? { code: 'migration_required' } : {}),
+      },
+      { status: missing ? 503 : 400 }
     );
   }
   return NextResponse.json({ donor: data }, { status: 201 });
