@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { requireCapability } from '@/lib/admin-guard';
+import { columnReady } from '@/lib/schema';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const INCOME_SOURCES = ['labour', 'business', 'job', 'pension', 'other'];
+/** Matches the check constraint in 0027. */
+const CURRENCIES = ['PKR', 'USD', 'GBP', 'EUR', 'SAR', 'AED', 'CAD', 'AUD'];
 const MAX_MEMBERS = 60;
 
 /** Money and counts arrive as strings from a form; blank means "not recorded". */
@@ -62,9 +66,14 @@ function shape(body: Record<string, unknown>): { row: Record<string, unknown> } 
   if (totalMembers !== null && male !== null && female !== null && male + female > totalMembers)
     return { bad: 'Male and female counts add up to more than the total.' };
 
+  const currency = (text(body.currency) ?? 'PKR').toUpperCase();
+  if (!CURRENCIES.includes(currency))
+    return { bad: 'That is not a currency the foundation records.' };
+
   return {
     row: {
       head_name: head,
+      currency,
       father_name: text(body.father_name),
       father_mobile: text(body.father_mobile),
       father_status: status,
@@ -91,6 +100,22 @@ function shape(body: Record<string, unknown>): { row: Record<string, unknown> } 
       fund_reason: text(body.fund_reason),
     },
   };
+}
+
+/*
+ * The column arrives with 0027. Until it does, a row carrying it is rejected
+ * wholesale and saving a household would break for a field nobody has asked
+ * for yet — so it is dropped until the migration lands, and picked up the
+ * moment it does.
+ */
+async function withCurrency(
+  supabase: SupabaseClient,
+  row: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  if (await columnReady(supabase, 'families', 'currency')) return row;
+  const { currency, ...rest } = row;
+  void currency;
+  return rest;
 }
 
 const read = async (request: Request) => {
@@ -138,7 +163,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await gate.supabase
     .from('families')
-    .insert({ ...shaped.row, created_by: gate.user.id, updated_by: gate.user.id })
+    .insert({ ...(await withCurrency(gate.supabase, shaped.row)), created_by: gate.user.id, updated_by: gate.user.id })
     .select()
     .single();
 
@@ -162,7 +187,7 @@ export async function PUT(request: Request) {
 
   const { data, error } = await gate.supabase
     .from('families')
-    .update({ ...shaped.row, updated_by: gate.user.id })
+    .update({ ...(await withCurrency(gate.supabase, shaped.row)), updated_by: gate.user.id })
     .eq('id', id)
     .select()
     .single();

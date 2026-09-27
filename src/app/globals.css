@@ -1949,7 +1949,9 @@ select.input {
   flex: 1;
   min-width: 210px;
 }
-.search svg {
+/* The magnifier only. A button inside the box has its own icon, and it
+   must not be dragged to the left edge with pointer events off. */
+.search > svg {
   position: absolute;
   left: 13px;
   top: 50%;
@@ -1961,7 +1963,8 @@ select.input {
 }
 .search input {
   width: 100%;
-  padding: 10px 14px 10px 39px;
+  /* Room on the end for Search, and for the clear button when it is there. */
+  padding: 10px 96px 10px 39px;
   border-radius: 12px;
   border: 1.5px solid var(--border);
   font-family: inherit;
@@ -5100,4 +5103,67 @@ table.grid td {
   font-size: 11px;
   color: var(--text-faint);
   margin-top: 2px;
+}
+
+/* The search box's own buttons.
+   Pinned to the end of the field rather than sitting after it, so the box
+   stays one object and the toolbar row does not grow a third column. */
+.search .s-go {
+  position: absolute;
+  inset-inline-end: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: var(--brand-1);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 13px;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.search .s-go:hover {
+  background: var(--brand-2);
+}
+.search .s-clear {
+  position: absolute;
+  inset-inline-end: 74px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+  line-height: 0;
+}
+.search .s-clear:hover {
+  color: var(--danger);
+}
+.search .s-clear svg {
+  width: 15px;
+  height: 15px;
+}
+.search .s-go:focus-visible,
+.search .s-clear:focus-visible {
+  outline: 2px solid var(--brand-1);
+  outline-offset: 2px;
+}
+
+/* A household that does not earn in rupees says so beside the figure. Without
+   it the number reads as PKR and a £1,750 rent looks like a small one. */
+.curtag {
+  display: inline-block;
+  margin-inline-start: 5px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(224, 165, 43, 0.16);
+  color: var(--brand-3);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
 }

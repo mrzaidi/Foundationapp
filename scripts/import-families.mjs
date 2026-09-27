@@ -113,15 +113,31 @@ function money(raw) {
   if (s === null) return { value: null, why: null };
   if (isZero(s)) return { value: 0, why: null };
 
-  if (/[£$€]/.test(s)) return { value: null, why: 'in another currency' };
-  if (/\b(under|below|up to|more than|above|over|se zyada|سے زیادہ|تک)\b/i.test(s) || /\+/.test(s))
-    return { value: null, why: 'a range, not a figure' };
+  /*
+   * Which currency the family answered in.
+   *
+   * These used to be refused outright, which left two households in pounds
+   * looking as though they had told us nothing. The figure is theirs and it is
+   * real; what was missing was somewhere to say it is not rupees.
+   */
+  const CURRENCIES = [
+    [/£|\bgbp\b|\bpounds?\b/i, 'GBP'],
+    [/€|\beur\b|\beuros?\b/i, 'EUR'],
+    [/\$|\busd\b|\bdollars?\b/i, 'USD'],
+    [/\bsar\b|\briyals?\b/i, 'SAR'],
+    [/\baed\b|\bdirhams?\b/i, 'AED'],
+  ];
+  const found = CURRENCIES.find(([re]) => re.test(s));
+  const currency = found ? found[1] : null;
 
-  // Rupee markers are not part of the figure. Stripping them is safe because
-  // another currency has already been refused above.
+  if (/\b(under|below|up to|more than|above|over|se zyada|سے زیادہ|تک)\b/i.test(s) || /\+/.test(s))
+    return { value: null, why: 'a range, not a figure', currency };
+
+  // Currency markers are not part of the figure, whichever currency it is.
   const cleaned = s
     .replace(/,/g, '')
-    .replace(/\b(rs|pkr|rupees?)\b\.?:?/gi, ' ')
+    .replace(/[£€$]/g, ' ')
+    .replace(/\b(rs|pkr|rupees?|gbp|eur|usd|sar|aed|pounds?|euros?|dollars?)\b\.?:?/gi, ' ')
     .replace(/روپیہ|روپے/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -129,25 +145,25 @@ function money(raw) {
   // 2 lakh · دو لاکھ
   if (/لاکھ|lakh/i.test(cleaned)) {
     const n = Number((cleaned.match(/(\d+(?:\.\d+)?)/) ?? [])[1]);
-    if (Number.isFinite(n)) return { value: Math.round(n * 100000), why: null };
-    if (/^دو\s*لاکھ$/.test(cleaned)) return { value: 200000, why: null };
-    return { value: null, why: 'written in words' };
+    if (Number.isFinite(n)) return { value: Math.round(n * 100000), why: null, currency };
+    if (/^دو\s*لاکھ$/.test(cleaned)) return { value: 200000, why: null, currency };
+    return { value: null, why: 'written in words', currency };
   }
 
   // 300k · 50 k
   const k = cleaned.match(/^(\d+(?:\.\d+)?)\s*k$/i);
-  if (k) return { value: Math.round(Number(k[1]) * 1000), why: null };
+  if (k) return { value: Math.round(Number(k[1]) * 1000), why: null, currency };
 
   // 54 thousand · 30000 thousend (a spelling of the number already given)
   const thousand = cleaned.match(/^(\d+(?:\.\d+)?)\s*(thousand|thousend|housend|ہزار)/i);
   if (thousand) {
     const n = Number(thousand[1]);
     // "30000 thousend" means 30000, not thirty million.
-    return { value: n >= 1000 ? Math.round(n) : Math.round(n * 1000), why: null };
+    return { value: n >= 1000 ? Math.round(n) : Math.round(n * 1000), why: null, currency };
   }
 
   const plain = cleaned.match(/^(\d+(?:\.\d+)?)$/);
-  if (plain) return { value: Math.round(Number(plain[1])), why: null };
+  if (plain) return { value: Math.round(Number(plain[1])), why: null, currency };
 
   /*
    * One number and some words around it — "70000/مبلغ ستر ہزار روپیہ",
@@ -161,10 +177,10 @@ function money(raw) {
     const n = Number(numbers[0]);
     // A bare 10 beside the word for thousand was handled above; anything this
     // small standing alone in a sentence is more likely a count than money.
-    if (n >= 100) return { value: Math.round(n), why: null };
+    if (n >= 100) return { value: Math.round(n), why: null, currency };
   }
 
-  return { value: null, why: 'could not be read as a figure' };
+  return { value: null, why: 'could not be read as a figure', currency };
 }
 
 /** A count, or nothing. */
@@ -257,7 +273,15 @@ for (const [i, r] of rows.entries()) {
   }
 
   const notes = [];
+  /*
+   * A household answers in one currency, so the currencies its money fields
+   * carry are collected here rather than stored per amount. Two different ones
+   * in the same household is a filling-in problem, not a fact, and is said so.
+   */
+  const currencies = new Set();
+
   const note = (label, res, original) => {
+    if (res.currency) currencies.add(res.currency);
     if (res.why) notes.push(`${label}: ${res.why} — the form says “${String(original).trim()}”`);
     return res.value;
   };
@@ -296,7 +320,14 @@ for (const [i, r] of rows.entries()) {
   const row = {
     head_name: head,
     father_name: text(r[Q.father]),
+    /*
+     * The form asks for one number, right after the father's name, and that
+     * is the number the office means when it says the father's mobile. It
+     * fills both: the household's contact, which is what the list shows, and
+     * the father's, which is where staff look for it on the record.
+     */
     contact: text(r[Q.mobile]),
+    father_mobile: text(r[Q.mobile]),
     address: text(r[Q.address]),
 
     children_count: c,
@@ -330,8 +361,24 @@ for (const [i, r] of rows.entries()) {
     submitted_at: stamp(r[Q.timestamp]),
 
     source_row: r,
-    intake_notes: notes.length ? notes.join('\n') : null,
   };
+
+  /*
+   * Both of these are decided from what the money fields turned up, so they
+   * are set after the row rather than inside it — a property that reads a list
+   * the properties above it are still filling is a trap for whoever reorders
+   * them next.
+   */
+  if (currencies.size === 1) {
+    row.currency = [...currencies][0];
+  } else if (currencies.size > 1) {
+    row.currency = 'PKR';
+    notes.push(
+      `Currency: the form mixes ${[...currencies].join(' and ')} — left as PKR, please check.`
+    );
+  }
+
+  row.intake_notes = notes.length ? notes.join('\n') : null;
 
   prepared.push({ line, head, row, notes });
 }
@@ -362,6 +409,29 @@ if (!WRITE) {
 
 /* -------------------------------------------------------------- the writing */
 console.log('\n  WRITING\n');
+
+/*
+ * Only write columns the table actually has.
+ *
+ * The importer runs against whatever migrations have been applied, and a row
+ * naming a column that is not there yet is rejected whole — so a household
+ * would fail entirely over one field nobody has added. Anything missing is
+ * dropped and named, and a later run fills it in.
+ */
+const probe = await db.from('families').select('*').limit(1);
+const known = probe.data?.[0] ? new Set(Object.keys(probe.data[0])) : null;
+const dropped = new Set();
+
+const fit = (row) => {
+  if (!known) return row;
+  const out = {};
+  for (const [k, v] of Object.entries(row)) {
+    if (known.has(k)) out[k] = v;
+    else dropped.add(k);
+  }
+  return out;
+};
+
 let added = 0;
 let updated = 0;
 let failed = 0;
@@ -377,8 +447,8 @@ for (const p of prepared) {
     .maybeSingle();
 
   const { error } = existing
-    ? await db.from('families').update(p.row).eq('id', existing.id)
-    : await db.from('families').insert(p.row);
+    ? await db.from('families').update(fit(p.row)).eq('id', existing.id)
+    : await db.from('families').insert(fit(p.row));
 
   if (error) {
     console.log(`    FAILED  ${p.head}: ${error.message}`);
@@ -389,5 +459,10 @@ for (const p of prepared) {
 }
 
 console.log(`\n    added ${added}, updated ${updated}, failed ${failed}`);
+if (dropped.size)
+  console.log(
+    `    not written — no such column yet: ${[...dropped].join(', ')}\n` +
+      `    run the migration that adds it, then this script again.`
+  );
 const { count: total } = await db.from('families').select('*', { count: 'exact', head: true });
 console.log(`    families now holds ${total} household(s)\n`);

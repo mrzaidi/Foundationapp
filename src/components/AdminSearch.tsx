@@ -26,6 +26,22 @@ export default function AdminSearch({
     router.push(`${basePath}${s ? `?${s}` : ''}`);
   }
 
+  const active = (params.get('q') ?? '') !== '';
+
+  function clear() {
+    setValue('');
+    const p = new URLSearchParams(params.toString());
+    p.delete('q');
+    p.delete('page');
+    const s = p.toString();
+    router.push(`${basePath}${s ? `?${s}` : ''}`);
+  }
+
+  /*
+   * The box searched on Enter and said so nowhere, so typing into it and
+   * waiting looked like a box that did not work. A button to press and a way
+   * back to the full list are the two things it was missing.
+   */
   return (
     <form className="search" onSubmit={submit}>
       <Icon name="search" />
@@ -35,6 +51,14 @@ export default function AdminSearch({
         placeholder={placeholder}
         aria-label={placeholder}
       />
+      {active && (
+        <button type="button" className="s-clear" onClick={clear} aria-label="Clear the search">
+          <Icon name="x" />
+        </button>
+      )}
+      <button type="submit" className="s-go">
+        Search
+      </button>
     </form>
   );
 }

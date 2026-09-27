@@ -5,6 +5,24 @@ import Icon from './Icon';
 import { useToast } from './Toast';
 import { money } from '@/lib/format';
 
+/**
+ * What a household can be paid in.
+ *
+ * Most are in rupees. A few families send money home from abroad and answered
+ * the intake form in their own currency, and a figure with no currency beside
+ * it reads as rupees — which made £1,750 of rent look like a small one.
+ */
+const CURRENCIES = [
+  { code: 'PKR', label: 'PKR — Pakistani rupee' },
+  { code: 'GBP', label: 'GBP — pound sterling' },
+  { code: 'USD', label: 'USD — US dollar' },
+  { code: 'EUR', label: 'EUR — euro' },
+  { code: 'SAR', label: 'SAR — Saudi riyal' },
+  { code: 'AED', label: 'AED — UAE dirham' },
+  { code: 'CAD', label: 'CAD — Canadian dollar' },
+  { code: 'AUD', label: 'AUD — Australian dollar' },
+];
+
 const INCOME_SOURCES = [
   { key: 'labour', label: 'Labour' },
   { key: 'business', label: 'Business' },
@@ -31,6 +49,7 @@ interface Family {
   members: Person[];
   income_sources: string[];
   income_source_other: string | null;
+  currency: string | null;
   monthly_income: number | null;
   monthly_expense: number | null;
   house_type: 'own' | 'rent' | null;
@@ -62,6 +81,7 @@ const EMPTY: Draft = {
   members: [],
   income_sources: [],
   income_source_other: '',
+  currency: 'PKR',
   monthly_income: '',
   monthly_expense: '',
   house_type: '',
@@ -93,6 +113,7 @@ function draftOf(f: Family | null): Draft {
     })),
     income_sources: f.income_sources ?? [],
     income_source_other: str(f.income_source_other),
+    currency: f.currency ?? 'PKR',
     monthly_income: str(f.monthly_income),
     monthly_expense: str(f.monthly_expense),
     house_type: str(f.house_type),
@@ -333,6 +354,10 @@ export default function FamilyDetails({
               <span className="v" style={{ textTransform: 'capitalize' }}>
                 {family.house_type || '—'}
               </span>
+            </div>
+            <div className="kv">
+              <span className="k">Currency</span>
+              <span className="v">{family.currency ?? 'PKR'}</span>
             </div>
             <div className="kv">
               <span className="k">Monthly income</span>
@@ -617,9 +642,29 @@ export default function FamilyDetails({
             </div>
           )}
 
+          <div className="field">
+            <label htmlFor="f_currency">Currency</label>
+            <select
+              id="f_currency"
+              className="input"
+              value={draft.currency}
+              onChange={(e) => set('currency', e.target.value)}
+            >
+              {CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            <p className="field-hint">
+              Every figure below is in this currency. Nothing is converted — a household is
+              read in the money it actually earns and spends.
+            </p>
+          </div>
+
           <div className="row-2">
             <div className="field">
-              <label htmlFor="f_income">Monthly family income (PKR)</label>
+              <label htmlFor="f_income">Monthly family income</label>
               <input
                 id="f_income"
                 className="input"
@@ -630,7 +675,7 @@ export default function FamilyDetails({
               />
             </div>
             <div className="field">
-              <label htmlFor="f_expense">Monthly expense (PKR)</label>
+              <label htmlFor="f_expense">Monthly expense</label>
               <input
                 id="f_expense"
                 className="input"
@@ -645,7 +690,7 @@ export default function FamilyDetails({
           <div className="fam-subhead">Estimated monthly outgoings</div>
           <div className="row-2">
             <div className="field">
-              <label htmlFor="f_ke">Electricity bill — KE (PKR)</label>
+              <label htmlFor="f_ke">Electricity bill — KE</label>
               <input
                 id="f_ke"
                 className="input"
@@ -656,7 +701,7 @@ export default function FamilyDetails({
               />
             </div>
             <div className="field">
-              <label htmlFor="f_rent">Rent (PKR)</label>
+              <label htmlFor="f_rent">Rent</label>
               <input
                 id="f_rent"
                 className="input"
@@ -667,7 +712,7 @@ export default function FamilyDetails({
               />
             </div>
             <div className="field">
-              <label htmlFor="f_edu">Children&rsquo;s education (PKR)</label>
+              <label htmlFor="f_edu">Children&rsquo;s education</label>
               <input
                 id="f_edu"
                 className="input"
@@ -678,7 +723,7 @@ export default function FamilyDetails({
               />
             </div>
             <div className="field">
-              <label htmlFor="f_med">Medicine / hospital (PKR)</label>
+              <label htmlFor="f_med">Medicine / hospital</label>
               <input
                 id="f_med"
                 className="input"

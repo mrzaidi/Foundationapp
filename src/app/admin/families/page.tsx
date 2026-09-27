@@ -21,6 +21,7 @@ interface Row {
   monthly_income: number | null;
   monthly_expense: number | null;
   house_type: 'own' | 'rent' | null;
+  currency: string | null;
   updated_at: string | null;
 }
 
@@ -51,9 +52,26 @@ export default async function AdminFamiliesPage({
     .order('created_at', { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
 
-  // One column, matched by the client rather than pasted into a filter string,
-  // so a name with a comma or a bracket in it searches for itself.
-  if (q) query = query.ilike('head_name', `%${q}%`);
+  /*
+   * Search where people actually look.
+   *
+   * It matched the head of the family and nothing else, so a phone number, a
+   * father's name or a street found nothing and the box read as broken.
+   *
+   * `or` takes one filter string, so the term is stripped of the characters
+   * that would end a clause early — a comma, brackets, a quote, a wildcard.
+   * They are separators in PostgREST's syntax, not letters anybody searches
+   * for, and leaving them in is the flaw the security review found in the
+   * member and application searches.
+   */
+  const safe = q.replace(/[,()"'*\\]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (safe) {
+    query = query.or(
+      ['head_name', 'father_name', 'contact', 'father_mobile', 'city', 'address', 'bank_account_title']
+        .map((col) => `${col}.ilike.%${safe}%`)
+        .join(',')
+    );
+  }
 
   const { data, count, error } = await query;
 
@@ -178,7 +196,16 @@ export default async function AdminFamiliesPage({
                           )}
                         </td>
                         <td className="num">
-                          {r.monthly_income === null ? '—' : money(Number(r.monthly_income), false)}
+                          {r.monthly_income === null ? (
+                            '—'
+                          ) : (
+                            <>
+                              {money(Number(r.monthly_income), false)}
+                              {r.currency && r.currency !== 'PKR' && (
+                                <span className="curtag">{r.currency}</span>
+                              )}
+                            </>
+                          )}
                           {r.monthly_expense !== null && (
                             <div style={{ color: 'var(--text-faint)', fontSize: 11.5 }}>
                               out {money(Number(r.monthly_expense), false)}
