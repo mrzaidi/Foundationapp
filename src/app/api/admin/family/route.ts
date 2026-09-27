@@ -75,11 +75,19 @@ function shape(body: Record<string, unknown>): { row: Record<string, unknown> } 
       head_name: head,
       currency,
       father_name: text(body.father_name),
+      /*
+       * One number, written to both columns.
+       *
+       * The form calls it the mobile number and wrote father_mobile; the list
+       * reads contact. So a household could be given a number and still show
+       * a dash on the list, which is what made a saved record look unsaved.
+       * They are the same number and are kept the same.
+       */
       father_mobile: text(body.father_mobile),
+      contact: text(body.contact) ?? text(body.father_mobile),
       father_status: status,
       address: text(body.address),
       city: text(body.city),
-      contact: text(body.contact),
       total_members: totalMembers,
       male_count: male,
       female_count: female,
@@ -93,6 +101,12 @@ function shape(body: Record<string, unknown>): { row: Record<string, unknown> } 
         body.has_bank_account === null || body.has_bank_account === undefined
           ? null
           : Boolean(body.has_bank_account),
+      bank_name: text(body.bank_name),
+      bank_account_title: text(body.bank_account_title),
+      // Never normalised — see the column comment in 0026. This is where the
+      // foundation sends money, and a tidied-up account number is a guess.
+      bank_account_number: text(body.bank_account_number),
+      wallet_number: text(body.wallet_number),
       bill_ke: num(body.bill_ke),
       rent: num(body.rent),
       education_expense: num(body.education_expense),

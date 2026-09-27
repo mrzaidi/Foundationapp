@@ -41,10 +41,8 @@ import { dirname, resolve } from 'node:path';
  * confirm and add anything you need back.
  * ------------------------------------------------------------------------- */
 const KEEP_EMAILS = [
-  // The QA login. It is a member, so a purge would take it with the rest and
-  // the regression suite would have nothing to sign in as. Remove this line
-  // only if you mean to lose it.
-  'qa-test@shf-foundation.test',
+  // The QA login used to be spared here. It was deleted on request, so there
+  // is nothing to spare; add an address of your own if there ever is.
 ];
 
 const HERE = dirname(fileURLToPath(import.meta.url));

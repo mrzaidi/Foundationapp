@@ -54,6 +54,10 @@ interface Family {
   monthly_expense: number | null;
   house_type: 'own' | 'rent' | null;
   has_bank_account: boolean | null;
+  bank_name: string | null;
+  bank_account_title: string | null;
+  bank_account_number: string | null;
+  wallet_number: string | null;
   bill_ke: number | null;
   rent: number | null;
   education_expense: number | null;
@@ -86,6 +90,10 @@ const EMPTY: Draft = {
   monthly_expense: '',
   house_type: '',
   has_bank_account: '',
+  bank_name: '',
+  bank_account_title: '',
+  bank_account_number: '',
+  wallet_number: '',
   bill_ke: '',
   rent: '',
   education_expense: '',
@@ -118,6 +126,10 @@ function draftOf(f: Family | null): Draft {
     monthly_expense: str(f.monthly_expense),
     house_type: str(f.house_type),
     has_bank_account: f.has_bank_account === null || f.has_bank_account === undefined ? '' : f.has_bank_account ? 'yes' : 'no',
+    bank_name: str(f.bank_name),
+    bank_account_title: str(f.bank_account_title),
+    bank_account_number: str(f.bank_account_number),
+    wallet_number: str(f.wallet_number),
     bill_ke: str(f.bill_ke),
     rent: str(f.rent),
     education_expense: str(f.education_expense),
@@ -363,6 +375,29 @@ export default function FamilyDetails({
                 {family.house_type || '—'}
               </span>
             </div>
+            <div className="kv">
+              <span className="k">Bank</span>
+              <span className="v">{family.bank_name || '—'}</span>
+            </div>
+            <div className="kv">
+              <span className="k">Account holder</span>
+              <span className="v">{family.bank_account_title || '—'}</span>
+            </div>
+            <div className="kv">
+              <span className="k">Account number</span>
+              {/* Shown exactly as the family wrote it — an IBAN with spaces,
+                  a number with dashes, a branch scribbled on the end. Tidying
+                  it up here would be guessing at somebody's bank details. */}
+              <span className="v" dir="ltr" style={{ wordBreak: 'break-word' }}>
+                {family.bank_account_number || '—'}
+              </span>
+            </div>
+            <div className="kv">
+              <span className="k">Easypaisa / JazzCash</span>
+              <span className="v" dir="ltr">
+                {family.wallet_number || '—'}
+              </span>
+            </div>
             {/* Saying "PKR" on a record that cannot hold anything else is a
                 label pretending to be a fact. It appears with the column. */}
             <div className="kv" hidden={!currencyReady}>
@@ -529,6 +564,57 @@ export default function FamilyDetails({
                 <option value="yes">Yes</option>
                 <option value="no">No</option>
               </select>
+            </div>
+          </div>
+
+          <div className="row-2">
+            <div className="field">
+              <label htmlFor="f_bankname">Bank</label>
+              <input
+                id="f_bankname"
+                className="input"
+                value={draft.bank_name}
+                onChange={(e) => set('bank_name', e.target.value)}
+                placeholder="HBL, Meezan, Bank Alfalah…"
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="f_bankholder">Account holder</label>
+              <input
+                id="f_bankholder"
+                className="input"
+                value={draft.bank_account_title}
+                onChange={(e) => set('bank_account_title', e.target.value)}
+                placeholder="The name on the account"
+              />
+            </div>
+          </div>
+
+          <div className="row-2">
+            <div className="field">
+              <label htmlFor="f_bankno">Account number / IBAN</label>
+              <input
+                id="f_bankno"
+                className="input"
+                dir="ltr"
+                value={draft.bank_account_number}
+                onChange={(e) => set('bank_account_number', e.target.value)}
+                placeholder="PK00 XXXX 0000 0000 0000 0000"
+              />
+              <p className="field-hint">
+                Kept exactly as written. Nothing is reformatted — this is where money goes.
+              </p>
+            </div>
+            <div className="field">
+              <label htmlFor="f_wallet">Easypaisa / JazzCash</label>
+              <input
+                id="f_wallet"
+                className="input"
+                dir="ltr"
+                value={draft.wallet_number}
+                onChange={(e) => set('wallet_number', e.target.value)}
+                placeholder="For a household with no bank account"
+              />
             </div>
           </div>
 

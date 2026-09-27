@@ -15,6 +15,7 @@ interface Row {
   head_name: string;
   city: string | null;
   contact: string | null;
+  father_mobile: string | null;
   total_members: number | null;
   male_count: number | null;
   female_count: number | null;
@@ -185,7 +186,10 @@ export default async function AdminFamiliesPage({
                           </div>
                         </td>
                         <td style={{ color: 'var(--text-faint)', fontSize: 12.5 }} dir="ltr">
-                          {r.contact || '—'}
+                          {/* One number under two names until the API was
+                              taught to keep them the same. Older rows still
+                              have it in only one of them. */}
+                          {r.contact || r.father_mobile || '—'}
                         </td>
                         <td className="num">
                           {r.total_members ?? '—'}
