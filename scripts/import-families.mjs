@@ -278,10 +278,39 @@ function stamp(raw) {
 }
 
 /* ------------------------------------------------------------------- import */
-const rows = xlsx.utils.sheet_to_json(xlsx.readFile(FILE).Sheets['Form Responses 1'], {
-  defval: null,
-  raw: false,
-});
+const sheet = xlsx.readFile(FILE).Sheets['Form Responses 1'];
+
+/*
+ * The sheet is read twice, and which reading matters depends on the field.
+ *
+ * `raw: false` gives what Excel displays, which is right for prose and for
+ * money answers written by hand. It is wrong for an account number: Excel
+ * decides a long digit string is a quantity, and displays it as 1.21679E+13.
+ * Storing that lost the account — the most important thing on the record.
+ *
+ * `raw: true` gives the value underneath, 12167901457501, with every digit
+ * intact. So identifiers are read from that, and everything else from the
+ * display text.
+ */
+const rows = xlsx.utils.sheet_to_json(sheet, { defval: null, raw: false });
+const rawRows = xlsx.utils.sheet_to_json(sheet, { defval: null, raw: true });
+
+/**
+ * An identifier — an account number, a wallet, a phone — as digits.
+ *
+ * What Excel made a number of comes back whole. A leading zero is gone for
+ * good in that case: the file no longer has it, so the caller is told rather
+ * than given a zero somebody guessed at.
+ */
+function identifier(shownValue, rawValue) {
+  if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
+    return {
+      value: String(BigInt(Math.round(rawValue))),
+      wasNumeric: true,
+    };
+  }
+  return { value: text(shownValue), wasNumeric: false };
+}
 
 console.log(`\n  ${rows.length} response(s) in ${FILE.split(/[\\/]/).pop()}`);
 console.log(`  mode: ${WRITE ? 'WRITE' : 'dry run — nothing will be saved'}\n`);
@@ -290,6 +319,7 @@ const prepared = [];
 const problems = [];
 
 for (const [i, r] of rows.entries()) {
+  const rawRow = rawRows[i] ?? {};
   const line = i + 2; // the row number a person would see in Excel
   const head = text(r[Q.head]);
   if (!head) {
@@ -339,8 +369,20 @@ for (const [i, r] of rows.entries()) {
   // are called out rather than trusted. Noted here, before intake_notes is
   // built from this list — added afterwards it reached the console and never
   // reached the record, which is the half that matters.
-  if (/E\+/i.test(String(r[Q.iban] ?? '')))
-    notes.push('Account number: Excel stored this as a number — check it against the form.');
+  const account = identifier(r[Q.iban], rawRow[Q.iban]);
+  const wallet = identifier(r[Q.wallet], rawRow[Q.wallet]);
+  const mobile = identifier(r[Q.mobile], rawRow[Q.mobile]);
+
+  for (const [label, got] of [
+    ['Account number', account],
+    ['Easypaisa / JazzCash number', wallet],
+    ['Mobile number', mobile],
+  ]) {
+    if (got.wasNumeric)
+      notes.push(
+        `${label}: the spreadsheet held this as a number, so every digit is here but a leading zero would not be — check it against the form.`
+      );
+  }
 
   const row = {
     head_name: head,
@@ -351,8 +393,8 @@ for (const [i, r] of rows.entries()) {
      * fills both: the household's contact, which is what the list shows, and
      * the father's, which is where staff look for it on the record.
      */
-    contact: text(r[Q.mobile]),
-    father_mobile: text(r[Q.mobile]),
+    contact: mobile.value,
+    father_mobile: mobile.value,
     address: text(r[Q.address]),
 
     children_count: c,
@@ -372,8 +414,8 @@ for (const [i, r] of rows.entries()) {
     has_bank_account: yesNo(r[Q.hasBank]),
     bank_name: text(r[Q.bankName]),
     bank_account_title: text(r[Q.accountTitle]),
-    bank_account_number: text(r[Q.iban]),
-    wallet_number: text(r[Q.wallet]),
+    bank_account_number: account.value,
+    wallet_number: wallet.value,
 
     bill_ke: note('Electricity', money(r[Q.electricity]), r[Q.electricity]),
     rent: note('Rent', money(r[Q.rent]), r[Q.rent]),

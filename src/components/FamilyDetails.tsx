@@ -165,6 +165,24 @@ export default function FamilyDetails({
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  /*
+   * Copying beats reading a twenty-four character IBAN off a screen and typing
+   * it into a bank. Selecting the text is the fallback for anywhere the
+   * clipboard is refused, so the number is always obtainable one way or the
+   * other.
+   */
+  async function copyAccount(value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      toast('Account number copied');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast('Could not copy — select the number and copy it by hand.', 'bad');
+    }
+  }
   // False until migration 0011 runs; the panel hides rather than showing a
   // Postgres error on a page that is otherwise fine.
   const [available, setAvailable] = useState(true);
@@ -387,9 +405,28 @@ export default function FamilyDetails({
               <span className="k">Account number</span>
               {/* Shown exactly as the family wrote it — an IBAN with spaces,
                   a number with dashes, a branch scribbled on the end. Tidying
-                  it up here would be guessing at somebody's bank details. */}
-              <span className="v" dir="ltr" style={{ wordBreak: 'break-word' }}>
-                {family.bank_account_number || '—'}
+                  it up here would be guessing at somebody's bank details.
+
+                  Set in a monospaced face so every digit is the same width:
+                  this is the line a transfer is keyed from, and 1 against l
+                  and 0 against O is how money reaches the wrong account. */}
+              <span className="v acct" dir="ltr">
+                {family.bank_account_number ? (
+                  <>
+                    <span className="acct-no">{family.bank_account_number}</span>
+                    <button
+                      type="button"
+                      className="acct-copy"
+                      onClick={() => copyAccount(family.bank_account_number ?? '')}
+                      aria-label="Copy the account number"
+                      title="Copy"
+                    >
+                      <Icon name={copied ? 'check' : 'file'} />
+                    </button>
+                  </>
+                ) : (
+                  '—'
+                )}
               </span>
             </div>
             <div className="kv">
