@@ -130,40 +130,65 @@ function money(raw) {
   const found = CURRENCIES.find(([re]) => re.test(s));
   const currency = found ? found[1] : null;
 
-  if (/\b(under|below|up to|more than|above|over|se zyada|سے زیادہ|تک)\b/i.test(s) || /\+/.test(s))
-    return { value: null, why: 'a range, not a figure', currency };
+  /*
+   * A bound is still something the family told us.
+   *
+   * "Under 50000" and "500k+" were coming through as no answer at all, which
+   * left eight households looking as though they had said nothing about their
+   * income when they had said a good deal. The bound they gave is recorded,
+   * and the record says it is a bound and which way it points — so a committee
+   * reads "at least 500,000" rather than a figure pretending to be exact, and
+   * never an empty box that reads as nothing.
+   */
+  const atMost = /\b(under|below|up to|less than|تک)\b/i.test(s);
+  // The plus has to be attached to the number — "500k+" and "80k+" mean "or
+  // more", while "75000 shop+ house" is one figure covering two things.
+  const atLeast =
+    /\b(more than|above|over|at least|se zyada|سے زیادہ)\b/i.test(s) || /\d\s*k?\s*\+/i.test(s);
+  const bound = atMost ? 'at most' : atLeast ? 'at least' : null;
 
-  // Currency markers are not part of the figure, whichever currency it is.
+  // Currency and bound markers are not part of the figure.
   const cleaned = s
     .replace(/,/g, '')
-    .replace(/[£€$]/g, ' ')
+    .replace(/[£€$+]/g, ' ')
     .replace(/\b(rs|pkr|rupees?|gbp|eur|usd|sar|aed|pounds?|euros?|dollars?)\b\.?:?/gi, ' ')
-    .replace(/روپیہ|روپے/g, ' ')
+    .replace(/\b(under|below|up to|less than|more than|above|over|at least|se zyada)\b/gi, ' ')
+    .replace(/روپیہ|روپے|سے زیادہ|تک/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+
+  /** Wraps a parsed figure so a bound always says it is one. */
+  const out = (value) =>
+    bound === null
+      ? { value, why: null, currency }
+      : { value, why: `recorded as ${bound} this — the family gave a range`, currency };
+
+  // 0.3 million · 2 million
+  const million = cleaned.match(/^(\d+(?:\.\d+)?)\s*(million|m)\b/i);
+  if (million) return out(Math.round(Number(million[1]) * 1000000));
 
   // 2 lakh · دو لاکھ
   if (/لاکھ|lakh/i.test(cleaned)) {
     const n = Number((cleaned.match(/(\d+(?:\.\d+)?)/) ?? [])[1]);
-    if (Number.isFinite(n)) return { value: Math.round(n * 100000), why: null, currency };
+    if (Number.isFinite(n)) return out(Math.round(n * 100000));
     if (/^دو\s*لاکھ$/.test(cleaned)) return { value: 200000, why: null, currency };
     return { value: null, why: 'written in words', currency };
   }
 
   // 300k · 50 k
   const k = cleaned.match(/^(\d+(?:\.\d+)?)\s*k$/i);
-  if (k) return { value: Math.round(Number(k[1]) * 1000), why: null, currency };
+  if (k) return out(Math.round(Number(k[1]) * 1000));
 
   // 54 thousand · 30000 thousend (a spelling of the number already given)
   const thousand = cleaned.match(/^(\d+(?:\.\d+)?)\s*(thousand|thousend|housend|ہزار)/i);
   if (thousand) {
     const n = Number(thousand[1]);
     // "30000 thousend" means 30000, not thirty million.
-    return { value: n >= 1000 ? Math.round(n) : Math.round(n * 1000), why: null, currency };
+    return out(n >= 1000 ? Math.round(n) : Math.round(n * 1000));
   }
 
   const plain = cleaned.match(/^(\d+(?:\.\d+)?)$/);
-  if (plain) return { value: Math.round(Number(plain[1])), why: null, currency };
+  if (plain) return out(Math.round(Number(plain[1])));
 
   /*
    * One number and some words around it — "70000/مبلغ ستر ہزار روپیہ",
@@ -177,7 +202,7 @@ function money(raw) {
     const n = Number(numbers[0]);
     // A bare 10 beside the word for thousand was handled above; anything this
     // small standing alone in a sentence is more likely a count than money.
-    if (n >= 100) return { value: Math.round(n), why: null, currency };
+    if (n >= 100) return out(Math.round(n));
   }
 
   return { value: null, why: 'could not be read as a figure', currency };
