@@ -156,6 +156,13 @@ export default function FamilyDetails({
   // False until migration 0011 runs; the panel hides rather than showing a
   // Postgres error on a page that is otherwise fine.
   const [available, setAvailable] = useState(true);
+  /*
+   * Whether the table can hold a currency yet. The row comes back with the
+   * column present or absent, which is the only honest signal — offering a
+   * dropdown the save will refuse is how somebody ends up changing PKR to
+   * euros three times and believing the app is broken.
+   */
+  const [currencyReady, setCurrencyReady] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -164,6 +171,7 @@ export default function FamilyDetails({
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       setFamily(json.family ?? null);
+      if (json.family) setCurrencyReady('currency' in json.family);
       setDraft(draftOf(json.family ?? null));
       setAvailable(true);
       setError('');
@@ -355,7 +363,9 @@ export default function FamilyDetails({
                 {family.house_type || '—'}
               </span>
             </div>
-            <div className="kv">
+            {/* Saying "PKR" on a record that cannot hold anything else is a
+                label pretending to be a fact. It appears with the column. */}
+            <div className="kv" hidden={!currencyReady}>
               <span className="k">Currency</span>
               <span className="v">{family.currency ?? 'PKR'}</span>
             </div>
@@ -642,7 +652,7 @@ export default function FamilyDetails({
             </div>
           )}
 
-          <div className="field">
+          <div className="field" hidden={!currencyReady}>
             <label htmlFor="f_currency">Currency</label>
             <select
               id="f_currency"

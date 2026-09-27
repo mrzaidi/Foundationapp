@@ -111,11 +111,32 @@ function shape(body: Record<string, unknown>): { row: Record<string, unknown> } 
 async function withCurrency(
   supabase: SupabaseClient,
   row: Record<string, unknown>
-): Promise<Record<string, unknown>> {
-  if (await columnReady(supabase, 'families', 'currency')) return row;
+): Promise<{ row: Record<string, unknown> } | { refusal: Response }> {
+  if (await columnReady(supabase, 'families', 'currency')) return { row };
+
   const { currency, ...rest } = row;
-  void currency;
-  return rest;
+
+  /*
+   * Dropping it quietly was worse than failing.
+   *
+   * This used to strip the column and save the rest, so changing a household
+   * from rupees to euros came back successful and changed nothing — the one
+   * behaviour worse than an error, because the person believes it worked.
+   * Saying PKR when PKR is all the table can hold is honest; saying nothing
+   * while discarding euros is not.
+   */
+  if (currency && currency !== 'PKR')
+    return {
+      refusal: Response.json(
+        {
+          error: 'Recording a currency other than rupees needs migration 0027. Run it, then try again.',
+          code: 'migration_required',
+        },
+        { status: 503 }
+      ),
+    };
+
+  return { row: rest };
 }
 
 const read = async (request: Request) => {
@@ -161,9 +182,12 @@ export async function POST(request: Request) {
   const shaped = shape(parsed.body);
   if ('bad' in shaped) return NextResponse.json({ error: shaped.bad }, { status: 422 });
 
+  const fitted = await withCurrency(gate.supabase, shaped.row);
+  if ('refusal' in fitted) return fitted.refusal;
+
   const { data, error } = await gate.supabase
     .from('families')
-    .insert({ ...(await withCurrency(gate.supabase, shaped.row)), created_by: gate.user.id, updated_by: gate.user.id })
+    .insert({ ...fitted.row, created_by: gate.user.id, updated_by: gate.user.id })
     .select()
     .single();
 
@@ -185,9 +209,12 @@ export async function PUT(request: Request) {
   const shaped = shape(parsed.body);
   if ('bad' in shaped) return NextResponse.json({ error: shaped.bad }, { status: 422 });
 
+  const fitted = await withCurrency(gate.supabase, shaped.row);
+  if ('refusal' in fitted) return fitted.refusal;
+
   const { data, error } = await gate.supabase
     .from('families')
-    .update({ ...(await withCurrency(gate.supabase, shaped.row)), updated_by: gate.user.id })
+    .update({ ...fitted.row, updated_by: gate.user.id })
     .eq('id', id)
     .select()
     .single();
