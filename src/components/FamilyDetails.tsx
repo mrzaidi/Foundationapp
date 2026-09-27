@@ -310,7 +310,7 @@ export default function FamilyDetails({
               <span className="v">{family.father_name || '—'}</span>
             </div>
             <div className="kv">
-              <span className="k">Father&rsquo;s mobile</span>
+              <span className="k">Mobile number</span>
               <span className="v" dir="ltr">
                 {family.father_mobile || '—'}
               </span>
@@ -468,7 +468,7 @@ export default function FamilyDetails({
               />
             </div>
             <div className="field">
-              <label htmlFor="f_fmobile">Father&rsquo;s mobile</label>
+              <label htmlFor="f_fmobile">Mobile number</label>
               <input
                 id="f_fmobile"
                 className="input"
