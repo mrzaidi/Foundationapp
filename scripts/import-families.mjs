@@ -97,6 +97,18 @@ const isZero = (s) => /^(zero|none|nil|کوئی نہیں|کچھ نہیں|0)$/i.t
  * rather than rounded into something that looks decided.
  */
 function money(raw) {
+  /*
+   * Read the answer before text() strips it. "Zero" and "None" mean the same
+   * thing on this form, but text() treats None as a blank and Zero as a word,
+   * which had one household recorded as earning nothing and the next as not
+   * having answered. Both are nothing, and both say where the nothing came
+   * from, because a zero income is a strong claim to put in front of a
+   * committee without showing the word it came from.
+   */
+  const written = raw === null || raw === undefined ? '' : String(raw).trim();
+  if (/^(none|nil|zero|no|کوئی نہیں|کچھ نہیں)$/i.test(written))
+    return { value: 0, why: `taken as nothing` };
+
   const s = text(raw);
   if (s === null) return { value: null, why: null };
   if (isZero(s)) return { value: 0, why: null };
