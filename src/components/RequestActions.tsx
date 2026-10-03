@@ -66,7 +66,11 @@ export default function RequestActions({ request }: { request: FundRequest }) {
   const [transferRef, setTransferRef] = useState(request.transfer_ref ?? '');
   const [payment, setPayment] = useState<'cash' | 'bank'>(request.payment_method ?? 'bank');
   /* Which kind of giving this grant comes out of, and what is left of each. */
-  const [fundedFrom, setFundedFrom] = useState<DonationType | ''>('');
+  // Seeded from the application, so a fund chosen at review is still there
+  // when somebody comes back to approve it.
+  const [fundedFrom, setFundedFrom] = useState<DonationType | ''>(
+    (request.funded_from as DonationType | null) ?? ''
+  );
   const [balances, setBalances] = useState<Record<string, number> | null>(null);
   const [receipts, setReceipts] = useState<File[]>([]);
   // What is left in this month's fund. Null until it loads, so the button is
@@ -175,8 +179,8 @@ export default function RequestActions({ request }: { request: FundRequest }) {
     // Checked before anything is uploaded or written: a receipt filed against
     // a transfer that is then refused leaves evidence of a payment that did
     // not happen.
-    if (action === 'transferred' && !fundedFrom) {
-      toast('Choose which fund this is paid out of.', 'bad');
+    if ((action === 'accepted' || action === 'transferred') && !fundedFrom) {
+      toast('Choose which fund pays for this before approving it.', 'bad');
       return;
     }
 
@@ -189,10 +193,15 @@ export default function RequestActions({ request }: { request: FundRequest }) {
 
       const body: Record<string, unknown> = { status: action, admin_note: note.trim() || null };
       if (action === 'accepted' || action === 'transferred') body.amount_approved = Number(amount);
+      /*
+       * The fund travels with the decision, not with the payment. 0028 settles
+       * it on approval and refuses a change afterwards, so sending it on a
+       * transfer would only be asking to be told no.
+       */
+      if (action === 'review' || action === 'accepted') body.funded_from = fundedFrom || null;
       if (action === 'transferred') {
         body.transfer_ref = transferRef.trim() || null;
         body.payment_method = payment;
-        body.funded_from = fundedFrom;
       }
 
       const res = await fetch(`/api/requests/${request.id}`, {
@@ -313,16 +322,20 @@ export default function RequestActions({ request }: { request: FundRequest }) {
             </div>
           )}
 
-          {open === 'transferred' && (
+          {(open === 'review' || open === 'accepted') && (
             <>
               {/*
                 Which pot the money comes out of.
-              
+
                 A foundation holding Zakat and Khums does not hold one sum it
                 can spend on anything — each kind of giving is spent under its
-                own rules. Asking here, once, is the only moment anybody knows
-                the answer; afterwards the money has gone and nothing records
-                where it came from.
+                own rules.
+
+                Asked while the application is still being decided, because the
+                person weighing the case is the one who knows whether this is
+                Zakat or Khums. It used to be asked at transfer, which put the
+                question to whoever was keying the payment, long after the
+                decision was taken. Approving settles it: see 0028.
               */}
               <div className="field">
                 <label htmlFor="funded_from">Paid out of which fund?</label>

@@ -26,6 +26,7 @@ interface EmbeddedRole {
   name: string;
   is_master: boolean;
   role_capabilities: { capability: string }[] | null;
+  role_statuses: { status: string }[] | null;
 }
 
 /**
@@ -46,6 +47,8 @@ function grantOf(profile: AdminProfile | null): Grant | null {
       roleName: role.name,
       isMaster: Boolean(role.is_master),
       capabilities: (role.role_capabilities ?? []).map((c) => c.capability as Capability),
+      // Empty means unrestricted, which is what the database means by it too.
+      statuses: (role.role_statuses ?? []).map((s) => s.status),
     };
   }
 

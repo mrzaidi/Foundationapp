@@ -89,6 +89,8 @@ export interface Grant {
   roleName: string;
   isMaster: boolean;
   capabilities: Capability[];
+  /** Application statuses this role may see. Empty means all of them. */
+  statuses?: string[];
 }
 
 export function can(grant: Grant | null | undefined, capability: Capability): boolean {
@@ -137,6 +139,7 @@ export function grantFromLevel(
     roleName: LEGACY_LABEL[level] ?? 'Master Admin',
     isMaster: level === 'master',
     capabilities,
+    statuses: [],
   };
 }
 

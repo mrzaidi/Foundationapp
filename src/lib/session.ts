@@ -76,7 +76,8 @@ export function forgetSessions() {
  * the caller works from the old level — the same way every other feature here
  * waits for its SQL rather than taking the portal down.
  */
-const WITH_ROLE = '*, roles ( id, name, is_master, role_capabilities ( capability ) )';
+const WITH_ROLE =
+  '*, roles ( id, name, is_master, role_capabilities ( capability ), role_statuses ( status ) )';
 
 async function verify(supabase: SupabaseClient): Promise<Session> {
   const {

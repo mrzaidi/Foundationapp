@@ -5,7 +5,11 @@ import { ALL_CAPABILITIES, type Capability } from '@/lib/permissions';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const SELECT = 'id, name, description, is_master, created_at, role_capabilities ( capability )';
+const SELECT =
+  'id, name, description, is_master, created_at, role_capabilities ( capability ), role_statuses ( status )';
+
+/** The application statuses a role can be limited to. Matches request_status. */
+const STATUSES = ['requested', 'review', 'accepted', 'transferred', 'rejected'];
 
 interface RoleRow {
   id: string;
@@ -14,11 +18,14 @@ interface RoleRow {
   is_master: boolean;
   created_at: string;
   role_capabilities: { capability: string }[] | null;
+  role_statuses: { status: string }[] | null;
 }
 
 /** The shape the screens want: capabilities as a flat list, plus a count. */
 const flatten = (r: RoleRow) => {
   const capabilities = (r.role_capabilities ?? []).map((c) => c.capability);
+  // No rows means no restriction — the role sees every status.
+  const statuses = (r.role_statuses ?? []).map((x) => x.status);
   return {
     id: r.id,
     name: r.name,
@@ -26,6 +33,7 @@ const flatten = (r: RoleRow) => {
     is_master: r.is_master,
     created_at: r.created_at,
     capabilities,
+    statuses,
     capability_count: r.is_master ? ALL_CAPABILITIES.length : capabilities.length,
   };
 };
@@ -51,6 +59,12 @@ function wanted(input: unknown): Capability[] {
   return [...new Set(input.map(String))].filter((c): c is Capability =>
     known.has(c as Capability)
   );
+}
+
+/** Only statuses this app knows about, deduplicated. */
+function wantedStatuses(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return [...new Set(input.map(String))].filter((x) => STATUSES.includes(x));
 }
 
 /**
@@ -110,7 +124,15 @@ export async function POST(request: Request) {
     if (capError) return NextResponse.json({ error: capError.message }, { status: 400 });
   }
 
-  return NextResponse.json({ role: { id: role.id, name, capabilities } }, { status: 201 });
+  const statuses = wantedStatuses(body.statuses);
+  if (statuses.length) {
+    const { error: stError } = await gate.supabase
+      .from('role_statuses')
+      .insert(statuses.map((status) => ({ role_id: role.id, status })));
+    if (stError) return NextResponse.json({ error: stError.message }, { status: 400 });
+  }
+
+  return NextResponse.json({ role: { id: role.id, name, capabilities, statuses } }, { status: 201 });
 }
 
 /**
@@ -185,10 +207,29 @@ export async function PUT(request: Request) {
     if (capError) return NextResponse.json({ error: capError.message }, { status: 400 });
   }
 
+  /*
+   * Statuses, the same way: the screen sends the set that should hold
+   * afterwards. An empty set is meaningful — it means no restriction, which is
+   * why the rows are cleared whether or not any are going back.
+   */
+  const statuses = wantedStatuses(body.statuses);
+  const { error: clearStatuses } = await gate.supabase
+    .from('role_statuses')
+    .delete()
+    .eq('role_id', id);
+  if (clearStatuses) return NextResponse.json({ error: clearStatuses.message }, { status: 400 });
+
+  if (statuses.length) {
+    const { error: stError } = await gate.supabase
+      .from('role_statuses')
+      .insert(statuses.map((status) => ({ role_id: id, status })));
+    if (stError) return NextResponse.json({ error: stError.message }, { status: 400 });
+  }
+
   // Everyone's established session is dropped, so the change is felt now.
   forgetIdentities();
 
-  return NextResponse.json({ role: { id, name, capabilities } });
+  return NextResponse.json({ role: { id, name, capabilities, statuses } });
 }
 
 /** DELETE /api/admin/roles?id= — remove a role nobody holds. */

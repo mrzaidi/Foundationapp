@@ -17,6 +17,7 @@ interface Role {
   description: string | null;
   is_master: boolean;
   capabilities: Capability[];
+  statuses: string[];
   capability_count: number;
 }
 
@@ -60,7 +61,25 @@ const GROUPS: { title: string; note: string; caps: Capability[] }[] = [
   },
 ];
 
-const EMPTY = { name: '', description: '', capabilities: [] as Capability[] };
+const EMPTY = {
+  name: '',
+  description: '',
+  capabilities: [] as Capability[],
+  statuses: [] as string[],
+};
+
+/**
+ * The stages an application goes through. A role given none of these sees all
+ * of them, which is what every role did before this existed; giving it any
+ * narrows it to exactly those.
+ */
+const STATUSES: { key: string; label: string; note: string }[] = [
+  { key: 'requested', label: 'Requested', note: 'Just come in, nobody has looked yet' },
+  { key: 'review', label: 'Review', note: 'Being checked against documents' },
+  { key: 'accepted', label: 'Approved', note: 'Agreed, waiting to be paid' },
+  { key: 'transferred', label: 'Transferred', note: 'Money has gone out' },
+  { key: 'rejected', label: 'Rejected', note: 'Turned down' },
+];
 
 export default function RolesManager() {
   const toast = useToast();
@@ -114,6 +133,7 @@ export default function RolesManager() {
       name: role.name,
       description: role.description ?? '',
       capabilities: [...role.capabilities],
+      statuses: [...(role.statuses ?? [])],
     });
     setEditing(role);
     setCreating(false);
@@ -163,6 +183,7 @@ export default function RolesManager() {
           name: draft.name.trim(),
           description: draft.description.trim(),
           capabilities: draft.capabilities,
+          statuses: draft.statuses,
         }),
       });
       const json = await res.json();
@@ -268,9 +289,23 @@ export default function RolesManager() {
                       {r.is_master ? (
                         <span className="gift-count">Everything, always</span>
                       ) : (
-                        <span className="gift-count">
-                          {r.capability_count} of {ALL_CAPABILITIES.length}
-                        </span>
+                        <>
+                          <span className="gift-count">
+                            {r.capability_count} of {ALL_CAPABILITIES.length}
+                          </span>
+                          {/* A narrowed role is worth seeing at a glance: it
+                              explains why somebody reports an application
+                              missing when it is only out of their view. */}
+                          {(r.statuses?.length ?? 0) > 0 && (
+                            <div className="we" style={{ marginTop: 3 }}>
+                              Sees only{' '}
+                              {r.statuses
+                                .map((x) => STATUSES.find((s) => s.key === x)?.label ?? x)
+                                .join(', ')
+                                .toLowerCase()}
+                            </div>
+                          )}
+                        </>
                       )}
                     </td>
                     <td style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
@@ -392,6 +427,68 @@ export default function RolesManager() {
                   </div>
                 );
               })}
+
+              {/* Which applications they see at all.
+                  Separate from the capabilities above because it answers a
+                  different question: not what somebody may do to an
+                  application, but which ones reach their screen. An office can
+                  split the work this way — one person takes applications in,
+                  another only pays out the approved ones. */}
+              <div className="span-2" style={{ marginTop: 6 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                  }}
+                >
+                  <label style={{ marginBottom: 2 }}>Which applications they see</label>
+                  <button
+                    type="button"
+                    className="rowlink"
+                    onClick={() => setDraft((d) => ({ ...d, statuses: [] }))}
+                  >
+                    Show them all
+                  </button>
+                </div>
+                <p className="field-hint" style={{ marginTop: 0 }}>
+                  {draft.statuses.length === 0
+                    ? 'Every application, at every stage.'
+                    : `Only applications that are ${draft.statuses
+                        .map((x) => STATUSES.find((s) => s.key === x)?.label ?? x)
+                        .join(', ')
+                        .toLowerCase()}.`}
+                </p>
+
+                <div className="capgrid">
+                  {STATUSES.map((st) => {
+                    const on = draft.statuses.includes(st.key);
+                    return (
+                      <button
+                        key={st.key}
+                        type="button"
+                        className={`capbox ${on ? 'on' : ''}`}
+                        aria-pressed={on}
+                        onClick={() =>
+                          setDraft((d) => ({
+                            ...d,
+                            statuses: d.statuses.includes(st.key)
+                              ? d.statuses.filter((x) => x !== st.key)
+                              : [...d.statuses, st.key],
+                          }))
+                        }
+                      >
+                        <span className="capmark">{on && <Icon name="check" />}</span>
+                        <span>
+                          <span className="capname">{st.label}</span>
+                          <span className="capmod">{st.note}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {formError && <p className="err-msg">{formError}</p>}

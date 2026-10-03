@@ -83,6 +83,9 @@ export interface FundRequest {
   transfer_ref: string | null;
   /* how a transferred grant was paid — see supabase/migrations/0014 */
   payment_method?: 'cash' | 'bank' | null;
+  /* which kind of giving pays for it — chosen at review, settled on approval,
+     see supabase/migrations/0019 and 0028 */
+  funded_from?: string | null;
   transferred_at: string | null;
   created_at: string;
   updated_at: string;

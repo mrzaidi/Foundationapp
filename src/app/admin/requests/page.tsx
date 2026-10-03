@@ -80,6 +80,17 @@ export default async function AdminRequestsPage({
   const mayFile =
     can(level, 'file_requests') && (await columnReady(supabase, 'fund_requests', 'filed_by'));
 
+  /*
+   * A role can be narrowed to certain stages — see 0028. The database already
+   * withholds the rows, so this is about the tabs: offering Transferred to
+   * somebody who can never see one is a filter that always comes back empty
+   * and reads as a fault.
+   */
+  const visible = level.statuses ?? [];
+  const tabs = visible.length
+    ? TABS.filter((t) => t.key !== 'all' && visible.includes(t.key))
+    : TABS;
+
   // A query that looks like a reference (SHF-26-01001) searches the reference
   // column; anything else searches the member via the joined profiles row.
   const looksLikeRef = /^(shf|\d)/i.test(q);
@@ -179,7 +190,7 @@ export default async function AdminRequestsPage({
           <div className="toolbar" style={{ flex: 1 }}>
             <AdminSearch placeholder="Search reference, name or email…" basePath="/admin/requests" />
             <div className="chips">
-              {TABS.map((t) => (
+              {tabs.map((t) => (
                 <Link
                   key={t.key}
                   href={qs({ status: t.key === 'all' ? '' : t.key, page: '' })}
