@@ -185,6 +185,19 @@ export async function PATCH(request: Request) {
     if (!isMonth(body.month))
       return NextResponse.json({ error: 'Invalid month.' }, { status: 422 });
 
+    /*
+     * A gift can be recorded against a month that has passed — a cheque handed
+     * over in April is often March's giving — but never against one that has
+     * not happened. That would add to a fund before there was a fund, and the
+     * committee would be spending against it.
+     */
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    if (body.month.slice(0, 7) > thisMonth)
+      return NextResponse.json(
+        { error: 'That month has not happened yet.' },
+        { status: 422 }
+      );
+
     // An amount of null or 0 means "they did not give this month" — every row
     // for the month goes, rather than a zero being stored, so a missing
     // donation stays visibly missing instead of looking like a gift of nothing.

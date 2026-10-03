@@ -91,6 +91,16 @@ export default function DonorDetail({ id }: { id: string }) {
   const [recording, setRecording] = useState(false);
   const [amount, setAmount] = useState('');
   const [kind, setKind] = useState<DonationType | ''>('');
+  /*
+   * Which month the gift counts toward, and the day it actually arrived.
+   *
+   * They are two different facts and the office needs both. A cheque handed
+   * over in April can be March's giving, and a donation remembered weeks later
+   * belongs to the month it was given in, not the month somebody got round to
+   * typing it. Both default to today, so recording this month stays one field.
+   */
+  const [month, setMonth] = useState(() => thisMonthIso().slice(0, 7));
+  const [receivedOn, setReceivedOn] = useState(() => new Date().toISOString().slice(0, 10));
 
   const load = useCallback(async () => {
     try {
@@ -121,17 +131,22 @@ export default function DonorDetail({ id }: { id: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id,
-          month: thisMonthIso(),
+          month: `${month}-01`,
+          received_on: receivedOn,
           amount: value,
           donation_type: kind,
         }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-      toast(`${money(value)} ${DONATION_LABEL[kind]} recorded`);
+      // Naming the month matters most when it is not this one: recording
+      // March's giving in May should say March back.
+      toast(`${money(value)} ${DONATION_LABEL[kind]} recorded for ${monthOf(`${month}-01`)}`);
       setRecording(false);
       setAmount('');
       setKind('');
+      setMonth(thisMonthIso().slice(0, 7));
+      setReceivedOn(new Date().toISOString().slice(0, 10));
       await load();
     } catch (e) {
       toast((e as Error).message, 'bad');
@@ -343,8 +358,46 @@ export default function DonorDetail({ id }: { id: string }) {
           <div className="amodal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <h3>Record a donation</h3>
             <p className="sub">
-              From <strong>{donor.name}</strong>, counted toward {monthOf(thisMonthIso())}.
+              From <strong>{donor.name}</strong>, counted toward{' '}
+              <strong>{monthOf(`${month}-01`)}</strong>
+              {month !== thisMonthIso().slice(0, 7) && ' — an earlier month'}.
             </p>
+
+            {/* Which month it belongs to, and the day it arrived.
+
+                Two facts, not one. A cheque handed over in April can be
+                March's giving, and a gift remembered weeks later belongs to
+                the month it was given in rather than the month somebody got
+                round to typing it. Both start at today, so recording this
+                month is still one field and a number. */}
+            <div className="row-2">
+              <div className="field">
+                <label htmlFor="dd_month">Counts toward</label>
+                <input
+                  id="dd_month"
+                  className="input"
+                  type="month"
+                  value={month}
+                  max={thisMonthIso().slice(0, 7)}
+                  onChange={(e) => setMonth(e.target.value || thisMonthIso().slice(0, 7))}
+                />
+                <p className="field-hint">
+                  Which month&rsquo;s fund this adds to. Never a month that has not happened.
+                </p>
+              </div>
+              <div className="field">
+                <label htmlFor="dd_received">Received on</label>
+                <input
+                  id="dd_received"
+                  className="input"
+                  type="date"
+                  value={receivedOn}
+                  max={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => setReceivedOn(e.target.value)}
+                />
+                <p className="field-hint">The day it actually came in.</p>
+              </div>
+            </div>
 
             <div className="field">
               <label htmlFor="dd_amount">Amount (PKR)</label>
