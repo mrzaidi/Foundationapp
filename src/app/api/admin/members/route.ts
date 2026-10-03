@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { adminIdentity, forgetIdentities, requireCapability } from '@/lib/admin-guard';
+import { orIlike, searchTerm } from '@/lib/search';
 import { mailReady, sendInBackground } from '@/lib/mailer';
 import { welcomeEmail } from '@/lib/emails';
 import { columnReady } from '@/lib/schema';
@@ -35,7 +36,8 @@ export async function GET(request: Request) {
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
-  if (q) query = query.or(`full_name.ilike.%${q}%,email.ilike.%${q}%,mobile.ilike.%${q}%`);
+  const term = searchTerm(q);
+  if (term) query = query.or(orIlike(['full_name', 'email', 'mobile'], term));
 
   const { data, error, count } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });

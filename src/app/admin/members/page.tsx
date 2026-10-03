@@ -6,6 +6,7 @@ import NewMemberButton from '@/components/NewMemberButton';
 import { can } from '@/lib/permissions';
 import Icon from '@/components/Icon';
 import { createClient } from '@/lib/supabase/server';
+import { orIlike, searchTerm } from '@/lib/search';
 import { dateLabel, initials } from '@/lib/format';
 import type { Profile } from '@/lib/types';
 
@@ -35,7 +36,8 @@ export default async function AdminMembersPage({
     .range(from, from + PAGE_SIZE - 1);
 
   if (role !== 'all') query = query.eq('role', role);
-  if (q) query = query.or(`full_name.ilike.%${q}%,email.ilike.%${q}%,mobile.ilike.%${q}%`);
+  const term = searchTerm(q);
+  if (term) query = query.or(orIlike(['full_name', 'email', 'mobile'], term));
 
   const { data, count } = await query;
   const members = (data ?? []) as Profile[];

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { orIlike, searchTerm } from '@/lib/search';
 import { currentSession } from '@/lib/session';
 import { formatAccount } from '@/lib/banks';
 import { toCsv } from '@/lib/csv';
@@ -60,7 +61,8 @@ export async function GET(request: Request) {
 
   let query = supabase.from('profiles').select('*').order('created_at', { ascending: false });
   if (role !== 'all') query = query.eq('role', role);
-  if (q) query = query.or(`full_name.ilike.%${q}%,email.ilike.%${q}%,mobile.ilike.%${q}%`);
+  const term = searchTerm(q);
+  if (term) query = query.or(orIlike(['full_name', 'email', 'mobile'], term));
 
   const { data: profileRows, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });

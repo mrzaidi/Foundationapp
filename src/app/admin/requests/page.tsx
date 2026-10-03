@@ -9,6 +9,7 @@ import AdminPageSize from '@/components/AdminPageSize';
 import AdminSearch from '@/components/AdminSearch';
 import StatusBadge from '@/components/StatusBadge';
 import { createClient } from '@/lib/supabase/server';
+import { orIlike, searchTerm } from '@/lib/search';
 import { dateLabel, initials, money } from '@/lib/format';
 import { DEFAULT_PAGE_SIZE, pageSizeOf } from '@/lib/pagination';
 import type { FundRequest } from '@/lib/types';
@@ -111,7 +112,7 @@ export default async function AdminRequestsPage({
     if (q) {
       if (looksLikeRef) b = b.ilike('reference', `%${q}%`);
       else
-        b = b.or(`full_name.ilike.%${q}%,email.ilike.%${q}%,mobile.ilike.%${q}%`, {
+        b = b.or(orIlike(['full_name', 'email', 'mobile'], searchTerm(q)), {
           referencedTable: 'profiles',
         });
     }

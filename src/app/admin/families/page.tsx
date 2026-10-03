@@ -4,6 +4,7 @@ import AdminSearch from '@/components/AdminSearch';
 import NewFamilyButton from '@/components/NewFamilyButton';
 import Icon from '@/components/Icon';
 import { createClient } from '@/lib/supabase/server';
+import { orIlike, searchTerm } from '@/lib/search';
 import { dateLabel, initials, money } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -65,11 +66,11 @@ export default async function AdminFamiliesPage({
    * for, and leaving them in is the flaw the security review found in the
    * member and application searches.
    */
-  const safe = q.replace(/[,()"'*\\]/g, ' ').replace(/\s+/g, ' ').trim();
+  const safe = searchTerm(q);
   if (safe) {
     query = query.or(
       ['head_name', 'father_name', 'contact', 'father_mobile', 'city', 'address', 'bank_account_title']
-        .map((col) => `${col}.ilike.%${safe}%`)
+        .map((col) => orIlike([col], safe))
         .join(',')
     );
   }
