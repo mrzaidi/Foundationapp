@@ -1,5 +1,8 @@
+#!/usr/bin/env node
 /**
- * End-to-end security test.
+ * End-to-end security test — authentication, roles, and the database boundary.
+ *
+ *   node scripts/security-test.mjs [site]   # defaults to production
  *
  * Every check is made twice where it matters: once through the app, and once
  * straight at PostgREST with the account's own token. The second is the one
