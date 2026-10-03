@@ -242,9 +242,23 @@ try {
   const { data: anyMember } = await db.from('profiles').select('id').eq('role', 'member').neq('id', member.id).limit(1).maybeSingle();
   const subject = anyMember?.id ?? member.id;
 
-  const { data: req } = await db.from('fund_requests')
+  // An application is refused until the applicant has somewhere to be paid
+  // (migration 0007). That guard is not what this section is testing, so the
+  // subject is given details rather than tripping over it.
+  await db.from('profiles')
+    .update({
+      bank_name: 'System Test Bank',
+      bank_account_title: 'SYSTEM TEST — delete me',
+      bank_account_number: '0000000000000001',
+    })
+    .eq('id', subject);
+
+  const made = await db.from('fund_requests')
     .insert({ user_id: subject, fund_type_id: fund.id, amount_requested: 1000, status: 'requested', purpose: 'SYSTEM TEST — delete me' })
     .select().single();
+  // Without this the whole section died on `null.id` and said nothing about why.
+  if (made.error) throw new Error(`could not raise a test application: ${made.error.message}`);
+  const req = made.data;
 
   // Approving with no fund named must be refused.
   const noFund = await db.from('fund_requests').update({ status: 'accepted', amount_approved: 1000 }).eq('id', req.id).select();
