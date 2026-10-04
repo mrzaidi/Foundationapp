@@ -94,12 +94,18 @@ export default function DonorDetail({ id }: { id: string }) {
   /*
    * Which month the gift counts toward, and the day it actually arrived.
    *
-   * They are two different facts and the office needs both. A cheque handed
-   * over in April can be March's giving, and a donation remembered weeks later
-   * belongs to the month it was given in, not the month somebody got round to
-   * typing it. Both default to today, so recording this month stays one field.
+   * The month is what every total is built from, so it is the one that has to
+   * be right. It follows the date typed above it: a gift received on 16
+   * September counts toward September without anybody having to say so twice.
+   *
+   * It stops following the moment somebody sets it themselves, because the two
+   * genuinely do come apart — a cheque handed over in April can be March's
+   * giving. Left to drift on its own it was worse than useless: a donation
+   * dated September sat in October's fund because the month kept its default,
+   * and every figure faithfully reported the month it had been given.
    */
   const [month, setMonth] = useState(() => thisMonthIso().slice(0, 7));
+  const [monthSetByHand, setMonthSetByHand] = useState(false);
   const [receivedOn, setReceivedOn] = useState(() => new Date().toISOString().slice(0, 10));
 
   const load = useCallback(async () => {
@@ -218,6 +224,11 @@ export default function DonorDetail({ id }: { id: string }) {
               setRecording(true);
               setAmount('');
               setKind('');
+              // Opening it fresh: last time's dates must not be inherited.
+              const today = new Date().toISOString().slice(0, 10);
+              setReceivedOn(today);
+              setMonth(today.slice(0, 7));
+              setMonthSetByHand(false);
             }}
           >
             <Icon name="plus" />
@@ -363,28 +374,12 @@ export default function DonorDetail({ id }: { id: string }) {
               {month !== thisMonthIso().slice(0, 7) && ' — an earlier month'}.
             </p>
 
-            {/* Which month it belongs to, and the day it arrived.
-
-                Two facts, not one. A cheque handed over in April can be
-                March's giving, and a gift remembered weeks later belongs to
-                the month it was given in rather than the month somebody got
-                round to typing it. Both start at today, so recording this
-                month is still one field and a number. */}
+            {/* The day it arrived comes first, because it is the fact the
+                office has in front of it. The month follows from it on its
+                own; it is shown so the answer is never a surprise, and it can
+                still be set by hand for a cheque that belongs to the month
+                before the one it turned up in. */}
             <div className="row-2">
-              <div className="field">
-                <label htmlFor="dd_month">Counts toward</label>
-                <input
-                  id="dd_month"
-                  className="input"
-                  type="month"
-                  value={month}
-                  max={thisMonthIso().slice(0, 7)}
-                  onChange={(e) => setMonth(e.target.value || thisMonthIso().slice(0, 7))}
-                />
-                <p className="field-hint">
-                  Which month&rsquo;s fund this adds to. Never a month that has not happened.
-                </p>
-              </div>
               <div className="field">
                 <label htmlFor="dd_received">Received on</label>
                 <input
@@ -393,11 +388,46 @@ export default function DonorDetail({ id }: { id: string }) {
                   type="date"
                   value={receivedOn}
                   max={new Date().toISOString().slice(0, 10)}
-                  onChange={(e) => setReceivedOn(e.target.value)}
+                  onChange={(e) => {
+                    const day = e.target.value;
+                    setReceivedOn(day);
+                    // Backdate the date and the month comes with it. That is
+                    // what "add a donation for September" means.
+                    if (day && !monthSetByHand) setMonth(day.slice(0, 7));
+                  }}
                 />
                 <p className="field-hint">The day it actually came in.</p>
               </div>
+              <div className="field">
+                <label htmlFor="dd_month">Counts toward</label>
+                <input
+                  id="dd_month"
+                  className="input"
+                  type="month"
+                  value={month}
+                  max={thisMonthIso().slice(0, 7)}
+                  onChange={(e) => {
+                    setMonth(e.target.value || thisMonthIso().slice(0, 7));
+                    setMonthSetByHand(true);
+                  }}
+                />
+                <p className="field-hint">
+                  {monthSetByHand && month !== receivedOn.slice(0, 7)
+                    ? `Set by hand — it does not match the date on the left.`
+                    : 'The fund this adds to. Follows the date unless you change it.'}
+                </p>
+              </div>
             </div>
+
+            {/* A gift counted somewhere other than where it landed is almost
+                always a slip. Said plainly, in front of the Record button,
+                rather than discovered a month later in the totals. */}
+            {month !== receivedOn.slice(0, 7) && (
+              <p className="field-hint" style={{ color: 'var(--warn, #b45309)', marginTop: -4 }}>
+                This arrived in {monthOf(`${receivedOn.slice(0, 7)}-01`)} but will be counted in{' '}
+                <strong>{monthOf(`${month}-01`)}</strong>.
+              </p>
+            )}
 
             <div className="field">
               <label htmlFor="dd_amount">Amount (PKR)</label>
