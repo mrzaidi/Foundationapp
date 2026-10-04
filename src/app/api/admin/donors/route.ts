@@ -1,9 +1,106 @@
 import { adminIdentity, requireCapability } from '@/lib/admin-guard';
-import { NextResponse } from 'next/server';
-import { asDonationType } from '@/lib/donation-types';
+import { NextResponse, after } from 'next/server';
+import { asDonationType, DONATION_LABEL } from '@/lib/donation-types';
+import { donationThanksEmail } from '@/lib/emails';
+import { mailReady, sendEmail } from '@/lib/mailer';
+import { buildDonationReceipt, donationReference } from '@/lib/donation-receipt-pdf';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+interface DonationRow {
+  id: string;
+  amount: number;
+  donation_type: string | null;
+  received_on: string;
+  month: string;
+  note: string | null;
+}
+
+/**
+ * Thank a donor for the gift just recorded, receipt attached.
+ *
+ * Everything here is allowed to come to nothing — no address, no email
+ * provider, a receipt that would not build — and in each case the donation
+ * stands and the office hears about it in the log rather than as an error on
+ * a screen. Saving the gift is the job; the thanks are a courtesy on top.
+ */
+async function thankTheDonor(
+  supabase: SupabaseClient,
+  donorId: string,
+  gift: DonationRow
+): Promise<void> {
+  try {
+    if (!mailReady()) return;
+
+    const { data: donor } = await supabase
+      .from('donors')
+      .select('name, contact, email, profiles:user_id(full_name, email, mobile)')
+      .eq('id', donorId)
+      .single();
+    if (!donor) return;
+
+    const d = donor as unknown as {
+      name: string | null;
+      contact: string | null;
+      email: string | null;
+      profiles: { full_name: string; email: string; mobile: string } | null;
+    };
+
+    // A donor who is also a member is reachable at the address on their
+    // account; a standalone donor only at whatever the office wrote down.
+    const to = d.profiles?.email ?? d.email;
+    if (!to) return;
+    const name = d.profiles?.full_name ?? d.name ?? 'Friend';
+
+    let receipt: { content: string; name: string } | undefined;
+    try {
+      const bytes = await buildDonationReceipt({
+        id: gift.id,
+        donorName: name,
+        donorContact: d.profiles?.mobile ?? d.contact ?? null,
+        amount: Number(gift.amount),
+        donationType: gift.donation_type,
+        receivedOn: gift.received_on,
+        month: gift.month,
+        note: gift.note,
+      });
+      receipt = {
+        content: Buffer.from(bytes).toString('base64'),
+        name: `donation-${donationReference(gift.id, gift.received_on)}.pdf`,
+      };
+    } catch (e) {
+      // Thanks without a receipt beat no thanks at all.
+      console.warn('[mail] donation receipt could not be built:', (e as Error).message);
+    }
+
+    // Awaited, not handed to sendInBackground: this already runs inside the
+    // caller's `after`, and nesting one keep-alive inside another would leave
+    // the send as a floating promise in the very phase that abandons them.
+    const sent = await sendEmail(
+      donationThanksEmail(
+        to,
+        name,
+        {
+          reference: donationReference(gift.id, gift.received_on),
+          amount: Number(gift.amount),
+          kind: DONATION_LABEL[asDonationType(gift.donation_type)],
+          receivedOn: gift.received_on,
+          month: gift.month,
+        },
+        receipt
+      )
+    );
+    console.log(
+      sent.sent
+        ? `[mail] thanked ${to} for ${gift.amount}`
+        : `[mail] not sent to ${to}: ${sent.reason}`
+    );
+  } catch (e) {
+    console.warn('[mail] could not thank the donor:', (e as Error).message);
+  }
+}
 
 /**
  * The answer the capability gate above already reached, in the shape these
@@ -236,6 +333,30 @@ export async function PATCH(request: Request) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+    /*
+     * Thank them, with the receipt attached.
+     *
+     * Registered with `after` rather than left as a floating promise: the
+     * response goes back immediately either way, but a serverless function is
+     * frozen the instant it returns, and work merely started would be
+     * abandoned half-way through building the receipt. `after` is what keeps
+     * the runtime alive long enough to finish.
+     *
+     * Outside a request — a script, a test — `after` throws, so that case
+     * falls back to simply running it.
+     *
+     * Either way the donation is already saved and nothing here can fail it:
+     * the office must not be told to enter a gift again because an email
+     * provider was slow. A donor with no address on file gets nothing.
+     */
+    const thanks = () => thankTheDonor(supabase, id, data as DonationRow);
+    try {
+      after(thanks);
+    } catch {
+      void thanks();
+    }
+
     return NextResponse.json({ donation: data });
   }
 

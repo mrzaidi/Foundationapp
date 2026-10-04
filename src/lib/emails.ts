@@ -18,7 +18,14 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://foundationapp-eight.ve
 const money = (n: number) => `PKR ${Math.round(n).toLocaleString('en-GB')}`;
 
 /** Inline styles only: an email client will strip anything else. */
-function wrap(heading: string, body: string, cta?: { href: string; label: string }) {
+function wrap(
+  heading: string,
+  body: string,
+  cta?: { href: string; label: string },
+  // A donor has no account, so the usual line at the bottom would be a small
+  // untruth on the one email the foundation sends to people outside it.
+  footer = 'You are receiving this because you have an account with the foundation.'
+) {
   return `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#eef4f1;padding:24px">
   <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #dbe7e1">
     <div style="background:${BRAND};color:#fff;padding:18px 24px;font-size:15px;font-weight:700">
@@ -36,7 +43,7 @@ function wrap(heading: string, body: string, cta?: { href: string; label: string
       }
     </div>
     <div style="padding:14px 24px;border-top:1px solid #edf3f0;font-size:11.5px;color:#7d8d86">
-      You are receiving this because you have an account with the foundation.
+      ${footer}
     </div>
   </div>
 </div>`;
@@ -150,6 +157,75 @@ If the money has not reached you within a few days, contact the foundation offic
       // the receipt is attached to the message itself. Sending somebody to the
       // portal to look at an application that is finished asks them to sign in
       // for nothing.
+    ),
+    ...(receipt ? { attachments: [receipt] } : {}),
+  };
+}
+
+/**
+ * Thank you for a gift, with the receipt attached.
+ *
+ * A fourth moment, and the only one addressed to somebody the foundation is
+ * not helping. A donor has no portal and no application to check, so unlike
+ * the three above this is not a shortcut to something they could look up — it
+ * is the only acknowledgement they get, and the receipt is the part they may
+ * need at the end of the year.
+ *
+ * The month is named whenever it is not the month the gift arrived in. A
+ * donor who hands over a cheque in October for September's giving should see
+ * that written down rather than wonder whether it was recorded correctly.
+ */
+export function donationThanksEmail(
+  to: string,
+  name: string,
+  opts: {
+    reference: string;
+    amount: number;
+    kind: string;
+    /** Both ISO dates — the day it arrived, and the month it counts toward. */
+    receivedOn: string;
+    month: string;
+  },
+  receipt?: { content: string; name: string }
+): Mail {
+  const first = name.split(' ')[0];
+  const monthName = new Date(opts.month).toLocaleDateString('en-GB', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+  const arrived = new Date(opts.receivedOn).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+  const countedElsewhere = opts.month.slice(0, 7) !== opts.receivedOn.slice(0, 7);
+  const counted = countedElsewhere
+    ? ` It has been recorded against ${monthName}.`
+    : '';
+
+  return {
+    to,
+    toName: name,
+    subject: `Thank you — ${money(opts.amount)} received`,
+    text: `${first}, thank you. The foundation has received your ${opts.kind} of ${money(opts.amount)} on ${arrived}.${counted}
+
+Your receipt is attached, reference ${opts.reference}. Please keep it for your records.
+
+${opts.kind} is spent under its own rules, and it will be used for nothing else.
+
+If anything here is wrong, contact the foundation office and quote ${opts.reference}.`,
+    html: wrap(
+      `Thank you, ${first}`,
+      `<p style="margin:0 0 12px">The foundation has received your ${opts.kind} of <strong>${money(opts.amount)}</strong> on ${arrived}.${counted}</p>
+       <p style="margin:0 0 12px">Your receipt is attached, reference <strong>${opts.reference}</strong>. Please keep it for your records.</p>
+       <p style="margin:0 0 12px">${opts.kind} is spent under its own rules, and it will be used for nothing else.</p>
+       <p style="margin:0">If anything here is wrong, contact the foundation office and quote ${opts.reference}.</p>`,
+      // No button, for the same reason the transfer email has none: a donor
+      // has no account to sign in to.
+      undefined,
+      'You are receiving this because you gave to the foundation.'
     ),
     ...(receipt ? { attachments: [receipt] } : {}),
   };
